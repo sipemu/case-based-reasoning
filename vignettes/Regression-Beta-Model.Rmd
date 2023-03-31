@@ -1,0 +1,105 @@
+---
+title: "Regression-Beta-Models"
+author: "Dr. Simon Müller"
+date: "`r Sys.Date()`"
+output:
+  html_vignette:
+    css: kable.css
+    number_sections: yes
+    toc: yes
+vignette: >
+  %\VignetteIndexEntry{Regression-Beta-Models}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r setup, include=TRUE}
+knitr::opts_chunk$set(echo = TRUE)
+library(CaseBasedReasoning)
+```
+
+# Motivation
+
+This section shows how to apply CPH regression for case-based-reasoning. The linear and logistic regression model can be applied similarly by initializing the model as follows:
+
+```{r LinearBetaModel}
+# lmModel <- LinearBetaModel$new(y ~ x1 + x2 + x3)
+```
+
+```{r LogisticBetaModel}
+# logisticModel <- LogisticBetaModel$new(y ~ x1 + x2 + x3)
+```
+
+# Cox Proportional Hazard Model 
+
+In the first example, we use the CPH model and the `ovarian` data set from the 
+`survival` package. In the first step, we initialize the R6 data object. 
+
+```{r initialization, warning=FALSE, message=FALSE}
+ovarian$resid.ds <- factor(ovarian$resid.ds)
+ovarian$rx <- factor(ovarian$rx)
+ovarian$ecog.ps <- factor(ovarian$ecog.ps)
+
+# initialize R6 object
+coxBeta <- CoxBetaModel$new(Surv(futime, fustat) ~ age + resid.ds + rx + ecog.ps, ovarian)
+```
+All cases with missing values in the learning and endpoint variables are dropped (`na.omit`), aand the reduced data set without missing values is saved internally. One get a text output on how many cases were dropped. `character` variables will be transformed to `factor`.
+
+
+# Case Based Reasoning 
+
+## Search for Similar Cases 
+
+After the initialization, we may want to get for each case in the query data the most similar case from the training data. 
+
+```{r similarity}
+n <- nrow(ovarian)
+trainID <- sample(1:n, floor(0.8 * n), F)
+testID <- (1:n)[-trainID]
+
+# fit model 
+ovarian[trainID, ] %>% 
+  coxBeta$fit()
+# get similar cases
+ovarian[trainID, ] %>%
+  coxBeta$get_similar_cases(query = ovarian[testID, ], k = 3) -> matchedData
+knitr::kable(head(matchedData))
+```
+
+You may extract then the similar cases and the verum data and put them together:
+
+**Note 1:** In the initialization step, we dropped all cases with missing values in the variables of ` data` and ` endPoint`. So, you need to make sure that you do missing value analysis before.
+
+**Note 2:** The `data.table` returned from `coxBeta$get_similar_cases` has four additional columns:
+
+1. `caseId`: By this column, you may map the similar cases to cases in data, e.g., if you had chosen ` k = 3`, then the first three elements in the column `caseId` will be ` 1` (following three ` 2` and so on). These three cases are the three most similar cases to case ` 0` in verum data.
+2. `scDist`: The calculated distance
+3. `scCaseId`: Grouping number of the query with matched data
+4. `group`: Grouping matched or query data
+
+
+## Check Proportional Hazard Assumption
+
+Finally, the Cox proportional hazard assumption can/should be checked for model
+validity.
+
+```{r proportional hazard, warning=FALSE, message=FALSE, fig.width=8, fig.height=8}
+coxBeta$check_ph()
+```
+
+## Validation of the matching Variables
+
+**TBD**
+
+# Distance Matrix Calculation
+
+Alternatively, you may be interested in the distance matrix:
+
+```{r distance_matrix, fig.width=8, fig.height=8}
+ovarian %>%
+  coxBeta$calc_distance_matrix() -> distMatrix
+
+heatmap(distMatrix)
+```
+`coxBeta$calc_distance_matrix()` calculates the distance matrix between train and test data, when test data is omitted, the distances between observations in the test data is calculated. Rows are observations in train and columns observations of test.
+The distance matrix is saved internally in the `CoxBetaModel` object: `coxBeta$distMat`.
