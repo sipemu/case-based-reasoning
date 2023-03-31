@@ -13,7 +13,7 @@ LazyData: TRUE
 NeedsCompilation: yes
 Depends:
     R6,
-    ranger (== 0.11.2),
+    ranger (>= 0.11.2),
     survival,
     ggplot2,
     cowplot,
@@ -37,4 +37,4 @@ LazyLoad: yes
 ByteCompile: yes
 VignetteBuilder: knitr
 Encoding: UTF-8
-RoxygenNote: 7.1.0
+RoxygenNote: 7.2.1

@@ -17,8 +17,10 @@ first two columns are terminal node IDs; If an ID pair do not
 appear in a tree -1 is inserted
 }
 \examples{
+\dontrun{
 require(ranger)
 rf.fit <- ranger(Species ~ ., data = iris, num.trees = 5, write.forest = TRUE)
 edges_between_terminal_nodes(rf.fit)
+}
 
 }

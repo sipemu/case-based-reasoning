@@ -24,24 +24,24 @@ Root class for Regression Models, e.g., CPH, logistic, and linear regression
 \section{Methods}{
 \subsection{Public methods}{
 \itemize{
-\item \href{#method-print}{\code{RegressionModel$print()}}
-\item \href{#method-variable_selection}{\code{RegressionModel$variable_selection()}}
-\item \href{#method-fit}{\code{RegressionModel$fit()}}
-\item \href{#method-clone}{\code{RegressionModel$clone()}}
+\item \href{#method-RegressionModel-print}{\code{RegressionModel$print()}}
+\item \href{#method-RegressionModel-variable_selection}{\code{RegressionModel$variable_selection()}}
+\item \href{#method-RegressionModel-fit}{\code{RegressionModel$fit()}}
+\item \href{#method-RegressionModel-clone}{\code{RegressionModel$clone()}}
 }
 }
-\if{html}{
-\out{<details open ><summary>Inherited methods</summary>}
-\itemize{
-\item \out{<span class="pkg-link" data-pkg="CaseBasedReasoning" data-topic="CBRBase" data-id="calc_distance_matrix">}\href{../../CaseBasedReasoning/html/CBRBase.html#method-calc_distance_matrix}{\code{CaseBasedReasoning::CBRBase$calc_distance_matrix()}}\out{</span>}
-\item \out{<span class="pkg-link" data-pkg="CaseBasedReasoning" data-topic="CBRBase" data-id="get_similar_cases">}\href{../../CaseBasedReasoning/html/CBRBase.html#method-get_similar_cases}{\code{CaseBasedReasoning::CBRBase$get_similar_cases()}}\out{</span>}
-\item \out{<span class="pkg-link" data-pkg="CaseBasedReasoning" data-topic="CBRBase" data-id="initialize">}\href{../../CaseBasedReasoning/html/CBRBase.html#method-initialize}{\code{CaseBasedReasoning::CBRBase$initialize()}}\out{</span>}
-}
-\out{</details>}
-}
+\if{html}{\out{
+<details open><summary>Inherited methods</summary>
+<ul>
+<li><span class="pkg-link" data-pkg="CaseBasedReasoning" data-topic="CBRBase" data-id="calc_distance_matrix"><a href='../../CaseBasedReasoning/html/CBRBase.html#method-CBRBase-calc_distance_matrix'><code>CaseBasedReasoning::CBRBase$calc_distance_matrix()</code></a></span></li>
+<li><span class="pkg-link" data-pkg="CaseBasedReasoning" data-topic="CBRBase" data-id="get_similar_cases"><a href='../../CaseBasedReasoning/html/CBRBase.html#method-CBRBase-get_similar_cases'><code>CaseBasedReasoning::CBRBase$get_similar_cases()</code></a></span></li>
+<li><span class="pkg-link" data-pkg="CaseBasedReasoning" data-topic="CBRBase" data-id="initialize"><a href='../../CaseBasedReasoning/html/CBRBase.html#method-CBRBase-initialize'><code>CaseBasedReasoning::CBRBase$initialize()</code></a></span></li>
+</ul>
+</details>
+}}
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-print"></a>}}
-\if{latex}{\out{\hypertarget{method-print}{}}}
+\if{html}{\out{<a id="method-RegressionModel-print"></a>}}
+\if{latex}{\out{\hypertarget{method-RegressionModel-print}{}}}
 \subsection{Method \code{print()}}{
 Prints information of the initialized object
 \subsection{Usage}{
@@ -50,8 +50,8 @@ Prints information of the initialized object
 
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-variable_selection"></a>}}
-\if{latex}{\out{\hypertarget{method-variable_selection}{}}}
+\if{html}{\out{<a id="method-RegressionModel-variable_selection"></a>}}
+\if{latex}{\out{\hypertarget{method-RegressionModel-variable_selection}{}}}
 \subsection{Method \code{variable_selection()}}{
 Fast backward variable selection with penalization
 \subsection{Usage}{
@@ -67,8 +67,8 @@ Fast backward variable selection with penalization
 }
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-fit"></a>}}
-\if{latex}{\out{\hypertarget{method-fit}{}}}
+\if{html}{\out{<a id="method-RegressionModel-fit"></a>}}
+\if{latex}{\out{\hypertarget{method-RegressionModel-fit}{}}}
 \subsection{Method \code{fit()}}{
 Fit the RandomForest
 \subsection{Usage}{
@@ -84,8 +84,8 @@ Fit the RandomForest
 }
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-clone"></a>}}
-\if{latex}{\out{\hypertarget{method-clone}{}}}
+\if{html}{\out{<a id="method-RegressionModel-clone"></a>}}
+\if{latex}{\out{\hypertarget{method-RegressionModel-clone}{}}}
 \subsection{Method \code{clone()}}{
 The objects of this class are cloneable with this method.
 \subsection{Usage}{

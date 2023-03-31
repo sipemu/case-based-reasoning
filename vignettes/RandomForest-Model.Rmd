@@ -30,7 +30,7 @@ ovarian$rx <- factor(ovarian$rx)
 ovarian$ecog.ps <- factor(ovarian$ecog.ps)
 
 # initialize R6 object
-rfModel <- RFModel$new(Surv(futime, fustat) ~ age + resid.ds + rx + ecog.ps)
+rfModel <- RFModel$new(Surv(futime, fustat) ~ age + resid.ds + rx + ecog.ps, data = ovarian, importance = "impurity_corrected")
 ```
 All cases with missing values in the learning and end point variables are dropped (`na.omit`) and the reduced data set without missing values is saved internally. You get a text output on how many cases were dropped. `character` variables will be transformed to `factor`.
 
@@ -47,7 +47,7 @@ ovarian[trainID, ] %>%
   rfModel$fit()
 # get similar cases
 ovarian[trainID, ] %>%
-  rfModel$get_similar_cases(queryData = ovarian[testID, ], k = 3) -> matchedData
+  rfModel$get_similar_cases(query = ovarian[testID, ], k = 3) -> matchedData
 knitr::kable(head(matchedData))
 ```
 
@@ -61,11 +61,11 @@ Optionally, you may want to adjust some parameters in the fitting step of the ra
 This can be done by
 
 ```{r, warning=FALSE, message=FALSE}
-sc$set_dist(distMethod = "proximity")
+rfModel$set_dist(distMethod = "proximity")
 ```
 or
 ```{r, warning=FALSE, message=FALSE}
-sc$set_dist(distMethod = "depth") # the default value
+rfModel$set_dist(distMethod = "depth") # the default value
 ```
 
 All other steps (excluding checking for proportional hazard assumption are the same as for the Cox-Model). 

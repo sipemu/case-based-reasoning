@@ -41,7 +41,7 @@ distanceRandomForest <- function(x, y = NULL, rfObject, method = "Proximity", th
     rf_dist <- proximity_distance(x = x, y = y, rfObject = rfObject)
   } else if (method == "Depth") {
     rf_dist <- depth_distance(x = x, y = y, rfObject = rfObject)
-    rf_dist <- rf_dist / rf_fit$num.trees
+    rf_dist <- rf_dist / rfObject$num.trees
   }
   rf_dist
 }
@@ -115,7 +115,6 @@ depth_distance <- function(x, y=NULL, rfObject) {
   x %>% 
     as.matrix() %>% 
     terminalNodes(rfObject) -> xNodes
-  xNodes <- xNodes
   rfObject %>% 
     ranger_forests_to_matrix() -> rfTrees
   if (is.null(y)) {

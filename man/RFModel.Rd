@@ -36,24 +36,24 @@ forest: An exploratory study.
 \section{Methods}{
 \subsection{Public methods}{
 \itemize{
-\item \href{#method-print}{\code{RFModel$print()}}
-\item \href{#method-new}{\code{RFModel$new()}}
-\item \href{#method-fit}{\code{RFModel$fit()}}
-\item \href{#method-set_distance_method}{\code{RFModel$set_distance_method()}}
-\item \href{#method-clone}{\code{RFModel$clone()}}
+\item \href{#method-RFModel-print}{\code{RFModel$print()}}
+\item \href{#method-RFModel-new}{\code{RFModel$new()}}
+\item \href{#method-RFModel-fit}{\code{RFModel$fit()}}
+\item \href{#method-RFModel-set_distance_method}{\code{RFModel$set_distance_method()}}
+\item \href{#method-RFModel-clone}{\code{RFModel$clone()}}
 }
 }
-\if{html}{
-\out{<details open ><summary>Inherited methods</summary>}
-\itemize{
-\item \out{<span class="pkg-link" data-pkg="CaseBasedReasoning" data-topic="CBRBase" data-id="calc_distance_matrix">}\href{../../CaseBasedReasoning/html/CBRBase.html#method-calc_distance_matrix}{\code{CaseBasedReasoning::CBRBase$calc_distance_matrix()}}\out{</span>}
-\item \out{<span class="pkg-link" data-pkg="CaseBasedReasoning" data-topic="CBRBase" data-id="get_similar_cases">}\href{../../CaseBasedReasoning/html/CBRBase.html#method-get_similar_cases}{\code{CaseBasedReasoning::CBRBase$get_similar_cases()}}\out{</span>}
-}
-\out{</details>}
-}
+\if{html}{\out{
+<details open><summary>Inherited methods</summary>
+<ul>
+<li><span class="pkg-link" data-pkg="CaseBasedReasoning" data-topic="CBRBase" data-id="calc_distance_matrix"><a href='../../CaseBasedReasoning/html/CBRBase.html#method-CBRBase-calc_distance_matrix'><code>CaseBasedReasoning::CBRBase$calc_distance_matrix()</code></a></span></li>
+<li><span class="pkg-link" data-pkg="CaseBasedReasoning" data-topic="CBRBase" data-id="get_similar_cases"><a href='../../CaseBasedReasoning/html/CBRBase.html#method-CBRBase-get_similar_cases'><code>CaseBasedReasoning::CBRBase$get_similar_cases()</code></a></span></li>
+</ul>
+</details>
+}}
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-print"></a>}}
-\if{latex}{\out{\hypertarget{method-print}{}}}
+\if{html}{\out{<a id="method-RFModel-print"></a>}}
+\if{latex}{\out{\hypertarget{method-RFModel-print}{}}}
 \subsection{Method \code{print()}}{
 Prints information of the initialized object
 \subsection{Usage}{
@@ -62,8 +62,8 @@ Prints information of the initialized object
 
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-new"></a>}}
-\if{latex}{\out{\hypertarget{method-new}{}}}
+\if{html}{\out{<a id="method-RFModel-new"></a>}}
+\if{latex}{\out{\hypertarget{method-RFModel-new}{}}}
 \subsection{Method \code{new()}}{
 Initialize a RandomForest object for searching similar cases.
 \subsection{Usage}{
@@ -83,8 +83,8 @@ Initialize a RandomForest object for searching similar cases.
 }
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-fit"></a>}}
-\if{latex}{\out{\hypertarget{method-fit}{}}}
+\if{html}{\out{<a id="method-RFModel-fit"></a>}}
+\if{latex}{\out{\hypertarget{method-RFModel-fit}{}}}
 \subsection{Method \code{fit()}}{
 Fit the RandomForest
 \subsection{Usage}{
@@ -100,8 +100,8 @@ Fit the RandomForest
 }
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-set_distance_method"></a>}}
-\if{latex}{\out{\hypertarget{method-set_distance_method}{}}}
+\if{html}{\out{<a id="method-RFModel-set_distance_method"></a>}}
+\if{latex}{\out{\hypertarget{method-RFModel-set_distance_method}{}}}
 \subsection{Method \code{set_distance_method()}}{
 Set the distance method. Available are Proximity and Depth
 \subsection{Usage}{
@@ -117,8 +117,8 @@ Set the distance method. Available are Proximity and Depth
 }
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-clone"></a>}}
-\if{latex}{\out{\hypertarget{method-clone}{}}}
+\if{html}{\out{<a id="method-RFModel-clone"></a>}}
+\if{latex}{\out{\hypertarget{method-RFModel-clone}{}}}
 \subsection{Method \code{clone()}}{
 The objects of this class are cloneable with this method.
 \subsection{Usage}{

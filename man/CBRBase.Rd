@@ -31,16 +31,16 @@ Root class for common functionality of this package
 \section{Methods}{
 \subsection{Public methods}{
 \itemize{
-\item \href{#method-new}{\code{CBRBase$new()}}
-\item \href{#method-fit}{\code{CBRBase$fit()}}
-\item \href{#method-calc_distance_matrix}{\code{CBRBase$calc_distance_matrix()}}
-\item \href{#method-get_similar_cases}{\code{CBRBase$get_similar_cases()}}
-\item \href{#method-clone}{\code{CBRBase$clone()}}
+\item \href{#method-CBRBase-new}{\code{CBRBase$new()}}
+\item \href{#method-CBRBase-fit}{\code{CBRBase$fit()}}
+\item \href{#method-CBRBase-calc_distance_matrix}{\code{CBRBase$calc_distance_matrix()}}
+\item \href{#method-CBRBase-get_similar_cases}{\code{CBRBase$get_similar_cases()}}
+\item \href{#method-CBRBase-clone}{\code{CBRBase$clone()}}
 }
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-new"></a>}}
-\if{latex}{\out{\hypertarget{method-new}{}}}
+\if{html}{\out{<a id="method-CBRBase-new"></a>}}
+\if{latex}{\out{\hypertarget{method-CBRBase-new}{}}}
 \subsection{Method \code{new()}}{
 Initialize object for searching similar cases
 \subsection{Usage}{
@@ -58,8 +58,8 @@ Initialize object for searching similar cases
 }
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-fit"></a>}}
-\if{latex}{\out{\hypertarget{method-fit}{}}}
+\if{html}{\out{<a id="method-CBRBase-fit"></a>}}
+\if{latex}{\out{\hypertarget{method-CBRBase-fit}{}}}
 \subsection{Method \code{fit()}}{
 Fit the Model
 \subsection{Usage}{
@@ -75,8 +75,8 @@ Fit the Model
 }
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-calc_distance_matrix"></a>}}
-\if{latex}{\out{\hypertarget{method-calc_distance_matrix}{}}}
+\if{html}{\out{<a id="method-CBRBase-calc_distance_matrix"></a>}}
+\if{latex}{\out{\hypertarget{method-CBRBase-calc_distance_matrix}{}}}
 \subsection{Method \code{calc_distance_matrix()}}{
 Calculates the distance matrix
 \subsection{Usage}{
@@ -94,8 +94,8 @@ Calculates the distance matrix
 }
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-get_similar_cases"></a>}}
-\if{latex}{\out{\hypertarget{method-get_similar_cases}{}}}
+\if{html}{\out{<a id="method-CBRBase-get_similar_cases"></a>}}
+\if{latex}{\out{\hypertarget{method-CBRBase-get_similar_cases}{}}}
 \subsection{Method \code{get_similar_cases()}}{
 Extracts similar cases
 \subsection{Usage}{
@@ -119,8 +119,8 @@ Extracts similar cases
 }
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-clone"></a>}}
-\if{latex}{\out{\hypertarget{method-clone}{}}}
+\if{html}{\out{<a id="method-CBRBase-clone"></a>}}
+\if{latex}{\out{\hypertarget{method-CBRBase-clone}{}}}
 \subsection{Method \code{clone()}}{
 The objects of this class are cloneable with this method.
 \subsection{Usage}{

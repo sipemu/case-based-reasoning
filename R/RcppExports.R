@@ -41,10 +41,6 @@ cpp_orderVector <- function(x, sortDirection, k = 0L) {
     .Call(`_CaseBasedReasoning_cpp_orderVector`, x, sortDirection, k)
 }
 
-cpp_terminalNodeID <- function(x, childNodes1, childNodes2, splitValues, splitVarIds) {
-    .Call(`_CaseBasedReasoning_cpp_terminalNodeID`, x, childNodes1, childNodes2, splitValues, splitVarIds)
-}
-
 cpp_weighted_knn <- function(x, query, weights, k) {
     .Call(`_CaseBasedReasoning_cpp_weighted_knn`, x, query, weights, k)
 }

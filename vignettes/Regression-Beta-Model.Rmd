@@ -18,22 +18,41 @@ knitr::opts_chunk$set(echo = TRUE)
 library(CaseBasedReasoning)
 ```
 
-# Motivation
+# Motivation {#motivation}
 
-This section shows how to apply CPH regression for case-based-reasoning. The linear and logistic regression model can be applied similarly by initializing the model as follows:
+This section demonstrates how to apply Cox Proportional Hazards (CPH) regression for Case-Based Reasoning (CBR). CPH regression is a popular survival analysis technique that models the relationship between the hazard rate and the predictor variables while accounting for the time-to-event data. Linear and logistic regression models can be employed similarly for CBR by initializing the models as follows:
 
-```{r LinearBetaModel}
-# lmModel <- LinearBetaModel$new(y ~ x1 + x2 + x3)
-```
+1.  **Data Preparation**: Begin by preparing the dataset, ensuring that it includes the relevant features and the time-to-event data. For CPH regression, you'll need to include a column indicating the event status (e.g., 1 for the event occurring and 0 for censored observations). For linear and logistic regression models, prepare the dependent and independent variables accordingly.
 
-```{r LogisticBetaModel}
-# logisticModel <- LogisticBetaModel$new(y ~ x1 + x2 + x3)
-```
+2.  **Feature Selection**: Identify the most relevant features or predictor variables for the regression models. Techniques like correlation analysis, mutual information, or machine learning algorithms can be used to select the most important features for the CBR process.
 
-# Cox Proportional Hazard Model 
+3.  **Model Initialization**: Initialize the appropriate regression model for the analysis:
 
-In the first example, we use the CPH model and the `ovarian` data set from the 
-`survival` package. In the first step, we initialize the R6 data object. 
+    ```{r LinearBetaModel}
+    cox_model <- CoxBetaModel$new(Surv(futime, fustat) ~ age + resid.ds + rx + ecog.ps, ovarian)
+
+    linear_model <- LinearBetaModel$new(y ~ x1 + x2 + x3)
+
+    logistic_model <- LogisticBetaModel$new(y ~ x1 + x2 + x3)
+    ```
+
+4.  **Model Training**: Fit the initialized regression model to the training data.
+
+    ```{r}
+    cox_model$fit(training_tbl)
+    ```
+
+5.  **Model Evaluation**: Evaluate the performance of the fitted regression models using appropriate evaluation metrics, such as concordance index for CPH regression, R-squared for linear regression, or accuracy and AUC-ROC for logistic regression.
+
+6.  **Similarity Assessment**: Use the trained regression models to assess the similarity between cases by comparing the predicted outcomes or coefficients of the predictor variables. Techniques such as distance metrics or clustering algorithms can be employed to group similar cases.
+
+7.  **Retrieve, Reuse, Revise, and Retain**: After identifying the most similar cases using the trained regression models, follow the traditional CBR process. Adapt the retrieved cases to fit the new problem, evaluate the revised solution, and add the new case and solution to the database for future reference.
+
+By integrating regression models like CPH, linear, and logistic regression into the CBR process, it becomes possible to capture the relationships between variables more effectively, leading to more accurate identification of similar cases and improved problem-solving capabilities.
+
+# Cox Proportional Hazard Model {#cox-proportional-hazard-model}
+
+In the first example, we demonstrate the application of the Cox Proportional Hazards (CPH) model using the ovarian dataset from the survival package. To begin, we initialize the R6 data object, which is essential for managing and organizing the dataset. This step sets the foundation for further analysis, enabling efficient implementation of the CPH model in the Case-Based Reasoning process.
 
 ```{r initialization, warning=FALSE, message=FALSE}
 ovarian$resid.ds <- factor(ovarian$resid.ds)
@@ -43,14 +62,14 @@ ovarian$ecog.ps <- factor(ovarian$ecog.ps)
 # initialize R6 object
 coxBeta <- CoxBetaModel$new(Surv(futime, fustat) ~ age + resid.ds + rx + ecog.ps, ovarian)
 ```
-All cases with missing values in the learning and endpoint variables are dropped (`na.omit`), aand the reduced data set without missing values is saved internally. One get a text output on how many cases were dropped. `character` variables will be transformed to `factor`.
 
+In the preprocessing stage, all cases with missing values in the learning and endpoint variables are removed using the **`na.omit`** function, and the cleaned dataset is stored internally. A text output is provided, indicating the number of cases that were dropped due to missing values. Additionally, any character variables present in the data are converted to factor variables to ensure compatibility with subsequent statistical analyses.
 
-# Case Based Reasoning 
+# Case Based Reasoning {#case-based-reasoning}
 
-## Search for Similar Cases 
+## Search for Similar Cases {#search-for-similar-cases}
 
-After the initialization, we may want to get for each case in the query data the most similar case from the training data. 
+Once the initialization is complete, the goal is to identify the most similar case from the training data for each case in the query dataset. This process involves comparing the features of the query cases with those of the training cases, using similarity measures or statistical models, to retrieve the most closely matched cases, thereby facilitating the Case-Based Reasoning process.
 
 ```{r similarity}
 n <- nrow(ovarian)
@@ -66,34 +85,30 @@ ovarian[trainID, ] %>%
 knitr::kable(head(matchedData))
 ```
 
-You may extract then the similar cases and the verum data and put them together:
+After identifying the similar cases, you can extract them along with the verum data and compile them together. However, keep in mind the following notes:
 
-**Note 1:** In the initialization step, we dropped all cases with missing values in the variables of ` data` and ` endPoint`. So, you need to make sure that you do missing value analysis before.
+**Note 1:** During the initialization step, we removed all cases with missing values in the data and endPoint variables. Therefore, it is crucial to perform a missing value analysis before proceeding.
 
-**Note 2:** The `data.table` returned from `coxBeta$get_similar_cases` has four additional columns:
+**Note 2:** The data.table returned from **`coxBeta$get_similar_cases`** includes four additional columns:
 
-1. `caseId`: By this column, you may map the similar cases to cases in data, e.g., if you had chosen ` k = 3`, then the first three elements in the column `caseId` will be ` 1` (following three ` 2` and so on). These three cases are the three most similar cases to case ` 0` in verum data.
-2. `scDist`: The calculated distance
-3. `scCaseId`: Grouping number of the query with matched data
-4. `group`: Grouping matched or query data
+1.  `caseId`: This column allows you to map the similar cases to cases in the data. For example, if you had chosen k=3, the first three elements in the caseId column will be 1 (followed by three 2's, and so on). These three cases are the three most similar cases to case 0 in the verum data.
+2.  `scDist`: The calculated distance between the cases.
+3.  `scCaseId`: Grouping number of the query case with its matched data.
+4.  `group`: Grouping indicator for matched or query data.
 
+These additional columns aid in organizing and interpreting the results, ensuring a clear understanding of the most similar cases and their corresponding query cases.
 
-## Check Proportional Hazard Assumption
+## Check Proportional Hazard Assumption {#check-proportional-hazard-assumption}
 
-Finally, the Cox proportional hazard assumption can/should be checked for model
-validity.
+Lastly, it is important to check the Cox proportional hazard assumption to ensure the validity of the model. This assumption states that the hazard ratios between different groups remain constant over time. By verifying this assumption, you can confirm that the relationships captured by the model are accurate and reliable for the given dataset, ultimately enhancing the effectiveness of the Case-Based Reasoning process.
 
 ```{r proportional hazard, warning=FALSE, message=FALSE, fig.width=8, fig.height=8}
 coxBeta$check_ph()
 ```
 
-## Validation of the matching Variables
+# Distance Matrix Calculation {#distance-matrix-calculation}
 
-**TBD**
-
-# Distance Matrix Calculation
-
-Alternatively, you may be interested in the distance matrix:
+Alternatively, you might be interested in examining the distance matrix to better understand the relationships between cases:
 
 ```{r distance_matrix, fig.width=8, fig.height=8}
 ovarian %>%
@@ -101,5 +116,7 @@ ovarian %>%
 
 heatmap(distMatrix)
 ```
-`coxBeta$calc_distance_matrix()` calculates the distance matrix between train and test data, when test data is omitted, the distances between observations in the test data is calculated. Rows are observations in train and columns observations of test.
-The distance matrix is saved internally in the `CoxBetaModel` object: `coxBeta$distMat`.
+
+**`coxBeta$calc_distance_matrix()`** computes the distance matrix between the train and test data. If test data is omitted, the function calculates the distances between observations in the train data. In the resulting matrix, rows represent observations in the train data, and columns represent observations in the test data. The distance matrix is stored internally in the **`CoxBetaModel`** object as **`coxBeta$distMat`**.
+
+Visualizing the distance matrix as a heatmap can provide insights into the relationships between cases, assisting in the identification of similar cases and improving the Case-Based Reasoning process.

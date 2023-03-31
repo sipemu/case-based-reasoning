@@ -19,17 +19,8 @@ terminalNodes <- function(x, rfObject) {
   testthat::expect_is(rfObject, "ranger")
   testthat::expect_false(object = is.null(rfObject$forest), 
                          info   = "Ranger object does not contain a forest.")
-  x <- as.matrix(x)
-  res=sapply(1:rfObject$num.trees, function(tree) {
-    cpp_terminalNodeID(x = x, 
-                       childNodes1 = rfObject$forest$child.nodeIDs[[tree]][[1]], 
-                       childNodes2 = rfObject$forest$child.nodeIDs[[tree]][[2]], 
-                       splitValues = as.double(rfObject$forest$split.values[[tree]]),
-                       splitVarIds = rfObject$forest$split.varIDs[[tree]])
-  }, simplify = F)
-  res <- do.call(cbind, res)
-  # switch from 0-index to 1-index
-  as.matrix(res) + 1
+  res = predict(rfObject, x, type="terminalNodes")
+  res$predictions
 }
 
 

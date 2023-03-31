@@ -19,8 +19,8 @@ k (= 1,...,l) similar cases from the train data. We use the rms-package for mode
 variable selection, and checking model assumptions.
 If the user omits the test data, this functions returns a n x n-distance matrix.
 }
-\section{Super class}{
-\code{\link[CaseBasedReasoning:CBRBase]{CaseBasedReasoning::CBRBase}} -> \code{CoxBetaModel}
+\section{Super classes}{
+\code{\link[CaseBasedReasoning:CBRBase]{CaseBasedReasoning::CBRBase}} -> \code{\link[CaseBasedReasoning:RegressionModel]{CaseBasedReasoning::RegressionModel}} -> \code{CoxBetaModel}
 }
 \section{Public fields}{
 \if{html}{\out{<div class="r6-fields">}}
@@ -34,23 +34,25 @@ If the user omits the test data, this functions returns a n x n-distance matrix.
 \section{Methods}{
 \subsection{Public methods}{
 \itemize{
-\item \href{#method-check_ph}{\code{CoxBetaModel$check_ph()}}
-\item \href{#method-clone}{\code{CoxBetaModel$clone()}}
+\item \href{#method-CoxBetaModel-check_ph}{\code{CoxBetaModel$check_ph()}}
+\item \href{#method-CoxBetaModel-clone}{\code{CoxBetaModel$clone()}}
 }
 }
-\if{html}{
-\out{<details open ><summary>Inherited methods</summary>}
-\itemize{
-\item \out{<span class="pkg-link" data-pkg="CaseBasedReasoning" data-topic="CBRBase" data-id="calc_distance_matrix">}\href{../../CaseBasedReasoning/html/CBRBase.html#method-calc_distance_matrix}{\code{CaseBasedReasoning::CBRBase$calc_distance_matrix()}}\out{</span>}
-\item \out{<span class="pkg-link" data-pkg="CaseBasedReasoning" data-topic="CBRBase" data-id="fit">}\href{../../CaseBasedReasoning/html/CBRBase.html#method-fit}{\code{CaseBasedReasoning::CBRBase$fit()}}\out{</span>}
-\item \out{<span class="pkg-link" data-pkg="CaseBasedReasoning" data-topic="CBRBase" data-id="get_similar_cases">}\href{../../CaseBasedReasoning/html/CBRBase.html#method-get_similar_cases}{\code{CaseBasedReasoning::CBRBase$get_similar_cases()}}\out{</span>}
-\item \out{<span class="pkg-link" data-pkg="CaseBasedReasoning" data-topic="CBRBase" data-id="initialize">}\href{../../CaseBasedReasoning/html/CBRBase.html#method-initialize}{\code{CaseBasedReasoning::CBRBase$initialize()}}\out{</span>}
-}
-\out{</details>}
-}
+\if{html}{\out{
+<details><summary>Inherited methods</summary>
+<ul>
+<li><span class="pkg-link" data-pkg="CaseBasedReasoning" data-topic="CBRBase" data-id="calc_distance_matrix"><a href='../../CaseBasedReasoning/html/CBRBase.html#method-CBRBase-calc_distance_matrix'><code>CaseBasedReasoning::CBRBase$calc_distance_matrix()</code></a></span></li>
+<li><span class="pkg-link" data-pkg="CaseBasedReasoning" data-topic="CBRBase" data-id="get_similar_cases"><a href='../../CaseBasedReasoning/html/CBRBase.html#method-CBRBase-get_similar_cases'><code>CaseBasedReasoning::CBRBase$get_similar_cases()</code></a></span></li>
+<li><span class="pkg-link" data-pkg="CaseBasedReasoning" data-topic="CBRBase" data-id="initialize"><a href='../../CaseBasedReasoning/html/CBRBase.html#method-CBRBase-initialize'><code>CaseBasedReasoning::CBRBase$initialize()</code></a></span></li>
+<li><span class="pkg-link" data-pkg="CaseBasedReasoning" data-topic="RegressionModel" data-id="fit"><a href='../../CaseBasedReasoning/html/RegressionModel.html#method-RegressionModel-fit'><code>CaseBasedReasoning::RegressionModel$fit()</code></a></span></li>
+<li><span class="pkg-link" data-pkg="CaseBasedReasoning" data-topic="RegressionModel" data-id="print"><a href='../../CaseBasedReasoning/html/RegressionModel.html#method-RegressionModel-print'><code>CaseBasedReasoning::RegressionModel$print()</code></a></span></li>
+<li><span class="pkg-link" data-pkg="CaseBasedReasoning" data-topic="RegressionModel" data-id="variable_selection"><a href='../../CaseBasedReasoning/html/RegressionModel.html#method-RegressionModel-variable_selection'><code>CaseBasedReasoning::RegressionModel$variable_selection()</code></a></span></li>
+</ul>
+</details>
+}}
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-check_ph"></a>}}
-\if{latex}{\out{\hypertarget{method-check_ph}{}}}
+\if{html}{\out{<a id="method-CoxBetaModel-check_ph"></a>}}
+\if{latex}{\out{\hypertarget{method-CoxBetaModel-check_ph}{}}}
 \subsection{Method \code{check_ph()}}{
 Check proportional hazard assumption graphically
 \subsection{Usage}{
@@ -59,8 +61,8 @@ Check proportional hazard assumption graphically
 
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-clone"></a>}}
-\if{latex}{\out{\hypertarget{method-clone}{}}}
+\if{html}{\out{<a id="method-CoxBetaModel-clone"></a>}}
+\if{latex}{\out{\hypertarget{method-CoxBetaModel-clone}{}}}
 \subsection{Method \code{clone()}}{
 The objects of this class are cloneable with this method.
 \subsection{Usage}{
