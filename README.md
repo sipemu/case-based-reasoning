@@ -4,7 +4,7 @@
 
 The R package case-based-reasoning provides an R interface case-based reasoning using machine learning methods.
 
-## Introduction: What is Case Based Reasoning? {#introduction}
+## Introduction: What is Case Based Reasoning?
 
 Case-Based Reasoning (CBR) is an artificial intelligence (AI) and problem-solving methodology that leverages the knowledge and experience gained from previously encountered situations, known as cases, to address new and complex problems. CBR relies on the principle that similar problems often have similar solutions, and it focuses on identifying, adapting, and reusing those solutions to solve new problems.
 
@@ -22,18 +22,18 @@ CBR has been successfully applied in various domains, including medical diagnosi
 
 In the context of observational studies, Case-Based Reasoning (CBR) can be integrated with statistical models to enhance the process of searching for similar cases, especially when dealing with large and complex datasets. By applying statistical techniques, the system can identify patterns, relationships, and associations among variables that are relevant to the problem at hand. This approach can lead to more accurate and efficient retrieval of relevant cases, ultimately improving the quality of the derived solutions (See our Vignettes).
 
-## Installation {#installation}
+## Installation
 
-#### CRAN {#cran}
+#### CRAN
 
     install.packages("CaseBasedReasoning")
 
-#### GITHUB {#github}
+#### GITHUB
 
     install.packages("devtools")
     devtools::install_github("sipemu/case-based-reasoning")
 
-## Features {#features}
+## Features
 
 This R package provides two methods case-based reasoning by using an endpoint:
 
@@ -43,15 +43,15 @@ This R package provides two methods case-based reasoning by using an endpoint:
 
 Besides the functionality of searching for similar cases, we added some additional features:
 
--   automatic validation of the critical variables between the query and similar cases dataset
+-   Automatic validation of the critical variables between the query and similar cases dataset
 
--   checking proportional hazard assumption for the Cox Model
+-   Checking proportional hazard assumption for the Cox Model
 
 -   C++-functions for distance calculation
 
-## Example: Cox Beta Model {#example-cox-beta-model}
+## Example: Cox Beta Model
 
-### Initialization {#initialization}
+### Initialization
 
 In the first example, we use the CPH model and the `ovarian` data set from the `survival` package. In the first step, we initialize the R6 data object.
 
@@ -65,7 +65,7 @@ In the first example, we use the CPH model and the `ovarian` data set from the `
     # initialize R6 object
     coxBeta <- CoxBetaModel$new(Surv(futime, fustat) ~ age + resid.ds + rx + ecog.ps)
 
-### Similar Cases {#similar-cases}
+### Similar Cases
 
 After the initialization, we may want to get for each case in the query data the most similar case from the learning data.
 
@@ -93,7 +93,7 @@ You may extract then the similar cases and the verum data and put them together:
 3.  `scCaseId`: Grouping number of the query with matched data
 4.  `group`: Grouping matched or query data
 
-### Distance Matrix {#distance-matrix}
+### Distance Matrix
 
 Alternatively, you may be interested in the distance matrix:
 
@@ -104,9 +104,9 @@ ovarian %>%
 
 `coxBeta$calc_distance_matrix()` calculates the distance matrix between train and test data, when test data is omitted, the distances between observations in the test data is calculated. Rows are observations in train and columns observations of test. The distance matrix is saved internally in the `CoxBetaModel` object: `coxBeta$distMat`.
 
-## Example: RandomForest Model {#example-randomforest-model}
+## Example: RandomForest Model
 
-### Initialization {#initialization-1}
+### Initialization
 
 In the second example, we apply a RandomForest model for approximating the distance measure on the `ovarian` data. Two possibilities for distance/similarity calculation are offered (details can be found in the documentation):
 
@@ -165,33 +165,33 @@ ovarian %>%
   rfSC$calc_distance_matrix() -> distMatrix
 ```
 
-## Contribution {#contribution}
+## Contribution 
 
-### Responsible for Mathematical Model Development and Programming {#responsible-for-mathematical-model-development-and-programming}
+### Responsible for Mathematical Model Development and Programming 
 
 -   [PD Dr. Jürgen Dippon](http://www.isa.uni-stuttgart.de/LstStoch/Dippon/), Institut für Stochastik und Anwendungen, Universität Stuttgart
 
 -   [Dr. Simon Müller](http://muon-stat.com/), TTI GmbH - MUON-STAT
 
-### Medical Advisor {#medical-advisor}
+### Medical Advisor
 
 -   Dr. Peter Fritz
 
 -   Professor Dr. Friedel
 
-### Funding {#funding}
+### Funding
 
 The Robert Bosch Foundation funded this work. Special thanks go to Professor Dr. Friedel ([Thoraxchirugie - Klinik Schillerhöhe](http://www.rbk.de/standorte/klinik-schillerhoehe/abteilungen/thoraxchirurgie/team.html)).
 
-## References {#references}
+## References
 
-### Main {#main}
+### Main
 
 -   Dippon et al. [A statistical approach to case based reasoning, with application to breast cancer data](http://dl.acm.org/citation.cfm?id=608456) (2002),
 
 -   Friedel et al. [Postoperative Survival of Lung Cancer Patients: Are There Predictors beyond TNM?](http://ar.iiarjournals.org/content/33/4/1609.short) (2012).
 
-### Other {#other}
+### Other
 
 -   Englund and Verikas [A novel approach to estimate proximity in a random forest: An exploratory study](https://www.researchgate.net/publication/257404436_A_novel_approach_to_estimate_proximity_in_a_random_forest_An_exploratory_study)
 
