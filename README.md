@@ -49,6 +49,28 @@ Besides the functionality of searching for similar cases, we added some addition
 
 -   C++-functions for distance calculation
 
+## Warning Message
+
+"Warning: Cases with missing values in the dependent variable (Y) or predictor variables (X) have been dropped from the analysis. This may lead to a reduced dataset and potential loss of information. Please review your data and consider appropriate missing value imputation techniques to mitigate these issues."
+
+Potential Solutions:
+
+-   **Missing Value Analysis**: Conduct a thorough missing value analysis to understand the nature and extent of the missing data. Determine if the data is missing at random (MAR), missing completely at random (MCAR), or missing not at random (MNAR). This information will guide the choice of imputation methods.
+
+-   **Imputation Techniques:** Depending on the nature of the missing data, various imputation techniques can be applied to fill in the gaps:
+
+    a.  **Mean/Median/Mode Imputation**: Replace missing values with the mean, median, or mode of the variable. This method is simple but can distort the distribution of the data.
+
+    b.  **Regression Imputation**: Use linear regression models to predict missing values based on the relationships between the predictor variables. This technique assumes that the relationships between variables are linear.
+
+    c.  **k-Nearest Neighbors Imputation (k-NN)**: Fill in missing values using the values from the k most similar cases in the dataset. The similarity is determined using distance metrics such as Euclidean or Manhattan distance.
+
+    d.  **Multiple Imputation**: Generate multiple imputed datasets by creating a range of plausible values for each missing value. Analyze each imputed dataset separately and then pool the results to obtain a final estimate.
+
+-   **Sensitivity Analysis**: After applying an imputation method, perform a sensitivity analysis to assess the impact of the imputed values on the overall results. This will help evaluate the robustness of the findings and the potential biases introduced by the imputation.
+
+By addressing missing values appropriately, you can mitigate the risk of losing valuable information and improve the quality of the analysis.
+
 ## Example: Cox Beta Model
 
 ### Initialization
@@ -82,20 +104,37 @@ ovarian[testID, ] %>%
   coxBeta$get_similar_cases(queryData = ovarian[testID, ], k = 3) -> matchedData
 ```
 
-You may extract then the similar cases and the verum data and put them together:
+To analyze the results, you can extract the similar cases and training data and combine them:
 
-**Note 1:** In the initialization step, we dropped all cases with missing values in the variables of `data` and `endPoint`. So, you need to make sure that you do missing value analysis before.
+-   **Note 1**: During the initialization step, all cases with missing values in the data and endPoint variables were removed. Be sure to conduct a missing value analysis beforehand.
 
-**Note 2:** The `data.table` returned from `coxBeta$get_similar_cases` has four additional columns:
+-   **Note 2**: The data.table returned from coxBeta\$get_similar_cases contains four columns that help identify the query cases, their matches, and the distances between them:
 
-1.  `caseId`: By this column, you may map the similar cases to cases in data, e.g., if you had chosen `k = 3`, then the first three elements in the column `caseId` will be `1` (following three `2` and so on). These three cases are the three most similar cases to case `0` in verum data.
-2.  `scDist`: The calculated distance
-3.  `scCaseId`: Grouping number of the query with matched data
-4.  `group`: Grouping matched or query data
+    -   **caseId**: This column allows you to map the similar cases to cases in the data. For example, if you chose k = 3, the first three elements in the caseId column will be 1 (followed by three 2s, and so on). These three cases are the three most similar cases to case 0 in the verum data.
+
+    -   **scDist**: The calculated distance between the cases.
+
+    -   **scCaseId**: Grouping number of the query case with its matched data.
+
+    -   **group**: Grouping indicator for matched or query data.
+
+These columns help organize and interpret the results, ensuring a clear understanding of the most similar cases and their corresponding query cases.
 
 ### Distance Matrix
 
-Alternatively, you may be interested in the distance matrix:
+The distance matrix is a square matrix that represents the pairwise distances between a set of data points. In the context of Case-Based Reasoning (CBR), the distance matrix captures the dissimilarities between cases in the training and test (or query) datasets, based on the fitted model and the values of the predictor variables.
+
+The distance matrix can be helpful in various situations:
+
+-   **Identifying Similar Cases**: By examining the distance matrix, you can identify the most similar cases to a given query case. Smaller distances indicate higher similarity, enabling the retrieval of relevant cases for CBR.
+
+-   **Clustering and Grouping**: The distance matrix can be used as input for clustering algorithms, such as hierarchical clustering or k-means clustering, to group cases with similar characteristics. This can provide insights into the structure and patterns within the data.
+
+-   **Visualizing Relationships**: By creating a heatmap of the distance matrix, you can visualize the relationships between cases. This representation can help identify trends and anomalies in the data, guiding further analysis and decision-making.
+
+-   **Model Validation**: The distance matrix can be used to assess the performance of the CPH regression model or other statistical models employed in the CBR process. Comparing the distance matrix for different models can help determine which model better captures the relationships between cases.
+
+In summary, a distance matrix can provide valuable insights into the relationships between cases, facilitate the identification of similar cases for CBR, and aid in the validation of the chosen statistical models.
 
 ```{r}
 ovarian %>%
@@ -110,9 +149,9 @@ ovarian %>%
 
 In the second example, we apply a RandomForest model for approximating the distance measure on the `ovarian` data. Two possibilities for distance/similarity calculation are offered (details can be found in the documentation):
 
--   Proximity: When comparing two observations, the mean of having the same end node over all trees is calculated
+-   **Proximity**: When comparing two observations, the mean of having the same end node over all trees is calculated
 
--   Depth: When comparing two observations, the mean length of edges between the two end nodes over all trees is calculated
+-   **Depth**: When comparing two observations, the mean length of edges between the two end nodes over all trees is calculated
 
 Let's initialize the model object:
 
@@ -125,7 +164,7 @@ ovarian$rx <- factor(ovarian$rx)
 ovarian$ecog.ps <- factor(ovarian$ecog.ps)
 
 # initialize R6 object
-rfSC <- RFModel$new(Surv(futime, fustat) ~ age + resid.ds + rx + ecog.ps)
+rfSC <- RFModel$new(Surv(futime, fustat) ~ age + resid.ds + rx + ecog.ps, ovarian)
 ```
 
 All observations with missing values in training and endpoint variables are dropped (`na.omit`) and the reduced data without missing values is stored internally. You get a text output on how many cases were dropped. Furthermore, `character` variables will be transformed to `factor`.
@@ -165,9 +204,9 @@ ovarian %>%
   rfSC$calc_distance_matrix() -> distMatrix
 ```
 
-## Contribution 
+## Contribution
 
-### Responsible for Mathematical Model Development and Programming 
+### Responsible for Mathematical Model Development and Programming
 
 -   [PD Dr. Jürgen Dippon](http://www.isa.uni-stuttgart.de/LstStoch/Dippon/), Institut für Stochastik und Anwendungen, Universität Stuttgart
 

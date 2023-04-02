@@ -65,6 +65,72 @@ coxBeta <- CoxBetaModel$new(Surv(futime, fustat) ~ age + resid.ds + rx + ecog.ps
 
 In the preprocessing stage, all cases with missing values in the learning and endpoint variables are removed using the **`na.omit`** function, and the cleaned dataset is stored internally. A text output is provided, indicating the number of cases that were dropped due to missing values. Additionally, any character variables present in the data are converted to factor variables to ensure compatibility with subsequent statistical analyses.
 
+# Available Models
+
+In the context of Case-Based Reasoning (CBR), linear regression, logistic regression, and Cox proportional hazards regression can be used for estimating the similarity between cases. Each of these regression methods has its own advantages and disadvantages, which are outlined below.
+
+## **Linear Regression**
+
+Advantages:
+
+1.  Simplicity: Linear regression models are easy to understand and interpret, which makes it straightforward to explain the model's behavior to stakeholders.
+
+2.  Speed: Linear regression models are computationally efficient, requiring less processing power and time to fit compared to more complex models.
+
+Disadvantages:
+
+1.  Limited to continuous dependent variables: Linear regression models can only be applied to problems with continuous dependent variables, which limits their applicability in CBR scenarios.
+
+## **Logistic Regression**
+
+Advantages:
+
+1.  Binary classification: Logistic regression is suitable for binary classification problems, making it more applicable in CBR scenarios where the outcome is binary (e.g., success or failure).
+
+2.  Interpretability: Logistic regression models provide insights into the relationship between variables through coefficients, allowing for easier interpretation of feature importance.
+
+Disadvantages:
+
+1.  Limited to linear relationships: Logistic regression models assume a linear relationship between the independent variables and the logit transformation of the dependent variable, which may not always hold true in real-world situations.
+
+## **Cox Proportional Hazards Regression**
+
+Advantages:
+
+1.  Time-to-event data: Cox proportional hazards regression is specifically designed for time-to-event data, making it highly applicable in CBR scenarios where the outcome is a survival or failure event occurring over time.
+
+2.  Deals with censoring: Cox proportional hazards regression can handle right-censored data, which is common in survival analysis scenarios.
+
+Disadvantages:
+
+1.  Proportional hazards assumption: Cox proportional hazards regression assumes that the hazard ratios are constant over time, which may not always hold true in real-world situations.
+
+2.  More complex: Cox proportional hazards regression is more complex compared to linear and logistic regression models, which can make explaining the model's behavior to stakeholders more challenging.
+
+In conclusion, the choice between linear regression, logistic regression, and Cox proportional hazards regression for CBR depends on the specific problem and dataset at hand. Factors such as the type of dependent variable (continuous, binary, or time-to-event), the presence of censoring, and the need for interpretability should all be considered when selecting the most appropriate method.
+
+## **Random Forests**
+
+Advantages:
+
+1.  Non-linear relationships: Random forests can capture complex, non-linear relationships between variables, making them suitable for a wider range of problems.
+
+2.  Robustness to outliers: Random forests are less susceptible to outliers compared to linear regression models, leading to more stable predictions.
+
+3.  Feature interactions: Random forests can capture interactions between features, which can be particularly useful in CBR when there are complex relationships between variables.
+
+4.  Reduced overfitting: Random forests employ an ensemble of decision trees, which generally results in reduced overfitting compared to single models, such as linear regression.
+
+Disadvantages:
+
+1.  Complexity: Random forests are more complex and harder to interpret compared to linear regression models, which can make explaining the model's behavior to stakeholders more challenging.
+
+2.  Computationally expensive: Random forests require more processing power and time to fit compared to linear regression models, particularly with large datasets and a high number of trees.
+
+3.  Less interpretable feature importance: Although random forests can provide feature importance scores, interpreting these scores can be more challenging compared to the coefficients of a linear regression model.
+
+In conclusion, the choice between linear regression models and random forests for CBR depends on the specific problem and dataset at hand. Factors such as the complexity of relationships between variables, the presence of outliers, computational resources, and the need for interpretability should all be considered when selecting the most appropriate method.
+
 # Case Based Reasoning {#case-based-reasoning}
 
 ## Search for Similar Cases {#search-for-similar-cases}
