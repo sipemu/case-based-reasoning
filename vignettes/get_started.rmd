@@ -1,5 +1,5 @@
 ---
-title: "Regression-Beta-Models"
+title: "Get Started"
 author: "Dr. Simon Müller"
 date: "`r Sys.Date()`"
 output:
@@ -8,7 +8,7 @@ output:
     number_sections: yes
     toc: yes
 vignette: >
-  %\VignetteIndexEntry{Regression-Beta-Models}
+  %\VignetteIndexEntry{Get Started}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
 ---

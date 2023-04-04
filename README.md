@@ -1,4 +1,4 @@
-[![cran version](http://www.r-pkg.org/badges/version/CaseBasedReasoning)](https://cran.rstudio.com/web/packages/CaseBasedReasoning) [![rstudio mirror downloads](http://cranlogs.r-pkg.org/badges/CaseBasedReasoning?)](https://cran.r-project.org/web/packages/CaseBasedReasoning/)
+[![cran version](http://www.r-pkg.org/badges/version/CaseBasedReasoning)](https://CRAN.R-project.org/package=CaseBasedReasoning) [![rstudio mirror downloads](http://cranlogs.r-pkg.org/badges/CaseBasedReasoning?)](https://CRAN.R-project.org/package=CaseBasedReasoning/)
 
 # Case Based Reasoning using Statistical Models
 
@@ -158,20 +158,20 @@ ditance_matrix = cph_model$fit$calc_distance_matrix()
 
 ### Funding
 
-The Robert Bosch Foundation funded this work. Special thanks go to Professor Dr. Friedel ([Thoraxchirugie - Klinik Schillerhöhe](http://www.rbk.de/standorte/klinik-schillerhoehe/abteilungen/thoraxchirurgie/team.html)).
+The Robert Bosch Foundation funded this work. Special thanks go to Professor Dr. Friedel (Thoraxchirugie - Klinik Schillerhöhe).
 
 ## References
 
 ### Main
 
--   Dippon et al. [A statistical approach to case based reasoning, with application to breast cancer data](http://dl.acm.org/citation.cfm?id=608456) (2002),
+-   Dippon et al. [A statistical approach to case based reasoning, with application to breast cancer data](https://dl.acm.org/citation.cfm?id=608456) (2002),
 
--   Friedel et al. [Postoperative Survival of Lung Cancer Patients: Are There Predictors beyond TNM?](http://ar.iiarjournals.org/content/33/4/1609.short) (2012).
+-   Friedel et al. [Postoperative Survival of Lung Cancer Patients: Are There Predictors beyond TNM?](https://ar.iiarjournals.org/content/33/4/1609.short) (2012).
 
 ### Other {#other}
 
 -   Englund and Verikas [A novel approach to estimate proximity in a random forest: An exploratory study](https://www.researchgate.net/publication/257404436_A_novel_approach_to_estimate_proximity_in_a_random_forest_An_exploratory_study)
 
--   Stuart, E. et al. [Matching methods for causal inference: Designing observational studies](http://www.biostat.jhsph.edu/~estuart/StuRub_MatchingChapter_07.pdf)
+-   Stuart, E. et al. [Matching methods for causal inference: Designing observational studies](https://www.biostat.jhsph.edu/~estuart/StuRub_MatchingChapter_07.pdf)
 
--   Defossez et al. [Temporal representation of care trajectories of cancer patients using data from a regional information system: an application in breast cancer](http://www.biomedcentral.com/1472-6947/14/24)
+-   Defossez et al. [Temporal representation of care trajectories of cancer patients using data from a regional information system: an application in breast cancer](https://www.biomedcentral.com/1472-6947/14/24)
