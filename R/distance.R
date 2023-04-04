@@ -71,8 +71,8 @@ distanceRandomForest <- function(x, y = NULL, rfObject, method = "Proximity", th
 #' }
 #' @export
 proximity_distance <- function(x, y = NULL, rfObject, as_dist=T) {
-  x %>% 
-    as.matrix() %>% 
+  x |>
+    as.matrix() |>
     terminalNodes(rfObject) -> xNodes
   if (is.null(y)) {
     d <- cpp_proximityMatrix(xNodes)
@@ -80,8 +80,8 @@ proximity_distance <- function(x, y = NULL, rfObject, as_dist=T) {
     # convert to dist object
     rf_dist <- asDistObject(d, n, "RFProximity")
   } else {
-    y %>% 
-      as.matrix() %>% 
+    y |>
+      as.matrix() |>
       terminalNodes(rfObject) -> yNodes
     rf_dist <- cpp_proximityMatrixRangerXY(xNodes, yNodes)
   }
@@ -112,10 +112,10 @@ proximity_distance <- function(x, y = NULL, rfObject, as_dist=T) {
 #' 
 #' @export
 depth_distance <- function(x, y=NULL, rfObject) {
-  x %>% 
-    as.matrix() %>% 
+  x |>
+    as.matrix() |>
     terminalNodes(rfObject) -> xNodes
-  rfObject %>% 
+  rfObject |>
     ranger_forests_to_matrix() -> rfTrees
   if (is.null(y)) {
     d <- cpp_depthMatrix(xNodes, rfTrees) 
@@ -123,8 +123,8 @@ depth_distance <- function(x, y=NULL, rfObject) {
     # convert to dist object
     rf_dist <- asDistObject(d, n, "RFDepth")
   } else {
-    y %>% 
-      as.matrix() %>% 
+    y |>
+      as.matrix() |>
       terminalNodes(rfObject) -> yNodes
     rf_dist <- cpp_depthMatrixRangerXY(xNodes, yNodes, rfTrees)
   }
@@ -153,8 +153,8 @@ edges_between_terminal_nodes <- function(rfObject) {
   testthat::expect_is(rfObject, "ranger")
   testthat::expect_false(object = is.null(rfObject$forest), 
                          info   = "Ranger object does not contain a forest.")
-  rfObject %>% 
-    ranger_forests_to_matrix() %>% 
+  rfObject |>
+    ranger_forests_to_matrix() |>
     cpp_TerminalNodeDistance()
 }
 

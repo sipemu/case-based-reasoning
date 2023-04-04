@@ -52,7 +52,7 @@ ranger_forests_to_matrix <- function(rfObject) {
                split_id = rfObject$forest$split.varIDs[[t]])
   }, simplify = F)
   res <- do.call(rbind, res)
-  res %>% 
+  res |>
     as.matrix()
 }
 

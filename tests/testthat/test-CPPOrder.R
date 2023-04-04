@@ -3,7 +3,7 @@ testthat::context("Order")
 testthat::test_that("Vector ordering", {
   set.seed(1234)
   x <- sample(1:20, size = 20)
-  xOrder <- CaseBasedReasoning:::cpp_orderVector(x, sortDirection=0) %>% 
+  xOrder <- CaseBasedReasoning:::cpp_orderVector(x, sortDirection=0) |>
     as.numeric()
   yOrder <- order(x)
   testthat::expect_equal(xOrder, yOrder)

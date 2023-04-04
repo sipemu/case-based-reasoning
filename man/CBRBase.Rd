@@ -14,6 +14,8 @@ Root class for common functionality of this package
 \describe{
 \item{\code{model}}{the statistical model}
 
+\item{\code{data}}{training data}
+
 \item{\code{model_fit}}{trained object}
 
 \item{\code{formula}}{Object of class formula or character describing the model fit}
@@ -63,7 +65,7 @@ Initialize object for searching similar cases
 \subsection{Method \code{fit()}}{
 Fit the Model
 \subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{CBRBase$fit(x)}\if{html}{\out{</div>}}
+\if{html}{\out{<div class="r">}}\preformatted{CBRBase$fit()}\if{html}{\out{</div>}}
 }
 
 \subsection{Arguments}{
@@ -80,15 +82,15 @@ Fit the Model
 \subsection{Method \code{calc_distance_matrix()}}{
 Calculates the distance matrix
 \subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{CBRBase$calc_distance_matrix(x, query = NULL)}\if{html}{\out{</div>}}
+\if{html}{\out{<div class="r">}}\preformatted{CBRBase$calc_distance_matrix(query = NULL)}\if{html}{\out{</div>}}
 }
 
 \subsection{Arguments}{
 \if{html}{\out{<div class="arguments">}}
 \describe{
-\item{\code{x}}{Training data of class data.frame}
-
 \item{\code{query}}{Query data of class data.frame}
+
+\item{\code{x}}{Training data of class data.frame}
 }
 \if{html}{\out{</div>}}
 }
@@ -99,14 +101,12 @@ Calculates the distance matrix
 \subsection{Method \code{get_similar_cases()}}{
 Extracts similar cases
 \subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{CBRBase$get_similar_cases(x, query, k = 1, addDistance = T, merge = T)}\if{html}{\out{</div>}}
+\if{html}{\out{<div class="r">}}\preformatted{CBRBase$get_similar_cases(query, k = 1, addDistance = T, merge = F)}\if{html}{\out{</div>}}
 }
 
 \subsection{Arguments}{
 \if{html}{\out{<div class="arguments">}}
 \describe{
-\item{\code{x}}{Training data of class data.frame}
-
 \item{\code{query}}{Query data of class data.frame}
 
 \item{\code{k}}{number of similar cases}

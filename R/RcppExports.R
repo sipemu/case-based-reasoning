@@ -29,10 +29,6 @@ cpp_depthMatrixRangerXY <- function(xNodeIDs, yNodeIDs, terminalNodeIDs) {
     .Call(`_CaseBasedReasoning_cpp_depthMatrixRangerXY`, xNodeIDs, yNodeIDs, terminalNodeIDs)
 }
 
-weighted_knn <- function(x, query, weights, sortDirection, k) {
-    .Call(`_CaseBasedReasoning_weighted_knn`, x, query, weights, sortDirection, k)
-}
-
 cpp_orderMatrix <- function(x, sortDirection, k = 5L) {
     .Call(`_CaseBasedReasoning_cpp_orderMatrix`, x, sortDirection, k)
 }

@@ -11,8 +11,8 @@
 #' If the user omits the test data, this functions returns a n x n-distance matrix.
 #'
 #' @export
-CoxBetaModel <- R6Class(
-  classname = "CoxBetaModel",
+CoxModel <- R6Class(
+  classname = "CoxModel",
   inherit   = RegressionModel,
   public    = list(
     #' @field model the statistical model

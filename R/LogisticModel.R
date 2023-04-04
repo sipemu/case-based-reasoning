@@ -1,8 +1,8 @@
 #' Logistic Regression Model for Case-Based-Reasoning
 #'
 #' @export
-LogisticBetaModel <- R6Class(
-  classname = "LogisticBetaModel",
+LogisticModel <- R6Class(
+  classname = "LogisticModel",
   inherit   = RegressionModel,
   public    = list(
     #' @field model the statistical model

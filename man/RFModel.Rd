@@ -20,7 +20,7 @@ Englund and Verikas. A novel approach to estimate proximity in a random
 forest: An exploratory study.
 }
 \section{Super class}{
-\code{\link[CaseBasedReasoning:CBRBase]{CaseBasedReasoning::CBRBase}} -> \code{RFModel}
+\code{CaseBasedReasoning::CBRBase} -> \code{RFModel}
 }
 \section{Public fields}{
 \if{html}{\out{<div class="r6-fields">}}
@@ -88,7 +88,7 @@ Initialize a RandomForest object for searching similar cases.
 \subsection{Method \code{fit()}}{
 Fit the RandomForest
 \subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{RFModel$fit(x)}\if{html}{\out{</div>}}
+\if{html}{\out{<div class="r">}}\preformatted{RFModel$fit()}\if{html}{\out{</div>}}
 }
 
 \subsection{Arguments}{

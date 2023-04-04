@@ -16,7 +16,7 @@ testthat::test_that("Classification Random Forest", {
   )
   
   rf_model <- RFModel$new(class ~ ., data=df)
-  df %>% 
+  df |>
     rf_model$fit()
   testthat::expect_is(rf_model$model_fit, 'ranger')
   
@@ -43,9 +43,9 @@ testthat::test_that("Cox-Proportional-Hazard", {
   ovarian$ecog.ps <- factor(ovarian$ecog.ps)
   
   # initialize R6 object
-  cph_model <- CoxBetaModel$new(Surv(futime, fustat) ~ age + resid.ds + rx + ecog.ps, ovarian)
+  cph_model <- CoxModel$new(Surv(futime, fustat) ~ age + resid.ds + rx + ecog.ps, ovarian)
   
-  ovarian %>% 
+  ovarian |>
     cph_model$fit()
   testthat::expect_is(cph_model$model_fit, 'cph')
   

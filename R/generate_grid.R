@@ -6,7 +6,7 @@
 #' model with many unique time2event values. Therefore, we offer a reduction of 
 #' the time2event values by choosing closest elements in a grid. 
 #' 
-#' @param t2e numeric vector with tiome2event values
+#' @param t2e numeric vector with time2event values
 #' @param grid_length number of grid elements
 #' 
 #' @return a list with new_t2e and grid_error
@@ -15,15 +15,15 @@
 generate_grid <- function(t2e, grid_length = 250) {
   t2e_grid <- seq(0, max(t2e), length.out = grid_length)
   d <- CaseBasedReasoning:::cpp_weightedDistanceXY(matrix(t2e_grid), matrix(trainID$OVS), 1)
-  o <- CaseBasedReasoning:::cpp_orderMatrix(d, 0, 1) %>% 
+  o <- CaseBasedReasoning:::cpp_orderMatrix(d, 0, 1) |> 
     as.numeric()
   new_grid <- t2e_grid[o]
-  d %>% 
-    as.data.frame() %>% 
-    as.list() %>% 
+  d |> 
+    as.data.frame() |> 
+    as.list() |> 
     purrr::map2(.y = o, .f = function(x, y) {
       x[y]
-    }) %>% 
+    }) |> 
     purrr::reduce(c) -> grid_error
   
   list(grid_error = grid_error,

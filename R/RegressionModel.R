@@ -12,7 +12,7 @@ RegressionModel <- R6Class(
     #' @description 
     #' Prints information of the initialized object
     print = function() {
-      cat("Case-Based-Reasoning based Regression Beta Coefficients\n")
+      cat("Case-Based-Reasoning based Regression Coefficients\n")
       cat("---------------------------------------\n")
       cat("Model     : ", paste(self$model, collapse = ", "), '\n')
       cat("Endpoint  : ", paste(self$endPoint, collapse = ", "), '\n')
@@ -24,7 +24,7 @@ RegressionModel <- R6Class(
     #' 
     #' @param x Training data of class data.frame
     variable_selection = function(x) {
-      x %>%
+      x |>
         dplyr::select(c(self$endPoint, self$terms)) -> x
       x <- private$check_data(x)
       
@@ -60,19 +60,19 @@ RegressionModel <- R6Class(
     #' Fit the RandomForest
     #' 
     #' @param x Training data of class data.frame
-    fit = function(x) {
-      x %>%
-        dplyr::select(c(self$endPoint, self$terms)) -> x
-      x <- private$check_data(x)
+    fit = function() {
+      self$data |>
+        dplyr::select(c(self$endPoint, self$terms)) -> train_tbl
+      train_tbl <- private$check_data(train_tbl)
       
       #  datadist scoping
-      regression_data <<- rms::datadist(x)
+      regression_data <<- rms::datadist(train_tbl)
       options(datadist="regression_data")
       
       # train regression model
       func <- get(self$model, envir = as.environment('package:rms'))
       params <- self$model_params
-      params$data <- x
+      params$data <- train_tbl
       params$formula <- self$formula
       self$model_fit <- pryr::do_call(func, params)
       
@@ -82,12 +82,12 @@ RegressionModel <- R6Class(
       
       # get weights
       for (i in 1:nVars) {
-        if (is.factor(x[[self$terms[i]]])) {
-          nLev <- nlevels(x[[self$terms[i]]])
+        if (is.factor(train_tbl[[self$terms[i]]])) {
+          nLev <- nlevels(train_tbl[[self$terms[i]]])
           weightsTmp <- rep(NA, times = nLev)
-          names(weightsTmp) <- levels(x[[self$terms[i]]])
+          names(weightsTmp) <- levels(train_tbl[[self$terms[i]]])
           for (j in 1:nLev) {
-            myLevel <- paste(self$terms[i], "=", levels(x[[self$terms[i]]])[j], sep="")
+            myLevel <- paste(self$terms[i], "=", levels(train_tbl[[self$terms[i]]])[j], sep="")
             if (j==1) {
               weightsTmp[j] <- 0
             } else {
@@ -143,12 +143,7 @@ RegressionModel <- R6Class(
                   trafoWeights = trafoWeights))
     },
     # calculate weighted absolute distance 
-    get_distance_matrix=function(x, query = NULL) {
-      if (is(x, "data.table")) {
-        x <- data.table::copy(x)
-      } else {
-        x <- data.table::copy(data.table::as.data.table(x))
-      }
+    get_distance_matrix=function(query = NULL) {
       # learn if weights are empty
       testthat::expect_is(self$weights, "list", info = "Model not trained")
       testthat::expect_false(private$check_weights(), info = "NA values in regression beta coefficients!")
@@ -158,15 +153,15 @@ RegressionModel <- R6Class(
       } 
       
       # transform for weighted distance calculations
-      trData <- private$transform_data(queryData = query,  
-                                       dtData    = x, 
-                                       learnVars = self$terms, 
-                                       weights   = self$weights)
+      training_data_list <- private$transform_data(queryData = query,  
+                                                   dtData    = self$data, 
+                                                   learnVars = self$terms, 
+                                                   weights   = self$weights)
       
       # calculate distance matrix
-      self$distMat <- weightedDistance(x       = trData$data, 
-                                       y       = trData$queryData, 
-                                       weights = trData$trafoWeights) %>% 
+      self$distMat <- weightedDistance(x       = training_data_list$data, 
+                                       y       = training_data_list$queryData, 
+                                       weights = training_data_list$trafoWeights) |> 
         as.matrix()
     }
   )

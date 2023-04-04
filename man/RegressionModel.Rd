@@ -10,7 +10,7 @@ Root class for Regression Models, e.g., CPH, logistic, and linear regression
 }
 \keyword{data-preparation}
 \section{Super class}{
-\code{\link[CaseBasedReasoning:CBRBase]{CaseBasedReasoning::CBRBase}} -> \code{RegressionModel}
+\code{CaseBasedReasoning::CBRBase} -> \code{RegressionModel}
 }
 \section{Public fields}{
 \if{html}{\out{<div class="r6-fields">}}
@@ -72,7 +72,7 @@ Fast backward variable selection with penalization
 \subsection{Method \code{fit()}}{
 Fit the RandomForest
 \subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{RegressionModel$fit(x)}\if{html}{\out{</div>}}
+\if{html}{\out{<div class="r">}}\preformatted{RegressionModel$fit()}\if{html}{\out{</div>}}
 }
 
 \subsection{Arguments}{

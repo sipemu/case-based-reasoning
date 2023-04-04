@@ -80,12 +80,12 @@ In the first example, we use the CPH model and the `ovarian` data set from the `
     library(tidyverse)
     library(survival)
     library(CaseBasedReasoning)
-    ovarian$resid.ds <- factor(ovarian$resid.ds)
-    ovarian$rx <- factor(ovarian$rx)
-    ovarian$ecog.ps <- factor(ovarian$ecog.ps)
+    ovarian$resid.ds = factor(ovarian$resid.ds)
+    ovarian$rx = factor(ovarian$rx)
+    ovarian$ecog.ps = factor(ovarian$ecog.ps)
 
     # initialize R6 object
-    coxBeta <- CoxBetaModel$new(Surv(futime, fustat) ~ age + resid.ds + rx + ecog.ps)
+    cph_model = CoxModel$new(Surv(futime, fustat) ~ age + resid.ds + rx + ecog.ps)
 
 ### Similar Cases
 
@@ -93,15 +93,14 @@ After the initialization, we may want to get for each case in the query data the
 
 ```{r}
 n <- nrow(ovarian)
-trainID <- sample(1:n, floor(0.8 * n), F)
-testID <- (1:n)[-trainID]
+trainID = sample(1:n, floor(0.8 * n), F)
+testID = (1:n)[-trainID]
 
 # fit model 
-ovarian[trainID, ] %>% 
-  coxBeta$fit()
+cph_model$fit()
+
 # get similar cases
-ovarian[testID, ] %>%
-  coxBeta$get_similar_cases(queryData = ovarian[testID, ], k = 3) -> matchedData
+matched_tbl = cph_model$get_similar_cases(queryData = ovarian[testID, ], k = 3)
 ```
 
 To analyze the results, you can extract the similar cases and training data and combine them:
@@ -137,72 +136,11 @@ The distance matrix can be helpful in various situations:
 In summary, a distance matrix can provide valuable insights into the relationships between cases, facilitate the identification of similar cases for CBR, and aid in the validation of the chosen statistical models.
 
 ```{r}
-ovarian %>%
-  coxBeta$calc_distance_matrix() -> distMatrix
+ditance_matrix = cph_model$fit$calc_distance_matrix()
 ```
 
-`coxBeta$calc_distance_matrix()` calculates the distance matrix between train and test data, when test data is omitted, the distances between observations in the test data is calculated. Rows are observations in train and columns observations of test. The distance matrix is saved internally in the `CoxBetaModel` object: `coxBeta$distMat`.
+`cph_model$calc_distance_matrix()` calculates the distance matrix between train and test data, when test data is omitted, the distances between observations in the test data is calculated. Rows are observations in train and columns observations of test. The distance matrix is saved internally in the `CoxModel` object: `cph_model$distMat`.
 
-## Example: RandomForest Model
-
-### Initialization
-
-In the second example, we apply a RandomForest model for approximating the distance measure on the `ovarian` data. Two possibilities for distance/similarity calculation are offered (details can be found in the documentation):
-
--   **Proximity**: When comparing two observations, the mean of having the same end node over all trees is calculated
-
--   **Depth**: When comparing two observations, the mean length of edges between the two end nodes over all trees is calculated
-
-Let's initialize the model object:
-
-```{r, warning=FALSE, message=FALSE}
-library(tidyverse)
-library(survival)
-library(CaseBasedReasoning)
-ovarian$resid.ds <- factor(ovarian$resid.ds)
-ovarian$rx <- factor(ovarian$rx)
-ovarian$ecog.ps <- factor(ovarian$ecog.ps)
-
-# initialize R6 object
-rfSC <- RFModel$new(Surv(futime, fustat) ~ age + resid.ds + rx + ecog.ps, ovarian)
-```
-
-All observations with missing values in training and endpoint variables are dropped (`na.omit`) and the reduced data without missing values is stored internally. You get a text output on how many cases were dropped. Furthermore, `character` variables will be transformed to `factor`.
-
-Optionally, you can adjust RandomForest parameters when initializing the model. The documentation of set able parameters can be found in the ranger R-package.
-
-As described, we offer two distance measures are offered:
-
--   `Depth` (Default)
--   `Proximity`
-
-```{r, warning=FALSE, message=FALSE}
-rfSC$set_dist(distMethod = "Proximity")
-```
-
-All following steps are the same as above:
-
-**Similar Cases:**
-
-```{r}
-n <- nrow(ovarian)
-trainID <- sample(1:n, floor(0.8 * n), F)
-testID <- (1:n)[-trainID]
-
-# train model 
-ovarian[trainID, ] %>% 
-  rfSC$fit()
-# get similar cases
-ovarian[trainID, ] %>%
-  rfSC$get_similar_cases(queryData = ovarian[testID, ], k = 3) -> matchedData
-```
-
-**Distance Matrix Calculation:**
-
-```{r}
-ovarian %>%
-  rfSC$calc_distance_matrix() -> distMatrix
-```
 
 ## Contribution
 
@@ -230,7 +168,7 @@ The Robert Bosch Foundation funded this work. Special thanks go to Professor Dr.
 
 -   Friedel et al. [Postoperative Survival of Lung Cancer Patients: Are There Predictors beyond TNM?](http://ar.iiarjournals.org/content/33/4/1609.short) (2012).
 
-### Other
+### Other {#other}
 
 -   Englund and Verikas [A novel approach to estimate proximity in a random forest: An exploratory study](https://www.researchgate.net/publication/257404436_A_novel_approach_to_estimate_proximity_in_a_random_forest_An_exploratory_study)
 

@@ -4,9 +4,11 @@
 CBRBase <- R6Class("CBRBase",
                    public = list(
                      #' @field model the statistical model
-                     model       = '',
+                     model     = '',
+                     #' @field data training data
+                     data      = NULL,
                      #' @field model_fit trained object
-                     model_fit    = NULL,
+                     model_fit = NULL,
                      #' @field formula Object of class formula or character describing the model fit
                      formula   = NULL,
                      #' @field terms terms of the formula
@@ -28,13 +30,14 @@ CBRBase <- R6Class("CBRBase",
                        self$formula <- formula
                        self$terms <- labels(terms(formula, data=data))
                        self$endPoint <- setdiff(all.vars(formula), '.')
-                       self$endPoint <- setdiff(self$endPoint, self$terms )
+                       self$endPoint <- setdiff(self$endPoint, self$terms)
+                       self$data <- data.table::as.data.table(data)
                      },
                      #' @description 
                      #' Fit the Model
                      #' 
                      #' @param x Training data of class data.frame
-                     fit = function(x) {
+                     fit = function() {
                        # virtual function
                      },
                      #' @description 
@@ -42,34 +45,26 @@ CBRBase <- R6Class("CBRBase",
                      #' 
                      #' @param x Training data of class data.frame
                      #' @param query Query data of class data.frame
-                     calc_distance_matrix = function(x, query = NULL) {
-                       # get distance matrix
-                       x %>% 
-                         private$get_distance_matrix(query = query) -> distanceMatrix
-                       distanceMatrix
+                     calc_distance_matrix = function(query = NULL) {
+                       private$get_distance_matrix(query = query)
                      },
                      #' @description 
                      #' Extracts similar cases
                      #' 
-                     #' @param x Training data of class data.frame
                      #' @param query Query data of class data.frame
                      #' @param k number of similar cases
                      #' @param addDistance Add distance to result data.frame
                      #' @param merge Add query data to matched cases data.frame
-                     get_similar_cases = function(x, query, k = 1, addDistance = T, merge = T) { 
+                     get_similar_cases = function(query, k = 1, addDistance = T, merge = F) { 
                        # check nCases input 
                        testthat::expect_is(k, "numeric")
                        testthat::expect_true(k >= 0, "numeric")
                        # catch floating numbers
                        k <- as.integer(k)
                        
-                       if (!is(x, "data.table")) {
-                         x <- data.table::as.data.table(x)
-                       }
-                       
                        if (missing(query)) {
                          cat("No query data.\n") 
-                         query <- data.table::copy(x)
+                         query <- data.table::copy(self$data)
                        } else {
                          query <- data.table::as.data.table(query)
                        }
@@ -78,22 +73,19 @@ CBRBase <- R6Class("CBRBase",
                        cat("Start caclulating similar cases...\n")
                        
                        # calculate distance matrix
-                       x %>% 
-                         as.data.table() %>% 
-                         private$get_distance_matrix(query = as.data.table(query)) -> distanceMatrix
+                       distance_matrix <- private$get_distance_matrix(query = as.data.table(query))
                        
                        # calculate distance and order of cases based on distance calculation
-                       x %>% 
+                       self$data |> 
                          private$extract_similar_cases(query          = query,
-                                                       distanceMatrix = distanceMatrix, 
+                                                       distanceMatrix = distance_matrix, 
                                                        k              = k, 
                                                        addDistance    = addDistance, 
-                                                       merge          = merge) -> df_sc
+                                                       merge          = merge) -> similar_cases_tbl
                        end <- Sys.time()
                        duration <- round(as.numeric(end - start), 2)
                        cat(paste0("Similar cases calculation finished in: ", duration, " seconds.\n"))
-                       
-                       df_sc
+                       similar_cases_tbl
                      }
                    ),
                    private = list(
@@ -118,15 +110,15 @@ CBRBase <- R6Class("CBRBase",
                        # more tests
                        return(x)
                      },
-                     drop_missing = function(x, isLearning=F) {
-                       x <- x %>% 
+                     drop_missing = function(df, isLearning=F) {
+                       df <- df |> 
                          dplyr::select(c(self$endPoint, self$terms))
-                       rs <- rowSums(is.na(x))
+                       rs <- rowSums(is.na(df))
                        idDrop <- which(rs > 0)
                        cat(paste0("Dropped cases with missing values: ", length(idDrop), "\n"))
                        if (length(idDrop) > 0)
-                         x <- x[-idDrop, ]
-                       return(x)
+                         df <- df[-idDrop, ]
+                       return(df)
                      },
                      # transform character variables to factor
                      check_factor = function(x) {
@@ -162,14 +154,14 @@ CBRBase <- R6Class("CBRBase",
                        m <- ncol(distanceMatrix)
                        
                        # get closest elements
-                       distanceMatrix %>% 
-                         as.matrix() %>% 
-                         cpp_orderMatrix(sortDirection = 0,
-                                         k             = k) -> orderedMatrix
+                       distanceMatrix |> 
+                         as.matrix() |> 
+                         CaseBasedReasoning:::cpp_orderMatrix(sortDirection = 0,
+                                                              k             = k) -> orderedMatrix
                        
                        colID <- 1:ncol(orderedMatrix)
-                       orderedMatrix %>% 
-                         tibble::as_tibble() %>% 
+                       orderedMatrix |> 
+                         tibble::as_tibble() |> 
                          purrr::map2(.y = colID, .f = function(rowIDs, colID, x, distanceMatrix) {
                            dtTmp <- x[rowIDs, ]
                            if (addDistance) {
@@ -183,7 +175,7 @@ CBRBase <- R6Class("CBRBase",
                        df_sc$caseId <- rep(1:k, m)
                        
                        if (merge) {
-                         query %>% 
+                         query |> 
                            private$merge_matched_data(df_sc = df_sc, 
                                                       k     = k) -> df_sc
                        }
@@ -198,9 +190,9 @@ CBRBase <- R6Class("CBRBase",
                        matchedData <- df_sc
                        matchedData$scCaseId <- rep(1:nrow(query), each = k)
                        matchedData$group <- "Matched"
-                       query %>% 
+                       query |> 
                          dplyr::select(names(matchedData)) -> query
-                       rbind(query, matchedData) %>% 
+                       rbind(query, matchedData) |> 
                          dplyr::arrange(scCaseId)
                      }
                    )

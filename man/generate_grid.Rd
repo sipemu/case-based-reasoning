@@ -7,7 +7,7 @@
 generate_grid(t2e, grid_length = 250)
 }
 \arguments{
-\item{t2e}{numeric vector with tiome2event values}
+\item{t2e}{numeric vector with time2event values}
 
 \item{grid_length}{number of grid elements}
 }

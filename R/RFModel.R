@@ -47,16 +47,16 @@ RFModel <- R6Class(
     #' Fit the RandomForest
     #' 
     #' @param x Training data of class data.frame
-    fit = function(x) {
-      x %>%
-        dplyr::select(c(self$endPoint, self$terms)) -> x
-      x <- private$check_data(x)
+    fit = function() {
+      self$data |>
+        dplyr::select(c(self$endPoint, self$terms)) -> train_tbl
+      train_tbl <- private$check_data(train_tbl)
       
       # Parameters
       # train regression model
       func <- get(self$model, envir = as.environment('package:ranger'))
       params <- self$model_params
-      params$data <- x
+      params$data <- train_tbl
       params$formula <- self$formula
       self$model_fit <- pryr::do_call(func, params)
     },

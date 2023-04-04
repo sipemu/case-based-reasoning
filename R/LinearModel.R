@@ -1,8 +1,8 @@
 #' Linear Regression Model for Case-Based-Reasoning
 #'
 #' @export
-LinearBetaModel <- R6Class(
-  classname = "LinearBetaModel",
+LinearModel <- R6Class(
+  classname = "LinearModel",
   inherit   = RegressionModel,
   public    = list(
     #' @field model the statistical model
