@@ -37,6 +37,9 @@ cpp_orderVector <- function(x, sortDirection, k = 0L) {
     .Call(`_CaseBasedReasoning_cpp_orderVector`, x, sortDirection, k)
 }
 
+#' @importFrom RcppParallel RcppParallelLibs
+NULL
+
 cpp_weighted_knn <- function(x, query, weights, k) {
     .Call(`_CaseBasedReasoning_cpp_weighted_knn`, x, query, weights, k)
 }

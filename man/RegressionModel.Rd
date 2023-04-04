@@ -10,7 +10,7 @@ Root class for Regression Models, e.g., CPH, logistic, and linear regression
 }
 \keyword{data-preparation}
 \section{Super class}{
-\code{CaseBasedReasoning::CBRBase} -> \code{RegressionModel}
+\code{\link[CaseBasedReasoning:CBRBase]{CaseBasedReasoning::CBRBase}} -> \code{RegressionModel}
 }
 \section{Public fields}{
 \if{html}{\out{<div class="r6-fields">}}

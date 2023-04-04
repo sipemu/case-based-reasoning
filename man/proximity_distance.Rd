@@ -12,6 +12,8 @@ proximity_distance(x, y = NULL, rfObject, as_dist = T)
 \item{y}{a second new dataset (Default: NULL)}
 
 \item{rfObject}{\code{ranger} object}
+
+\item{as_dist}{Bool, return a dist object.}
 }
 \value{
 a \code{dist} or a matrix object with pairwise proximity of 

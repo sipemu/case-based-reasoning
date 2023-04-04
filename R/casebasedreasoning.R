@@ -1,7 +1,14 @@
 #' Case Based Reasoning
+#' 
+#' A R package for Case Based Reasoning using statistical/ML models.
+#' 
 #' @docType package
 #' @name CaseBasedReasoning
 #' @import R6
 #' @import data.table
+#' @import ranger
+#' @import rms
+#' @import survival
+#' @importFrom stats predict
 #' @useDynLib CaseBasedReasoning, .registration = TRUE
 NULL

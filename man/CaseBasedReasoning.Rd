@@ -4,3 +4,6 @@
 \name{CaseBasedReasoning}
 \alias{CaseBasedReasoning}
 \title{Case Based Reasoning}
+\description{
+A R package for Case Based Reasoning using statistical/ML models.
+}

@@ -2,10 +2,15 @@
 % Please edit documentation in R/utils.R
 \name{call_function}
 \alias{call_function}
-\title{call a function by character strings}
+\title{Call a function by character strings using the namespace and custom 
+parameters.}
 \usage{
 call_function(func_list)
 }
+\arguments{
+\item{func_list}{A list with fields func, namespace, and args}
+}
 \description{
-call a function by character strings
+Call a function by character strings using the namespace and custom 
+parameters.
 }

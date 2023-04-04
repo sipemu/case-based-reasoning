@@ -19,7 +19,7 @@ distanceRandomForest(
 
 \item{rfObject}{\code{ranger} object}
 
-\item{method}{distance calculation method}
+\item{method}{distance calculation method, Proximity (Default) or Depth.}
 
 \item{threads}{number of threads to use}
 }

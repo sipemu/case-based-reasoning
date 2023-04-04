@@ -20,7 +20,7 @@ Englund and Verikas. A novel approach to estimate proximity in a random
 forest: An exploratory study.
 }
 \section{Super class}{
-\code{CaseBasedReasoning::CBRBase} -> \code{RFModel}
+\code{\link[CaseBasedReasoning:CBRBase]{CaseBasedReasoning::CBRBase}} -> \code{RFModel}
 }
 \section{Public fields}{
 \if{html}{\out{<div class="r6-fields">}}

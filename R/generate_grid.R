@@ -14,8 +14,8 @@
 #' @export
 generate_grid <- function(t2e, grid_length = 250) {
   t2e_grid <- seq(0, max(t2e), length.out = grid_length)
-  d <- CaseBasedReasoning:::cpp_weightedDistanceXY(matrix(t2e_grid), matrix(trainID$OVS), 1)
-  o <- CaseBasedReasoning:::cpp_orderMatrix(d, 0, 1) |> 
+  d <- cpp_weightedDistanceXY(matrix(t2e_grid), matrix(t2e), 1)
+  o <- cpp_orderMatrix(d, 0, 1) |> 
     as.numeric()
   new_grid <- t2e_grid[o]
   d |> 

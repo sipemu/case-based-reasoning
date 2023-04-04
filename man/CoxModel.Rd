@@ -20,7 +20,7 @@ variable selection, and checking model assumptions.
 If the user omits the test data, this functions returns a n x n-distance matrix.
 }
 \section{Super classes}{
-\code{CaseBasedReasoning::CBRBase} -> \code{CaseBasedReasoning::RegressionModel} -> \code{CoxModel}
+\code{\link[CaseBasedReasoning:CBRBase]{CaseBasedReasoning::CBRBase}} -> \code{\link[CaseBasedReasoning:RegressionModel]{CaseBasedReasoning::RegressionModel}} -> \code{CoxModel}
 }
 \section{Public fields}{
 \if{html}{\out{<div class="r6-fields">}}

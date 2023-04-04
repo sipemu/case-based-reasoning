@@ -37,9 +37,11 @@ terminalNodes <- function(x, rfObject) {
 #' Column 4: child node ID 2
 #'
 #' @examples
+#' \dontrun{
 #' library(ranger)
 #' rf.fit <- ranger(Species ~ ., data = iris, num.trees = 5, write.forest = TRUE)
-#' forestMat <- forestToMatrix(rf.fit)
+#' forest_matrix <- ranger_forests_to_matrix(rf.fit)
+#' }
 #' 
 #' @export
 ranger_forests_to_matrix <- function(rfObject) {
@@ -75,7 +77,10 @@ asDistObject <- function(x, n, method) {
 }
 
 
-#' call a function by character strings
+#' Call a function by character strings using the namespace and custom 
+#' parameters.
+#' 
+#' @param func_list A list with fields func, namespace, and args
 call_function = function(func_list) {
   func_name <- func_list$func
   func_namespace <- func_list$namespace

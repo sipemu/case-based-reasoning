@@ -3,7 +3,7 @@
 #' @param x a data.frame
 #' @param y a second data.frame
 #' @param rfObject \code{ranger} object
-#' @param method distance calculation method
+#' @param method distance calculation method, Proximity (Default) or Depth.
 #' @param threads number of threads to use
 #' 
 #' @return a \code{dist} or a matrix object with pairwise distance of 
@@ -53,6 +53,7 @@ distanceRandomForest <- function(x, y = NULL, rfObject, method = "Proximity", th
 #' @param x a new dataset
 #' @param y a second new dataset (Default: NULL)
 #' @param rfObject \code{ranger} object
+#' @param as_dist Bool, return a dist object.
 #' 
 #' @return a \code{dist} or a matrix object with pairwise proximity of 
 #' observations in x vs y (if not null)

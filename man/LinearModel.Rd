@@ -9,7 +9,7 @@ Linear Regression Model for Case-Based-Reasoning
 Linear Regression Model for Case-Based-Reasoning
 }
 \section{Super classes}{
-\code{CaseBasedReasoning::CBRBase} -> \code{CaseBasedReasoning::RegressionModel} -> \code{LinearModel}
+\code{\link[CaseBasedReasoning:CBRBase]{CaseBasedReasoning::CBRBase}} -> \code{\link[CaseBasedReasoning:RegressionModel]{CaseBasedReasoning::RegressionModel}} -> \code{LinearModel}
 }
 \section{Public fields}{
 \if{html}{\out{<div class="r6-fields">}}

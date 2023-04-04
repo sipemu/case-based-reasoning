@@ -156,8 +156,8 @@ CBRBase <- R6Class("CBRBase",
                        # get closest elements
                        distanceMatrix |> 
                          as.matrix() |> 
-                         CaseBasedReasoning:::cpp_orderMatrix(sortDirection = 0,
-                                                              k             = k) -> orderedMatrix
+                         cpp_orderMatrix(sortDirection = 0,
+                                         k             = k) -> orderedMatrix
                        
                        colID <- 1:ncol(orderedMatrix)
                        orderedMatrix |> 
