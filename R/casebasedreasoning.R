@@ -10,6 +10,10 @@
 #' @import rms
 #' @import survival
 #' @import Rcpp
+#' @import cowplot
+#' @import dplyr
+#' @import ggplot2
+#' @import tidyr
 #' @importFrom stats predict
 #' @importFrom RcppParallel RcppParallelLibs
 #' @useDynLib CaseBasedReasoning, .registration = TRUE

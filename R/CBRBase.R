@@ -1,6 +1,6 @@
 #' Root class for common functionality of this package
 #' 
-#' @keywords data-preparation
+#' @keywords datapreparation
 CBRBase <- R6Class("CBRBase",
                    public = list(
                      #' @field model the statistical model
@@ -59,7 +59,6 @@ CBRBase <- R6Class("CBRBase",
                        # check nCases input 
                        testthat::expect_is(k, "numeric")
                        testthat::expect_true(k >= 0, "numeric")
-                       # catch floating numbers
                        k <- as.integer(k)
                        
                        if (missing(query)) {
@@ -93,9 +92,9 @@ CBRBase <- R6Class("CBRBase",
                        x <- private$drop_missing(x, isLearning)
                        if (nrow(x) == 0) {
                          if (isLearning) {
-                           stop("Error: Learning data is empty after NA elimination.")
+                           stop("Learning data is empty after NA elimination.")
                          } else {
-                           stop("Error: Query is empty after NA elimination.")
+                           stop("Query is empty after NA elimination.")
                          }
                        }
                        # check character variables: need factors
@@ -154,7 +153,7 @@ CBRBase <- R6Class("CBRBase",
                          cpp_orderMatrix(sortDirection = 0,
                                          k             = k) -> orderedMatrix
                        
-                       colnames(orderedMatrix) <- paste0("c´", 1:ncol(orderedMatrix))
+                       colnames(orderedMatrix) <- paste0("c", 1:ncol(orderedMatrix))
                        colID <- 1:ncol(orderedMatrix)
                        orderedMatrix |> 
                          tibble::as_tibble() |> 
