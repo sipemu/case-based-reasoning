@@ -18,7 +18,7 @@ This function returns for each observation the pairwise sum of edges
 between the corresponding terminal nodes over each tree in the random forest.
 }
 \examples{
-\dontrun{
+\donttest{
 require(ranger)
 rf <- ranger(Species ~ ., data = iris, num.trees = 5, write.forest = TRUE)
 depth_distance(x=iris[, -5], rfObject=rf)

@@ -10,7 +10,7 @@
 #' observations in x vs y (if not null)
 #' 
 #' @examples
-#' \dontrun{
+#' \donttest{
 #' library(ranger)
 #' # proximity pairwise distances
 #' rf.fit <- ranger(Species ~ ., data = iris, num.trees = 500, write.forest = TRUE)
@@ -59,7 +59,7 @@ distanceRandomForest <- function(x, y = NULL, rfObject, method = "Proximity", th
 #' observations in x vs y (if not null)
 #'      
 #' @examples
-#' \dontrun{
+#' \donttest{
 #' require(ranger)
 #' rf <- ranger(Species ~ ., data = iris, num.trees = 5, write.forest = TRUE)
 #' proximity_distance(x = iris[, -5], rfObject = rf)
@@ -71,7 +71,7 @@ distanceRandomForest <- function(x, y = NULL, rfObject, method = "Proximity", th
 #' proximity_distance(x = iris[learn, -5], y = iris[test, -5], rfObject = rf)
 #' }
 #' @export
-proximity_distance <- function(x, y = NULL, rfObject, as_dist=T) {
+proximity_distance <- function(x, y = NULL, rfObject, as_dist=TRUE) {
   x |>
     as.matrix() |>
     terminalNodes(rfObject) -> xNodes
@@ -105,7 +105,7 @@ proximity_distance <- function(x, y = NULL, rfObject, as_dist=T) {
 #' @param rfObject \code{ranger} object
 #' 
 #' @examples
-#' \dontrun{
+#' \donttest{
 #' require(ranger)
 #' rf <- ranger(Species ~ ., data = iris, num.trees = 5, write.forest = TRUE)
 #' depth_distance(x=iris[, -5], rfObject=rf)
@@ -143,7 +143,7 @@ depth_distance <- function(x, y=NULL, rfObject) {
 #' @return a \code{matrix} object with pairwise terminal node edge length
 #'    
 #' @examples
-#' \dontrun{
+#' \donttest{
 #' require(ranger)
 #' rf.fit <- ranger(Species ~ ., data = iris, num.trees = 5, write.forest = TRUE)
 #' edges_between_terminal_nodes(rf.fit)
@@ -169,7 +169,7 @@ edges_between_terminal_nodes <- function(rfObject) {
 #' @return a \code{dist} or \code{matrix} object
 #' 
 #' @examples
-#' \dontrun{
+#' \donttest{
 #' require(ranger)
 #' rf <- ranger(Species ~ ., data = iris, num.trees = 5, write.forest = TRUE)
 #' terminalNodes(iris[, -5], rf)

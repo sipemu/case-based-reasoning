@@ -4,7 +4,7 @@
 \alias{proximity_distance}
 \title{Get proximity matrix of an ranger object}
 \usage{
-proximity_distance(x, y = NULL, rfObject, as_dist = T)
+proximity_distance(x, y = NULL, rfObject, as_dist = TRUE)
 }
 \arguments{
 \item{x}{a new dataset}
@@ -23,7 +23,7 @@ observations in x vs y (if not null)
 Get proximity matrix of an ranger object
 }
 \examples{
-\dontrun{
+\donttest{
 require(ranger)
 rf <- ranger(Species ~ ., data = iris, num.trees = 5, write.forest = TRUE)
 proximity_distance(x = iris[, -5], rfObject = rf)

@@ -12,12 +12,12 @@ RegressionModel <- R6Class(
     #' @description 
     #' Prints information of the initialized object
     print = function() {
-      cat("Case-Based-Reasoning based Regression Coefficients\n")
-      cat("---------------------------------------\n")
-      cat("Model     : ", paste(self$model, collapse = ", "), '\n')
-      cat("Endpoint  : ", paste(self$endPoint, collapse = ", "), '\n')
-      cat("Variables : ", paste(self$terms, collapse = ", "), '\n')
-      cat("Trained   : ", ifelse(is.null(self$weights), FALSE, TRUE), '\n')
+      message("Case-Based-Reasoning based Regression Coefficients")
+      message("---------------------------------------")
+      message("Model     : ", paste(self$model, collapse = ", "))
+      message("Endpoint  : ", paste(self$endPoint, collapse = ", "))
+      message("Variables : ", paste(self$terms, collapse = ", "))
+      message("Trained   : ", ifelse(is.null(self$weights), FALSE, TRUE))
     },
     #' @description  
     #' Fast backward variable selection with penalization
@@ -28,13 +28,6 @@ RegressionModel <- R6Class(
         dplyr::select(c(self$endPoint, self$terms)) -> x
       x <- private$check_data(x)
       
-      # Timing
-      start <- Sys.time()
-      cat("Start learning...\n")
-      #  datadist scoping
-      regression_data <<- rms::datadist(x)
-      options(datadist="regression_data")
-      
       # train regression model
       func <- get(self$model, envir = as.environment('package:rms'))
       params <- self$model_params
@@ -44,16 +37,7 @@ RegressionModel <- R6Class(
       
       # Variable Selection
       vars <- rms::fastbw(fit = self$model_fit, type = "i")
-      cat(paste0("Initial variable set: ", paste(c(self$endPoint, self$terms), collapse = ", "), "\n"))
-      cat(paste0("Selected variable set: ", paste(vars$names.kept, collapse = ", "), "\n"))
       selected_vars <- c(self$endPoint, self$terms)
-      
-      # end timing
-      options(datadist=NULL)
-      end <- Sys.time()
-      duration <- round(as.numeric(end - start), 2)
-      cat(paste0("Learning finished in: ", duration, " seconds.\n"))
-      
       selected_vars
     },
     #' @description 
@@ -64,10 +48,6 @@ RegressionModel <- R6Class(
       self$data |>
         dplyr::select(c(self$endPoint, self$terms)) -> train_tbl
       train_tbl <- private$check_data(train_tbl)
-      
-      #  datadist scoping
-      regression_data <<- rms::datadist(train_tbl)
-      options(datadist="regression_data")
       
       # train regression model
       func <- get(self$model, envir = as.environment('package:rms'))
@@ -101,7 +81,6 @@ RegressionModel <- R6Class(
         }
       }
       self$weights <- weights
-      options(datadist=NULL)
     }
   ),
   private = list(
@@ -109,7 +88,7 @@ RegressionModel <- R6Class(
     check_weights = function() {
       wNA <- unlist(lapply(self$weights, function(x) any(is.na(x))))
       if (any(wNA)) {
-        cat(paste0("Variables: ", names(wNA)[which(wNA)], " have NA weights.\n"))
+        warning(paste0("Variables: ", names(wNA)[which(wNA)], " have NA weights.\n"))
         return(TRUE)
       }
       return(FALSE)
@@ -164,5 +143,78 @@ RegressionModel <- R6Class(
                                        weights = training_data_list$trafoWeights) |> 
         as.matrix()
     }
+  )
+)
+
+
+#' Cox-Beta Model for Case-Based-Reasoning
+#'
+#' Regression beta coefficients obtained from a CPH regression model fitted on the 
+#' training data are used for building a weighted distance measure between
+#' train and test data. Afterwards, we will use these weights for calculating a 
+#' (n x m)-distance matrix, where n is the number of observations in the training data, 
+#' and m is the number of observations of the test data. The user can use this 
+#' distance matrix for further cluster analysis or for extracting for each test observation 
+#' k (= 1,...,l) similar cases from the train data. We use the rms-package for model fitting,
+#' variable selection, and checking model assumptions.
+#' If the user omits the test data, this functions returns a n x n-distance matrix.
+#'
+#' @export
+CoxModel <- R6Class(
+  classname = "CoxModel",
+  inherit   = RegressionModel,
+  public    = list(
+    #' @field model the statistical model
+    model        = 'cph',
+    #' @field model_params rms arguments
+    model_params = list(x = T, y = T, surv = T),
+    #' @description 
+    #' Check proportional hazard assumption graphically
+    check_ph=function() {
+      # learn if weights are empty
+      testthat::expect_is(self$weights, "list", info = "The model is not trained.")
+      n <- length(self$terms)
+      ggPlot <- list()
+      zph <- survival::cox.zph(self$model_fit, "rank")
+      for (i in 1:n) {
+        df <- data.frame(x=zph$x, y=zph$y[, i])
+        g <- ggplot2::ggplot(df, aes(x=x, y=y)) +
+          ggplot2::geom_hline(yintercept=0, colour="grey") +
+          ggplot2::geom_point() +
+          ggplot2::geom_smooth(color="#18BC9C", fill="#18BC9C") +
+          ggplot2::ylab(paste0("Beta(t) of ", self$terms[i])) +
+          ggplot2::xlab("Time to Event") +
+          cowplot::background_grid(major="xy", minor="xy")
+        ggPlot <- c(ggPlot, list(g))
+      }
+      return(cowplot::plot_grid(plotlist = ggPlot,
+                                ncol     = 2))
+    }
+  )
+)
+
+
+#' Linear Regression Model for Case-Based-Reasoning
+#'
+#' @export
+LinearModel <- R6Class(
+  classname = "LinearModel",
+  inherit   = RegressionModel,
+  public    = list(
+    #' @field model the statistical model
+    model       = 'ols'
+  )
+)
+
+
+#' Logistic Regression Model for Case-Based-Reasoning
+#'
+#' @export
+LogisticModel <- R6Class(
+  classname = "LogisticModel",
+  inherit   = RegressionModel,
+  public    = list(
+    #' @field model the statistical model
+    model       = 'lrm'
   )
 )

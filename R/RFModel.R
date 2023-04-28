@@ -23,13 +23,13 @@ RFModel <- R6Class(
     #' @description 
     #' Prints information of the initialized object
     print = function() {
-      cat("Case-Based-Reasoning with RandomForests\n")
-      cat("---------------------------------------\n")
-      cat("Model     : ", paste(self$model, collapse = ", "), '\n')
-      cat("Endpoints : ", paste(self$endPoint, collapse = ", "), '\n')
-      cat("Variables : ", paste(self$terms, collapse = ", "), '\n')
-      cat("Method    : ", paste(self$dist_method, collapse = ", "), '\n')
-      cat("Trained   : ", ifelse(is.null(self$model_fit), FALSE, TRUE), '\n')
+      message("Case-Based-Reasoning with RandomForests")
+      message("---------------------------------------")
+      message("Model     : ", paste(self$model, collapse = ", "))
+      message("Endpoints : ", paste(self$endPoint, collapse = ", "))
+      message("Variables : ", paste(self$terms, collapse = ", "))
+      message("Method    : ", paste(self$dist_method, collapse = ", "))
+      message("Trained   : ", ifelse(is.null(self$model_fit), FALSE, TRUE))
     },
     #' @description 
     #' Initialize a RandomForest object for searching similar cases.

@@ -37,7 +37,7 @@ terminalNodes <- function(x, rfObject) {
 #' Column 4: child node ID 2
 #'
 #' @examples
-#' \dontrun{
+#' \donttest{
 #' library(ranger)
 #' rf.fit <- ranger(Species ~ ., data = iris, num.trees = 5, write.forest = TRUE)
 #' forest_matrix <- ranger_forests_to_matrix(rf.fit)

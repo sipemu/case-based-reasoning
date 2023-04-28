@@ -9,6 +9,8 @@
 #' @import ranger
 #' @import rms
 #' @import survival
+#' @import Rcpp
 #' @importFrom stats predict
+#' @importFrom RcppParallel RcppParallelLibs
 #' @useDynLib CaseBasedReasoning, .registration = TRUE
 NULL

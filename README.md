@@ -53,23 +53,6 @@ Besides the functionality of searching for similar cases, we added some addition
 
 "Warning: Cases with missing values in the dependent variable (Y) or predictor variables (X) have been dropped from the analysis. This may lead to a reduced dataset and potential loss of information. Please review your data and consider appropriate missing value imputation techniques to mitigate these issues."
 
-Potential Solutions:
-
--   **Missing Value Analysis**: Conduct a thorough missing value analysis to understand the nature and extent of the missing data. Determine if the data is missing at random (MAR), missing completely at random (MCAR), or missing not at random (MNAR). This information will guide the choice of imputation methods.
-
--   **Imputation Techniques:** Depending on the nature of the missing data, various imputation techniques can be applied to fill in the gaps:
-
-    a.  **Mean/Median/Mode Imputation**: Replace missing values with the mean, median, or mode of the variable. This method is simple but can distort the distribution of the data.
-
-    b.  **Regression Imputation**: Use linear regression models to predict missing values based on the relationships between the predictor variables. This technique assumes that the relationships between variables are linear.
-
-    c.  **k-Nearest Neighbors Imputation (k-NN)**: Fill in missing values using the values from the k most similar cases in the dataset. The similarity is determined using distance metrics such as Euclidean or Manhattan distance.
-
-    d.  **Multiple Imputation**: Generate multiple imputed datasets by creating a range of plausible values for each missing value. Analyze each imputed dataset separately and then pool the results to obtain a final estimate.
-
--   **Sensitivity Analysis**: After applying an imputation method, perform a sensitivity analysis to assess the impact of the imputed values on the overall results. This will help evaluate the robustness of the findings and the potential biases introduced by the imputation.
-
-By addressing missing values appropriately, you can mitigate the risk of losing valuable information and improve the quality of the analysis.
 
 ## Example: Cox Beta Model
 
@@ -85,7 +68,7 @@ In the first example, we use the CPH model and the `ovarian` data set from the `
     ovarian$ecog.ps = factor(ovarian$ecog.ps)
 
     # initialize R6 object
-    cph_model = CoxModel$new(Surv(futime, fustat) ~ age + resid.ds + rx + ecog.ps)
+    cph_model = CoxModel$new(Surv(futime, fustat) ~ age + resid.ds + rx + ecog.ps, data=ovarian)
 
 ### Similar Cases
 
@@ -95,12 +78,13 @@ After the initialization, we may want to get for each case in the query data the
 n <- nrow(ovarian)
 trainID = sample(1:n, floor(0.8 * n), F)
 testID = (1:n)[-trainID]
+cph_model = CoxModel$new(Surv(futime, fustat) ~ age + resid.ds + rx + ecog.ps, data=ovarian[trainID, ])
 
 # fit model 
 cph_model$fit()
 
 # get similar cases
-matched_tbl = cph_model$get_similar_cases(queryData = ovarian[testID, ], k = 3)
+matched_tbl = cph_model$get_similar_cases(query = ovarian[testID, ], k = 3)
 ```
 
 To analyze the results, you can extract the similar cases and training data and combine them:
@@ -146,9 +130,9 @@ ditance_matrix = cph_model$fit$calc_distance_matrix()
 
 ### Responsible for Mathematical Model Development and Programming
 
--   [PD Dr. Jürgen Dippon](http://www.isa.uni-stuttgart.de/LstStoch/Dippon/), Institut für Stochastik und Anwendungen, Universität Stuttgart
+-   [PD Dr. Jürgen Dippon](https://www.isa.uni-stuttgart.de/institut/team/Dippon/), Institut für Stochastik und Anwendungen, Universität Stuttgart
 
--   [Dr. Simon Müller](http://muon-stat.com/), TTI GmbH - MUON-STAT
+-   [Dr. Simon Müller](https://data-zoo.de/), DataZoo GmbH
 
 ### Medical Advisor
 
@@ -164,14 +148,14 @@ The Robert Bosch Foundation funded this work. Special thanks go to Professor Dr.
 
 ### Main
 
--   Dippon et al. [A statistical approach to case based reasoning, with application to breast cancer data](https://dl.acm.org/citation.cfm?id=608456) (2002),
+-   Dippon et al. [A statistical approach to case based reasoning, with application to breast cancer data](https://dl.acm.org/doi/10.1016/S0167-9473%2802%2900058-0) (2002),
 
 -   Friedel et al. [Postoperative Survival of Lung Cancer Patients: Are There Predictors beyond TNM?](https://ar.iiarjournals.org/content/33/4/1609.short) (2012).
 
 ### Other {#other}
 
--   Englund and Verikas [A novel approach to estimate proximity in a random forest: An exploratory study](https://www.researchgate.net/publication/257404436_A_novel_approach_to_estimate_proximity_in_a_random_forest_An_exploratory_study)
+-   Englund and Verikas [A novel approach to estimate proximity in a random forest: An exploratory study](https://www.sciencedirect.com/science/article/abs/pii/S095741741200810X)
 
 -   Stuart, E. et al. [Matching methods for causal inference: Designing observational studies](https://www.biostat.jhsph.edu/~estuart/StuRub_MatchingChapter_07.pdf)
 
--   Defossez et al. [Temporal representation of care trajectories of cancer patients using data from a regional information system: an application in breast cancer](https://www.biomedcentral.com/1472-6947/14/24)
+-   Defossez et al. [Temporal representation of care trajectories of cancer patients using data from a regional information system: an application in breast cancer](https://bmcmedinformdecismak.biomedcentral.com/articles/10.1186/1472-6947-14-24)

@@ -63,14 +63,11 @@ CBRBase <- R6Class("CBRBase",
                        k <- as.integer(k)
                        
                        if (missing(query)) {
-                         cat("No query data.\n") 
+                         stop("No query data.\n") 
                          query <- data.table::copy(self$data)
                        } else {
                          query <- data.table::as.data.table(query)
                        }
-                       
-                       start <- Sys.time()
-                       cat("Start caclulating similar cases...\n")
                        
                        # calculate distance matrix
                        distance_matrix <- private$get_distance_matrix(query = as.data.table(query))
@@ -82,9 +79,6 @@ CBRBase <- R6Class("CBRBase",
                                                        k              = k, 
                                                        addDistance    = addDistance, 
                                                        merge          = merge) -> similar_cases_tbl
-                       end <- Sys.time()
-                       duration <- round(as.numeric(end - start), 2)
-                       cat(paste0("Similar cases calculation finished in: ", duration, " seconds.\n"))
                        similar_cases_tbl
                      }
                    ),
@@ -115,10 +109,11 @@ CBRBase <- R6Class("CBRBase",
                          dplyr::select(c(self$endPoint, self$terms))
                        rs <- rowSums(is.na(df))
                        idDrop <- which(rs > 0)
-                       cat(paste0("Dropped cases with missing values: ", length(idDrop), "\n"))
-                       if (length(idDrop) > 0)
+                       if (length(idDrop) > 0) {
                          df <- df[-idDrop, ]
-                       return(df)
+                         warning(paste0("Dropped cases with missing values: ", length(idDrop)))
+                       }
+                       df
                      },
                      # transform character variables to factor
                      check_factor = function(x) {
@@ -130,7 +125,7 @@ CBRBase <- R6Class("CBRBase",
                          }
                        }
                        if (length(trf) > 0) {
-                         cat(paste0("Following variables are transformed to class factor: ", paste(trf, collapse=", "), "\n"))
+                         warning(paste0("Following variables are transformed to class factor: ", paste(trf, collapse=", ")))
                        }
                        return(x)
                      },
@@ -159,6 +154,7 @@ CBRBase <- R6Class("CBRBase",
                          cpp_orderMatrix(sortDirection = 0,
                                          k             = k) -> orderedMatrix
                        
+                       colnames(orderedMatrix) <- paste0("c´", 1:ncol(orderedMatrix))
                        colID <- 1:ncol(orderedMatrix)
                        orderedMatrix |> 
                          tibble::as_tibble() |> 

@@ -20,7 +20,7 @@ a \code{dist} or \code{matrix} object
 Weighted Distance calculation
 }
 \examples{
-\dontrun{
+\donttest{
 require(ranger)
 rf <- ranger(Species ~ ., data = iris, num.trees = 5, write.forest = TRUE)
 terminalNodes(iris[, -5], rf)

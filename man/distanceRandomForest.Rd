@@ -31,7 +31,7 @@ observations in x vs y (if not null)
 Distance calculation based on RandomForest Proximity or Depth
 }
 \examples{
-\dontrun{
+\donttest{
 library(ranger)
 # proximity pairwise distances
 rf.fit <- ranger(Species ~ ., data = iris, num.trees = 500, write.forest = TRUE)
