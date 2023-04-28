@@ -18,12 +18,12 @@ BugReports: https://github.com/sipemu/case-based-reasoning/issues
 License: MIT + file LICENSE
 Depends:
     Rcpp,
-    RcppParallel,
+    RcppParallel
+Imports:
     R6,
     data.table,
     ranger,
-    rms
-Imports:
+    rms,
     survival,
     ggplot2,
     cowplot,
