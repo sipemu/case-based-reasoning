@@ -5,7 +5,6 @@
 #' @docType package
 #' @name CaseBasedReasoning
 #' @import R6
-#' @import data.table
 #' @import ranger
 #' @import rms
 #' @import survival

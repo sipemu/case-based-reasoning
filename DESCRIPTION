@@ -22,7 +22,6 @@ Depends:
     rms
 Imports:
     R6,
-    data.table,
     ranger,
     survival,
     ggplot2,

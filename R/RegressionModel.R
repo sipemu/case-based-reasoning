@@ -127,10 +127,6 @@ RegressionModel <- R6Class(
       testthat::expect_is(self$weights, "list", info = "Model not trained")
       testthat::expect_false(private$check_weights(), info = "NA values in regression beta coefficients!")
       
-      if (!is.null(query)) {
-        query <- data.table::copy(query)
-      } 
-      
       # transform for weighted distance calculations
       training_data_list <- private$transform_data(queryData = query,  
                                                    dtData    = self$data, 

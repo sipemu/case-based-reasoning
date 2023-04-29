@@ -157,7 +157,7 @@ After identifying the similar cases, you can extract them along with the verum d
 
 **Note 1:** During the initialization step, we removed all cases with missing values in the data and endPoint variables. Therefore, it is crucial to perform a missing value analysis before proceeding.
 
-**Note 2:** The data.table returned from **`cph_model$get_similar_cases`** includes four additional columns:
+**Note 2:** The data.frame returned from **`cph_model$get_similar_cases`** includes four additional columns:
 
 1.  `caseId`: This column allows you to map the similar cases to cases in the data. For example, if you had chosen k=3, the first three elements in the caseId column will be 1 (followed by three 2's, and so on). These three cases are the three most similar cases to case 0 in the verum data.
 2.  `scDist`: The calculated distance between the cases.

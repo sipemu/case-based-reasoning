@@ -91,7 +91,7 @@ To analyze the results, you can extract the similar cases and training data and 
 
 -   **Note 1**: During the initialization step, all cases with missing values in the data and endPoint variables were removed. Be sure to conduct a missing value analysis beforehand.
 
--   **Note 2**: The data.table returned from coxBeta\$get_similar_cases contains four columns that help identify the query cases, their matches, and the distances between them:
+-   **Note 2**: The data.frame returned from coxBeta\$get_similar_cases contains four columns that help identify the query cases, their matches, and the distances between them:
 
     -   **caseId**: This column allows you to map the similar cases to cases in the data. For example, if you chose k = 3, the first three elements in the caseId column will be 1 (followed by three 2s, and so on). These three cases are the three most similar cases to case 0 in the verum data.
 

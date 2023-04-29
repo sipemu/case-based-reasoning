@@ -31,7 +31,7 @@ CBRBase <- R6Class("CBRBase",
                        self$terms <- labels(terms(formula, data=data))
                        self$endPoint <- setdiff(all.vars(formula), '.')
                        self$endPoint <- setdiff(self$endPoint, self$terms)
-                       self$data <- data.table::as.data.table(data)
+                       self$data <- data
                      },
                      #' @description 
                      #' Fit the Model
@@ -62,14 +62,11 @@ CBRBase <- R6Class("CBRBase",
                        k <- as.integer(k)
                        
                        if (missing(query)) {
-                         stop("No query data.\n") 
-                         query <- data.table::copy(self$data)
-                       } else {
-                         query <- data.table::as.data.table(query)
+                         query <- self$data
                        }
                        
                        # calculate distance matrix
-                       distance_matrix <- private$get_distance_matrix(query = as.data.table(query))
+                       distance_matrix <- private$get_distance_matrix(query = query)
                        
                        # calculate distance and order of cases based on distance calculation
                        self$data |> 
@@ -83,11 +80,6 @@ CBRBase <- R6Class("CBRBase",
                    ),
                    private = list(
                      check_data = function(x, isLearning=T) {
-                       if (is(x, "data.table")) {
-                         x <- data.table::copy(x)
-                       } else {
-                         x <- data.table::copy(data.table::as.data.table(x))
-                       }
                        # drop cases with missing values in the relevant variables
                        x <- private$drop_missing(x, isLearning)
                        if (nrow(x) == 0) {
@@ -163,8 +155,8 @@ CBRBase <- R6Class("CBRBase",
                              dtTmp$scDist <- distanceMatrix[rowIDs, colID]
                            }
                            dtTmp
-                         }, x = x, distanceMatrix = distanceMatrix) -> df_sc
-                       df_sc <- data.table::rbindlist(df_sc)
+                         }, x = x, distanceMatrix = distanceMatrix) |>
+                         purrr::reduce(rbind) -> df_sc
                        
                        # mark similar cases: 1:n ids
                        df_sc$caseId <- rep(1:k, m)

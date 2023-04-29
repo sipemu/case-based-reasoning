@@ -8,7 +8,7 @@ Root class for common functionality of this package
 
 Root class for common functionality of this package
 }
-\keyword{data-preparation}
+\keyword{datapreparation}
 \section{Public fields}{
 \if{html}{\out{<div class="r6-fields">}}
 \describe{
