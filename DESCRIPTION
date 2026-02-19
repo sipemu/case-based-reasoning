@@ -1,9 +1,9 @@
 Package: CaseBasedReasoning
 Type: Package
 Title: Case Based Reasoning
-Version: 0.3
-Date: 2023-04-03
-Authors@R: 
+Version: 0.4
+Date: 2026-02-19
+Authors@R:
     c(person(given = "Simon",
            family = "Mueller",
            role = c("cre"),
@@ -24,16 +24,13 @@ Imports:
     R6,
     ranger,
     survival,
-    ggplot2,
-    cowplot,
-    dplyr,
-    purrr,
-    tidyr
+    ggplot2
 Suggests:
     testthat,
     knitr,
     rmarkdown,
-    RcppArmadillo
+    RcppArmadillo,
+    patchwork
 LinkingTo: Rcpp, RcppArmadillo, RcppParallel
 SystemRequirements: GNU make
 LazyData: TRUE
