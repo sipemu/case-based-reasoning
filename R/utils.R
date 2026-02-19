@@ -86,5 +86,5 @@ call_function = function(func_list) {
   func_namespace <- func_list$namespace
   func_args <- func_list$args
   func_to_call <- get(func_name, envir = as.environment(func_namespace))
-  pryr::do_call(func_to_call, func_args)
+  do.call(func_to_call, func_args)
 }

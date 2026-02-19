@@ -58,7 +58,7 @@ RFModel <- R6Class(
       params <- self$model_params
       params$data <- train_tbl
       params$formula <- self$formula
-      self$model_fit <- pryr::do_call(func, params)
+      self$model_fit <- do.call(func, params)
     },
     #' @description 
     #' Set the distance method. Available are Proximity and Depth

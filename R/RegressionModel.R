@@ -33,8 +33,8 @@ RegressionModel <- R6Class(
       params <- self$model_params
       params$data <- x
       params$formula <- self$formula
-      self$model_fit <- pryr::do_call(func, params)
-      
+      self$model_fit <- do.call(func, params)
+
       # Variable Selection
       vars <- rms::fastbw(fit = self$model_fit, type = "i")
       selected_vars <- c(self$endPoint, self$terms)
@@ -54,8 +54,8 @@ RegressionModel <- R6Class(
       params <- self$model_params
       params$data <- train_tbl
       params$formula <- self$formula
-      self$model_fit <- pryr::do_call(func, params)
-      
+      self$model_fit <- do.call(func, params)
+
       nVars <- length(self$terms) 
       weights <- vector("list", nVars)
       names(weights) <- self$terms

@@ -28,8 +28,7 @@ Imports:
     cowplot,
     dplyr,
     purrr,
-    tidyr,
-    pryr
+    tidyr
 Suggests:
     testthat,
     knitr,
