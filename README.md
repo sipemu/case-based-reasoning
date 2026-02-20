@@ -1,4 +1,9 @@
-[![cran version](http://www.r-pkg.org/badges/version/CaseBasedReasoning)](https://CRAN.R-project.org/package=CaseBasedReasoning) [![rstudio mirror downloads](http://cranlogs.r-pkg.org/badges/CaseBasedReasoning?)](https://CRAN.R-project.org/package=CaseBasedReasoning/)
+[![CRAN status](https://www.r-pkg.org/badges/version/CaseBasedReasoning)](https://CRAN.R-project.org/package=CaseBasedReasoning)
+[![CRAN downloads](https://cranlogs.r-pkg.org/badges/grand-total/CaseBasedReasoning)](https://CRAN.R-project.org/package=CaseBasedReasoning)
+[![CRAN monthly downloads](https://cranlogs.r-pkg.org/badges/CaseBasedReasoning)](https://CRAN.R-project.org/package=CaseBasedReasoning)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![R ≥ 3.5.0](https://img.shields.io/badge/R-%E2%89%A5%203.5.0-276DC3.svg?logo=r)](https://cran.r-project.org/)
+[![Lifecycle: stable](https://img.shields.io/badge/lifecycle-stable-brightgreen.svg)](https://lifecycle.r-lib.org/articles/stages.html#stable)
 
 # Case Based Reasoning using Statistical Models
 
