@@ -173,14 +173,14 @@ The Robert Bosch Foundation funded this work. Special thanks go to Professor Dr.
 
 ### Main
 
--   Dippon et al. [A statistical approach to case based reasoning, with application to breast cancer data](https://dl.acm.org/doi/10.1016/S0167-9473%2802%2900058-0) (2002),
+-   Dippon et al. [A statistical approach to case based reasoning, with application to breast cancer data](https://doi.org/10.1016/S0167-9473(02)00058-0) (2002),
 
 -   Friedel et al. [Postoperative Survival of Lung Cancer Patients: Are There Predictors beyond TNM?](https://ar.iiarjournals.org/content/33/4/1609.short) (2012).
 
 ### Other {#other}
 
--   Englund and Verikas [A novel approach to estimate proximity in a random forest: An exploratory study](https://www.sciencedirect.com/science/article/abs/pii/S095741741200810X)
+-   Englund and Verikas [A novel approach to estimate proximity in a random forest: An exploratory study](https://doi.org/10.1016/j.eswa.2012.01.157)
 
--   Stuart, E. et al. [Matching methods for causal inference: Designing observational studies](https://www.biostat.jhsph.edu/~estuart/StuRub_MatchingChapter_07.pdf)
+-   Stuart, E. et al. [Matching methods for causal inference: Designing observational studies](https://doi.org/10.4135/9781412995627.d14)
 
--   Defossez et al. [Temporal representation of care trajectories of cancer patients using data from a regional information system: an application in breast cancer](https://bmcmedinformdecismak.biomedcentral.com/articles/10.1186/1472-6947-14-24)
+-   Defossez et al. [Temporal representation of care trajectories of cancer patients using data from a regional information system: an application in breast cancer](https://doi.org/10.1186/1472-6947-14-24)
