@@ -4,6 +4,7 @@
 
 // [[Rcpp::depends(RcppParallel)]]
 #include <RcppParallel.h>
+
 // [[Rcpp::depends(RcppArmadillo)]]
 #include <RcppArmadillo.h>
 
@@ -11,12 +12,14 @@
 
 #include <memory>
 
-typedef tbb::concurrent_unordered_map<std::pair<int, int>, double> tbbUPMap;
-typedef tbb::concurrent_unordered_map<int, double> tbbUMap;
-
 // TODO: Representation of Results
 // column-wise, row-wise, or full
 #if RCPP_PARALLEL_USE_TBB
+
+#include "tbb/concurrent_unordered_map.h"
+
+typedef tbb::concurrent_unordered_map<std::pair<int, int>, double> tbbUPMap;
+typedef tbb::concurrent_unordered_map<int, double> tbbUMap;
 
 struct parallelDistance : public RcppParallel::Worker {
   const arma::mat& input_;
