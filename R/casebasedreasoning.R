@@ -1,9 +1,6 @@
-#' Case Based Reasoning
-#'
-#' An R package for Case Based Reasoning using statistical/ML models.
-#'
-#' @docType package
-#' @name CaseBasedReasoning
+#' @keywords internal
+"_PACKAGE"
+
 #' @import R6
 #' @import ranger
 #' @import rms

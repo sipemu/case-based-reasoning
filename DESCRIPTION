@@ -6,7 +6,7 @@ Date: 2026-02-19
 Authors@R:
     c(person(given = "Simon",
            family = "Mueller",
-           role = c("cre"),
+           role = c("aut", "cre"),
            email = "simon.mueller@muon-stat.com"),
       person(given = "PD Dr. Juergen",
            family = "Dippon",
@@ -33,9 +33,8 @@ Suggests:
     patchwork
 LinkingTo: Rcpp, RcppArmadillo, RcppParallel
 SystemRequirements: GNU make
-LazyData: TRUE
 NeedsCompilation: yes
 ByteCompile: yes
 VignetteBuilder: knitr
 Encoding: UTF-8
-RoxygenNote: 7.2.1
+RoxygenNote: 7.3.3

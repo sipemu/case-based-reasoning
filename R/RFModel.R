@@ -49,12 +49,11 @@ RFModel <- R6Class(
       train_tbl <- self$data[, c(self$endpoint, self$terms), drop = FALSE]
       train_tbl <- private$check_data(train_tbl)
 
-      # train regression model
-      func <- get(self$model, envir = as.environment('package:ranger'))
+      # train model
       params <- self$model_params
       params$data <- train_tbl
       params$formula <- self$formula
-      self$model_fit <- do.call(func, params)
+      self$model_fit <- do.call(ranger::ranger, params)
     },
     #' @description
     #' Set the distance method. Available are Proximity and Depth

@@ -26,7 +26,7 @@ RegressionModel <- R6Class(
       train_tbl <- private$check_data(train_tbl)
 
       # train regression model
-      func <- get(self$model, envir = as.environment('package:rms'))
+      func <- utils::getFromNamespace(self$model, "rms")
       params <- self$model_params
       params$data <- train_tbl
       params$formula <- self$formula
@@ -44,7 +44,7 @@ RegressionModel <- R6Class(
       train_tbl <- private$check_data(train_tbl)
 
       # train regression model
-      func <- get(self$model, envir = as.environment('package:rms'))
+      func <- utils::getFromNamespace(self$model, "rms")
       params <- self$model_params
       params$data <- train_tbl
       params$formula <- self$formula

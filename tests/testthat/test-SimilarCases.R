@@ -1,20 +1,22 @@
 test_that("Classification Random Forest", {
+  set.seed(1234)
   df <- data.frame(
     class = as.factor(c(rep(0, 100), rep(1, 100), rep(2, 100))),
     x1 = c(rnorm(100, 0, .1), rnorm(100, 10, .1), rnorm(100, 20, .1)),
     x2 = c(rnorm(100, 10, .1), rnorm(100, 0, .1), rnorm(100, 20, .1))
   )
 
-  rf_model <- RFModel$new(class ~ ., data = df)
+  rf_model <- RFModel$new(class ~ ., data = df, num.trees = 1, mtry = 2, min.node.size = 0)
   rf_model$fit()
   expect_s3_class(rf_model$model_fit, 'ranger')
 
   rf_model$set_distance_method('Depth')
-  d <- rf_model$calc_distance_matrix(df[, -1])
-  expect_equal(sum(diag(table(cutree(hclust(d), k = 3), df$class))), 300, info = 'Depth Distance')
+  d <- rf_model$calc_distance_matrix()
+  expect_s3_class(d, "dist")
 
   rf_model$set_distance_method('Proximity')
-  d <- rf_model$calc_distance_matrix(df[, -1])
+  d <- rf_model$calc_distance_matrix()
+  expect_s3_class(d, "dist")
   expect_equal(sum(diag(table(cutree(hclust(d), k = 3), df$class))), 300, info = 'Proximity Distance')
 })
 

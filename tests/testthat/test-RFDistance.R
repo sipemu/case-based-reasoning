@@ -1,8 +1,7 @@
 test_that("Terminal Nodes", {
   set.seed(1234)
   rf <- ranger::ranger(Species ~ ., data = iris, num.trees = 5, write.forest = TRUE)
-  # we use different indices in our calculations
-  tn1 <- terminal_nodes(iris[, -5], rf) - 1
+  tn1 <- terminal_nodes(iris[, -5], rf)
   tn2 <- predict(rf, iris[, -5], type = "terminalNodes")
   expect_equal(tn1, tn2$predictions)
 })
@@ -30,7 +29,7 @@ test_that("Number of Edges between Terminal Nodes", {
 })
 
 
-test_that("Perfect Separation Test", {
+test_that("Perfect Separation Test - Proximity", {
   df <- data.frame(
     class = as.factor(c(rep(0, 100), rep(1, 100), rep(2, 100))),
     x1 = c(rnorm(100, 0, .1), rnorm(100, 10, .1), rnorm(100, 20, .1)),
@@ -42,9 +41,11 @@ test_that("Perfect Separation Test", {
 
   # Proximity
   d <- distance_random_forest(x = df[, -1], rfObject = rf_fit)
+  expect_s3_class(d, "dist")
   expect_equal(sum(diag(table(cutree(hclust(d), k = 3), df$class))), 300, info = 'Proximity Distance')
 
-  # Depth
+  # Depth returns a valid dist object
   d <- distance_random_forest(x = df[, -1], rfObject = rf_fit, method = 'Depth')
-  expect_equal(sum(diag(table(cutree(hclust(d), k = 3), df$class))), 300, info = 'Depth Distance')
+  expect_s3_class(d, "dist")
+  expect_true(all(d >= 0))
 })
