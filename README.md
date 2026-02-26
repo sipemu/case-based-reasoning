@@ -4,6 +4,7 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![R ≥ 3.5.0](https://img.shields.io/badge/R-%E2%89%A5%203.5.0-276DC3.svg?logo=r)](https://cran.r-project.org/)
 [![Lifecycle: stable](https://img.shields.io/badge/lifecycle-stable-brightgreen.svg)](https://lifecycle.r-lib.org/articles/stages.html#stable)
+[![R-CMD-check](https://github.com/sipemu/case-based-reasoning/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/sipemu/case-based-reasoning/actions/workflows/R-CMD-check.yaml)
 
 # Case Based Reasoning using Statistical Models
 
