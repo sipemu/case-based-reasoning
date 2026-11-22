@@ -48,7 +48,9 @@ in a random forest: An exploratory study. Expert Systems with Applications,
 <details open><summary>Inherited methods</summary>
 <ul>
 <li><span class="pkg-link" data-pkg="CaseBasedReasoning" data-topic="CBRBase" data-id="calc_distance_matrix"><a href='../../CaseBasedReasoning/html/CBRBase.html#method-CBRBase-calc_distance_matrix'><code>CaseBasedReasoning::CBRBase$calc_distance_matrix()</code></a></span></li>
+<li><span class="pkg-link" data-pkg="CaseBasedReasoning" data-topic="CBRBase" data-id="evaluate_survival"><a href='../../CaseBasedReasoning/html/CBRBase.html#method-CBRBase-evaluate_survival'><code>CaseBasedReasoning::CBRBase$evaluate_survival()</code></a></span></li>
 <li><span class="pkg-link" data-pkg="CaseBasedReasoning" data-topic="CBRBase" data-id="get_similar_cases"><a href='../../CaseBasedReasoning/html/CBRBase.html#method-CBRBase-get_similar_cases'><code>CaseBasedReasoning::CBRBase$get_similar_cases()</code></a></span></li>
+<li><span class="pkg-link" data-pkg="CaseBasedReasoning" data-topic="CBRBase" data-id="predict_survival"><a href='../../CaseBasedReasoning/html/CBRBase.html#method-CBRBase-predict_survival'><code>CaseBasedReasoning::CBRBase$predict_survival()</code></a></span></li>
 </ul>
 </details>
 }}

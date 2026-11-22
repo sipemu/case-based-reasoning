@@ -37,6 +37,12 @@
 
 ### New features
 
+- `predict_survival()` predicts survival curves for survival endpoints from
+  the retrieved cases: a Kaplan-Meier estimate over each query's `k` nearest
+  training cases, optionally weighted with a tricube kernel (Lowsky et al.,
+  2013). `evaluate_survival()` scores these predictions on test data with
+  Uno's C-index and the IPCW (integrated) Brier score, so that `k` and the
+  distance method can be chosen on held-out data (#21).
 - Regression models (`CoxModel`, `LinearModel`, `LogisticModel`) support any
   rms term: splines (`rcs()`, `pol()`, ...), interactions and so on (#11).
   Distances are computed in *contribution space*: each term's contribution to

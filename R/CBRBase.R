@@ -102,6 +102,94 @@ CBRBase <- R6Class("CBRBase",
                          merge          = merge
                        )
                        similar_cases_tbl
+                     },
+                     #' @description
+                     #' Predict survival curves from the \code{k} most similar
+                     #' training cases: a Kaplan-Meier estimate over the retrieved
+                     #' cases of each query (Lowsky et al., 2013). Only for survival
+                     #' endpoints (\code{Surv(time, status)}).
+                     #'
+                     #' @param query Query data of class data.frame
+                     #' @param k number of similar cases
+                     #' @param times time points; default: the event times of the
+                     #'   training data
+                     #' @param weighted If \code{TRUE}, cases are weighted with a
+                     #'   tricube kernel of their distance to the query.
+                     #' @return A matrix of survival probabilities with one row per
+                     #'   query and one column per time point (attribute \code{times}).
+                     #' @references
+                     #' Lowsky, D. J. et al. (2013). A K-nearest neighbors survival
+                     #' probability prediction method. Statistics in Medicine, 32(12),
+                     #' 2062--2069. \doi{10.1002/sim.5673}
+                     predict_survival = function(query, k = 10, times = NULL, weighted = FALSE) {
+                       outcome <- private$survival_outcome()
+                       k <- private$check_k(k)
+                       if (is.null(times)) {
+                         times <- sort(unique(outcome$time[outcome$status == 1]))
+                       }
+                       dist <- as.matrix(private$get_distance_matrix(query = query))
+                       surv <- predict_survival_cases(dist, outcome$time, outcome$status,
+                                                      k, times, weighted)
+                       attr(surv, "times") <- times
+                       surv
+                     },
+                     #' @description
+                     #' Evaluate survival predictions from retrieved cases on test
+                     #' data: Uno's concordance index and the IPCW (integrated)
+                     #' Brier score. Use it to choose \code{k} and the distance
+                     #' method on held-out data.
+                     #'
+                     #' @param test Test data with the endpoint columns
+                     #' @param k number of similar cases
+                     #' @param times time points for the Brier score; default: 20
+                     #'   points between the 10\% and 90\% quantile of the training
+                     #'   event times
+                     #' @param tau time horizon for the concordance index (risk score
+                     #'   \eqn{1 - S(\tau)}); default: the largest of \code{times}
+                     #' @param weighted passed to \code{predict_survival()}
+                     #' @return A list with \code{c_index} (Uno's C), \code{ibs}
+                     #'   (integrated Brier score) and \code{brier} (data.frame with
+                     #'   the Brier score at each time).
+                     #' @references
+                     #' Uno, H. et al. (2011). On the C-statistics for evaluating
+                     #' overall adequacy of risk prediction procedures with censored
+                     #' survival data. Statistics in Medicine, 30(10), 1105--1117.
+                     #' \doi{10.1002/sim.4154}
+                     #'
+                     #' Graf, E. et al. (1999). Assessment and comparison of
+                     #' prognostic classification schemes for survival data.
+                     #' Statistics in Medicine, 18(17-18), 2529--2545.
+                     evaluate_survival = function(test, k = 10, times = NULL, tau = NULL,
+                                                  weighted = FALSE) {
+                       outcome <- private$survival_outcome()
+                       missing_cols <- setdiff(self$endpoint, names(test))
+                       if (length(missing_cols) > 0) {
+                         stop("Endpoint columns not found in test data: ",
+                              paste(missing_cols, collapse = ", "))
+                       }
+                       test_time <- test[[self$endpoint[1]]]
+                       test_status <- as.numeric(test[[self$endpoint[2]]])
+                       if (is.null(times)) {
+                         ev <- outcome$time[outcome$status == 1]
+                         times <- unique(stats::quantile(ev, seq(0.1, 0.9, length.out = 20),
+                                                         names = FALSE))
+                       }
+                       times <- sort(times)
+                       if (is.null(tau)) tau <- max(times)
+                       surv <- self$predict_survival(test, k = k, times = sort(unique(c(times, tau))),
+                                                     weighted = weighted)
+                       all_times <- attr(surv, "times")
+                       s_tau <- surv[, match(tau, all_times)]
+                       cc <- survival::concordance(
+                         survival::Surv(test_time, test_status) ~ s_tau,
+                         timewt = "n/G2", ymax = tau
+                       )
+                       bs <- brier_ipcw(surv[, match(times, all_times), drop = FALSE],
+                                        test_time, test_status, times,
+                                        outcome$time, outcome$status)
+                       list(c_index = unname(cc$concordance),
+                            ibs     = integrate_mean(times, bs),
+                            brier   = data.frame(time = times, brier = bs))
                      }
                    ),
                    active = list(
@@ -146,6 +234,31 @@ CBRBase <- R6Class("CBRBase",
                          stop("Model not trained: call $fit() first.")
                        }
                        invisible(TRUE)
+                     },
+                     check_k = function(k) {
+                       if (!is.numeric(k) || length(k) != 1 || is.na(k) || k != round(k) || k < 1) {
+                         stop("'k' must be a single whole number >= 1.")
+                       }
+                       private$ensure_fitted()
+                       if (k > length(private$train_idx)) {
+                         stop("'k' (", k, ") is larger than the number of available training cases (",
+                              length(private$train_idx), ").")
+                       }
+                       as.integer(k)
+                     },
+                     # time and status of the training cases for survival endpoints
+                     survival_outcome = function() {
+                       if (length(self$endpoint) != 2) {
+                         stop("Survival prediction needs a survival endpoint, e.g. Surv(time, status) ~ ...")
+                       }
+                       private$ensure_fitted()
+                       x <- private$training_rows()
+                       status <- x[[self$endpoint[2]]]
+                       if (is.logical(status)) status <- as.numeric(status)
+                       if (!is.numeric(status) || !all(status %in% c(0, 1))) {
+                         stop("The status variable '", self$endpoint[2], "' must be 0/1 or logical.")
+                       }
+                       list(time = x[[self$endpoint[1]]], status = status)
                      },
                      # training cases (all columns) that were used for fitting
                      training_rows = function() {
