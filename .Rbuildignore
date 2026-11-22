@@ -7,3 +7,8 @@
 ^cran-comments\.md$
 ^doc$
 ^Meta$
+^CRAN-SUBMISSION$
+^_pkgdown\.yml$
+^docs$
+^pkgdown$
+^codecov\.yml$

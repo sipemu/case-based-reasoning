@@ -90,7 +90,7 @@ public:
   arma::vec calculate_distance(arma::mat& xNodeIDs);
   
 protected:
-  void set_distance(RfDistContainer& nodeDists);
+  void set_distance(const ForestTopology& topology);
 };
 
 

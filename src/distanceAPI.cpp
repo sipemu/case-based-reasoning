@@ -91,14 +91,13 @@ arma::mat rfProximityXYDistanceAPI::calculate_distance(arma::mat& x, arma::mat& 
 * RandomForests Depth Distance
 */
 void rfDepthDistanceAPI::init(arma::umat& terminalNodeIDs) {
-  rangerForest rf(terminalNodeIDs);
-  RfDistContainer nodeDists = rf.nodeDistance();
-  this->set_distance(nodeDists);
+  ForestTopology topology(terminalNodeIDs);
+  this->set_distance(topology);
 }
 
-void rfDepthDistanceAPI::set_distance(RfDistContainer& nodeDists) {
+void rfDepthDistanceAPI::set_distance(const ForestTopology& topology) {
   rfDepthDistance dist;
-  dist.set_parameters(nodeDists);
+  dist.set_parameters(topology);
   dist_ = std::make_shared<rfDepthDistance>(dist);
 }
 
@@ -115,9 +114,8 @@ arma::vec rfDepthDistanceAPI::calculate_distance(arma::mat& xNodeIDs) {
  * RandomForests XY Depth Distance
  */
 void rfDepthXYDistanceAPI::init(arma::umat& terminalNodeIDs) {
-  rangerForest rf(terminalNodeIDs);
-  RfDistContainer nodeDists = rf.nodeDistance();
-  this->set_distance(nodeDists);
+  ForestTopology topology(terminalNodeIDs);
+  this->set_distance(topology);
 }
 
 arma::mat rfDepthXYDistanceAPI::calculate_distance(arma::mat& xNodeIDs, arma::mat& yNodeIDs) {

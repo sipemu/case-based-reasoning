@@ -18,7 +18,8 @@ distance_random_forest(
   y = NULL,
   rfObject,
   method = "Proximity",
-  threads = NULL
+  threads = NULL,
+  proximity_type = c("original", "oob", "rfgap")
 )
 }
 \arguments{
@@ -32,6 +33,9 @@ distance_random_forest(
 
 \item{threads}{number of threads to use. The previous RcppParallel thread
 setting is restored on exit.}
+
+\item{proximity_type}{type of proximity for \code{method = "Proximity"},
+see \code{\link{proximity_distance}}.}
 }
 \value{
 a \code{dist} or a matrix object with pairwise distance of

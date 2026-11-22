@@ -1,0 +1,38 @@
+# Fails if NAMESPACE or man/ are out of sync with the roxygen comments.
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+    branches: [main, master]
+
+name: document-check
+
+permissions: read-all
+
+jobs:
+  document-check:
+    runs-on: ubuntu-latest
+    env:
+      GITHUB_PAT: ${{ secrets.GITHUB_TOKEN }}
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+
+      - uses: r-lib/actions/setup-r@f9a764fea8d5c63df6ef9a5c7795bf7deb5d7e05 # v2
+        with:
+          use-public-rspm: true
+
+      # keep in sync with RoxygenNote in DESCRIPTION
+      - uses: r-lib/actions/setup-r-dependencies@f9a764fea8d5c63df6ef9a5c7795bf7deb5d7e05 # v2
+        with:
+          extra-packages: roxygen2@7.3.3, any::pkgload, any::Rcpp
+
+      - name: Regenerate RcppExports and documentation
+        run: |
+          Rcpp::compileAttributes()
+          roxygen2::roxygenise()
+        shell: Rscript {0}
+
+      - name: Check for uncommitted changes
+        run: |
+          git status --porcelain -- NAMESPACE man R/RcppExports.R src/RcppExports.cpp
+          git diff --exit-code -- NAMESPACE man R/RcppExports.R src/RcppExports.cpp

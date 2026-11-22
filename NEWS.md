@@ -31,6 +31,10 @@
 - The `threads` argument of `distance_random_forest()` only applies to that
   call, and the previous RcppParallel setting is restored (#17).
 - Regression weights for numeric variables are no longer double-named (#18).
+- Depth distance no longer precomputes a table over all pairs of terminal
+  nodes. Edge counts are computed on demand from each tree's parent and depth
+  arrays: n = 1500 with 100 trees now takes seconds instead of not finishing,
+  and memory is linear in the number of nodes (#12).
 - `orderMatrix()` honours `sortDirection` in TBB builds and clamps `k` to the
   number of rows (#25).
 - Corrected the DOI of Englund & Verikas (2012) (#19).
@@ -43,6 +47,14 @@
   2013). `evaluate_survival()` scores these predictions on test data with
   Uno's C-index and the IPCW (integrated) Brier score, so that `k` and the
   distance method can be chosen on held-out data (#21).
+- Out-of-bag and RF-GAP random forest proximities (Rhodes, Cutler & Moon,
+  2023): `proximity_distance(type = c("original", "oob", "rfgap"))`,
+  `distance_random_forest(proximity_type = )` and
+  `RFModel$set_distance_method("Proximity", proximity_type = )`. RF-GAP
+  removes the in-bag bias of the original proximity, and its
+  proximity-weighted average of the training outcomes reproduces the forest's
+  (out-of-bag) prediction. `RFModel` now keeps the in-bag counts by default
+  (#20).
 - Regression models (`CoxModel`, `LinearModel`, `LogisticModel`) support any
   rms term: splines (`rcs()`, `pol()`, ...), interactions and so on (#11).
   Distances are computed in *contribution space*: each term's contribution to
