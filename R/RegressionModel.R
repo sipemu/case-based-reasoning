@@ -20,100 +20,91 @@ RegressionModel <- R6Class(
       cat("Trained   : ", ifelse(is.null(self$weights), FALSE, TRUE), "\n")
     },
     #' @description
-    #' Fast backward variable selection with penalization
-    variable_selection = function() {
-      train_tbl <- self$data[, c(self$endpoint, self$terms), drop = FALSE]
-      train_tbl <- private$check_data(train_tbl)
-
-      # train regression model
-      func <- utils::getFromNamespace(self$model, "rms")
-      params <- self$model_params
-      params$data <- train_tbl
-      params$formula <- self$formula
-      self$model_fit <- do.call(func, params)
+    #' Fast backward variable selection with penalization (\code{rms::fastbw})
+    #'
+    #' @param update If \code{TRUE}, restrict the model's formula and terms to the
+    #'   selected variables. The model must then be fitted again with \code{$fit()}.
+    #' @param ... Further arguments passed to \code{rms::fastbw}, e.g.
+    #'   \code{rule} or \code{sls}.
+    #' @return Character vector of the selected (retained) variables.
+    variable_selection = function(update = FALSE, ...) {
+      train_tbl <- private$prepare_training()
+      fit <- private$fit_model(train_tbl)
 
       # Variable Selection
-      vars <- rms::fastbw(fit = self$model_fit, type = "i")
-      selected_vars <- c(self$endpoint, self$terms)
+      vars <- rms::fastbw(fit = fit, type = "i", ...)
+      selected_vars <- intersect(self$terms, vars$names.kept)
+
+      if (isTRUE(update)) {
+        if (length(selected_vars) == 0) {
+          stop("No variables retained by fastbw(); formula not updated.")
+        }
+        formula <- stats::reformulate(selected_vars, response = self$formula[[2]])
+        environment(formula) <- environment(self$formula)
+        self$formula <- formula
+        self$terms <- selected_vars
+        self$model_fit <- NULL
+        self$weights <- NULL
+        private$train_idx <- NULL
+      }
       selected_vars
     },
     #' @description
     #' Fit the regression model
     fit = function() {
-      train_tbl <- self$data[, c(self$endpoint, self$terms), drop = FALSE]
-      train_tbl <- private$check_data(train_tbl)
+      train_tbl <- private$prepare_training()
+      self$model_fit <- private$fit_model(train_tbl)
+      coefs <- stats::coef(self$model_fit)
 
-      # train regression model
+      weights <- vector("list", length(self$terms))
+      names(weights) <- self$terms
+      for (v in self$terms) {
+        lev <- private$factor_levels[[v]]
+        if (!is.null(lev)) {
+          # reference level has weight 0; others: coefficient named "var=level"
+          w <- c(0, unname(coefs[paste0(v, "=", lev[-1])]))
+          names(w) <- lev
+        } else {
+          w <- unname(coefs[v])
+        }
+        weights[[v]] <- w
+      }
+      self$weights <- weights
+      invisible(self)
+    }
+  ),
+  private = list(
+    fit_model = function(train_tbl) {
       func <- utils::getFromNamespace(self$model, "rms")
       params <- self$model_params
       params$data <- train_tbl
       params$formula <- self$formula
-      self$model_fit <- do.call(func, params)
-
-      nVars <- length(self$terms)
-      weights <- vector("list", nVars)
-      names(weights) <- self$terms
-
-      # get weights
-      for (i in 1:nVars) {
-        if (is.factor(train_tbl[[self$terms[i]]])) {
-          nLev <- nlevels(train_tbl[[self$terms[i]]])
-          weightsTmp <- rep(NA, times = nLev)
-          names(weightsTmp) <- levels(train_tbl[[self$terms[i]]])
-          for (j in 1:nLev) {
-            myLevel <- paste(self$terms[i], "=", levels(train_tbl[[self$terms[i]]])[j], sep = "")
-            if (j == 1) {
-              weightsTmp[j] <- 0
-            } else {
-              weightsTmp[j] <- self$model_fit$coefficients[myLevel]
-            }
-          }
-          weights[[i]] <- weightsTmp
-        } else {  # else numeric
-          myLevel <- paste(self$terms[i])
-          weights[[i]] <- self$model_fit$coefficients[myLevel]
-        }
-      }
-      self$weights <- weights
-    }
-  ),
-  private = list(
+      do.call(func, params)
+    },
     # check weights on NA
     check_weights = function() {
-      wNA <- unlist(lapply(self$weights, function(x) any(is.na(x))))
+      wNA <- vapply(self$weights, function(x) any(is.na(x)), logical(1))
       if (any(wNA)) {
-        warning(paste0("Variables: ", names(wNA)[which(wNA)], " have NA weights.\n"))
+        warning("Variables: ", paste(names(wNA)[wNA], collapse = ", "), " have NA weights.")
         return(TRUE)
       }
       return(FALSE)
     },
-    # transform_data:
-    # we transform all factors to their corresponding
-    # weights and set weight equal to 1 for factor variables
-    transform_data = function(queryData, dtData, learnVars, weights) {
-      nVars <- length(learnVars)
-      trafoWeights <- rep(0, nVars)
-      for (j in 1:nVars) {
-        if (is.factor(dtData[[learnVars[j]]])) {
-          if (!is.null(queryData)) {
-            queryData[[learnVars[j]]] <- weights[[learnVars[j]]][queryData[[learnVars[j]]]]
-          }
-          dtData[[learnVars[j]]] <- weights[[learnVars[j]]][dtData[[learnVars[j]]]]
-          trafoWeights[j] <- 1
-        } else { # else keep weights
-          trafoWeights[j] <- weights[[learnVars[j]]]
+    # transform prepared data to a numeric matrix: factor levels are replaced by
+    # their coefficient (weight 1 in the distance), numeric variables keep their
+    # value and get their coefficient as weight
+    transform_data = function(df) {
+      w <- numeric(length(self$terms))
+      for (j in seq_along(self$terms)) {
+        v <- self$terms[j]
+        if (is.factor(df[[v]])) {
+          df[[v]] <- unname(self$weights[[v]][as.character(df[[v]])])
+          w[j] <- 1
+        } else {
+          w[j] <- self$weights[[v]]
         }
       }
-      names(trafoWeights) <- NULL
-
-      if (is.null(queryData)) {
-        queryData <- NULL
-      } else {
-        queryData <- unname(as.matrix(queryData[, learnVars, drop = FALSE]))
-      }
-      return(list(queryData    = queryData,
-                  data         = unname(as.matrix(dtData[, learnVars, drop = FALSE])),
-                  trafoWeights = trafoWeights))
+      list(x = unname(as.matrix(df[, self$terms, drop = FALSE])), weights = w)
     },
     # calculate weighted absolute distance
     get_distance_matrix = function(query = NULL) {
@@ -124,17 +115,19 @@ RegressionModel <- R6Class(
         stop("NA values in regression beta coefficients!")
       }
 
-      # transform for weighted distance calculations
-      training_data_list <- private$transform_data(queryData = query,
-                                                   dtData    = self$data,
-                                                   learnVars = self$terms,
-                                                   weights   = self$weights)
+      train <- private$transform_data(
+        private$prepare_newdata(private$training_rows(), "training data")
+      )
+      query_x <- NULL
+      if (!is.null(query)) {
+        query_x <- private$transform_data(private$prepare_newdata(query))$x
+      }
 
       # calculate distance matrix
       self$dist_matrix <- as.matrix(weighted_distance(
-        x       = training_data_list$data,
-        y       = training_data_list$queryData,
-        weights = training_data_list$trafoWeights
+        x       = train$x,
+        y       = query_x,
+        weights = train$weights
       ))
     }
   )

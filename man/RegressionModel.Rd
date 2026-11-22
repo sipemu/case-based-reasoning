@@ -53,11 +53,25 @@ Prints information of the initialized object
 \if{html}{\out{<a id="method-RegressionModel-variable_selection"></a>}}
 \if{latex}{\out{\hypertarget{method-RegressionModel-variable_selection}{}}}
 \subsection{Method \code{variable_selection()}}{
-Fast backward variable selection with penalization
+Fast backward variable selection with penalization (\code{rms::fastbw})
 \subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{RegressionModel$variable_selection()}\if{html}{\out{</div>}}
+\if{html}{\out{<div class="r">}}\preformatted{RegressionModel$variable_selection(update = FALSE, ...)}\if{html}{\out{</div>}}
 }
 
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{update}}{If \code{TRUE}, restrict the model's formula and terms to the
+selected variables. The model must then be fitted again with \code{$fit()}.}
+
+\item{\code{...}}{Further arguments passed to \code{rms::fastbw}, e.g.
+\code{rule} or \code{sls}.}
+}
+\if{html}{\out{</div>}}
+}
+\subsection{Returns}{
+Character vector of the selected (retained) variables.
+}
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-RegressionModel-fit"></a>}}

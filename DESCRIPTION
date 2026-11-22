@@ -1,7 +1,7 @@
 Package: CaseBasedReasoning
 Type: Package
 Title: Case Based Reasoning
-Version: 0.4.2
+Version: 0.4.2.9000
 Date: 2026-11-22
 Authors@R:
     c(person(given = "Simon",

@@ -108,33 +108,6 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
-// cpp_orderVector
-arma::uvec cpp_orderVector(arma::vec x, const int sortDirection, int k);
-RcppExport SEXP _CaseBasedReasoning_cpp_orderVector(SEXP xSEXP, SEXP sortDirectionSEXP, SEXP kSEXP) {
-BEGIN_RCPP
-    Rcpp::RObject rcpp_result_gen;
-    Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< arma::vec >::type x(xSEXP);
-    Rcpp::traits::input_parameter< const int >::type sortDirection(sortDirectionSEXP);
-    Rcpp::traits::input_parameter< int >::type k(kSEXP);
-    rcpp_result_gen = Rcpp::wrap(cpp_orderVector(x, sortDirection, k));
-    return rcpp_result_gen;
-END_RCPP
-}
-// cpp_weighted_knn
-Rcpp::List cpp_weighted_knn(arma::mat x, arma::mat query, arma::vec weights, const std::size_t k);
-RcppExport SEXP _CaseBasedReasoning_cpp_weighted_knn(SEXP xSEXP, SEXP querySEXP, SEXP weightsSEXP, SEXP kSEXP) {
-BEGIN_RCPP
-    Rcpp::RObject rcpp_result_gen;
-    Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< arma::mat >::type x(xSEXP);
-    Rcpp::traits::input_parameter< arma::mat >::type query(querySEXP);
-    Rcpp::traits::input_parameter< arma::vec >::type weights(weightsSEXP);
-    Rcpp::traits::input_parameter< const std::size_t >::type k(kSEXP);
-    rcpp_result_gen = Rcpp::wrap(cpp_weighted_knn(x, query, weights, k));
-    return rcpp_result_gen;
-END_RCPP
-}
 
 static const R_CallMethodDef CallEntries[] = {
     {"_CaseBasedReasoning_cpp_weightedDistance", (DL_FUNC) &_CaseBasedReasoning_cpp_weightedDistance, 2},
@@ -145,8 +118,6 @@ static const R_CallMethodDef CallEntries[] = {
     {"_CaseBasedReasoning_cpp_depthMatrix", (DL_FUNC) &_CaseBasedReasoning_cpp_depthMatrix, 2},
     {"_CaseBasedReasoning_cpp_depthMatrixRangerXY", (DL_FUNC) &_CaseBasedReasoning_cpp_depthMatrixRangerXY, 3},
     {"_CaseBasedReasoning_cpp_orderMatrix", (DL_FUNC) &_CaseBasedReasoning_cpp_orderMatrix, 3},
-    {"_CaseBasedReasoning_cpp_orderVector", (DL_FUNC) &_CaseBasedReasoning_cpp_orderVector, 3},
-    {"_CaseBasedReasoning_cpp_weighted_knn", (DL_FUNC) &_CaseBasedReasoning_cpp_weighted_knn, 4},
     {NULL, NULL, 0}
 };
 

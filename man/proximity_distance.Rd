@@ -13,11 +13,13 @@ proximity_distance(x, y = NULL, rfObject, as_dist = TRUE)
 
 \item{rfObject}{\code{ranger} object}
 
-\item{as_dist}{Bool, return a dist object.}
+\item{as_dist}{Bool, convert proximity \eqn{p} to the distance
+\eqn{\sqrt{1 - p}}.}
 }
 \value{
-a \code{dist} or a matrix object with pairwise proximity of
-observations in x vs y (if not null)
+a \code{dist} object (if \code{y} is \code{NULL}) or a matrix with
+pairwise proximities (or distances, see \code{as_dist}) of observations in
+x vs y
 }
 \description{
 Get proximity matrix of an ranger object

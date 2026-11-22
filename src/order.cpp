@@ -22,8 +22,9 @@ struct parallelOrderMatrix : public Worker {
   
   void operator() (std::size_t begin, std::size_t end) {
     arma::uvec order(x_.n_rows);
+    const char* sortDir = (sortDirection_ == 0) ? "ascend" : "descend";
     for (std::size_t i=begin;i<end;++i) {
-      order = arma::sort_index(x_.col(i), "ascend");
+      order = arma::sort_index(x_.col(i), sortDir);
       for (std::size_t l=0;l<k_;++l) {
         output_(l, i) = order(l) + 1;
       }
@@ -34,9 +35,9 @@ struct parallelOrderMatrix : public Worker {
 arma::umat orderMatrix(arma::mat& x, const int sortDirection, const int k) {
   int nCols = x.n_cols;
   int nRows = k;
-  if (k == 0) {
+  if (k <= 0 || k > (int)x.n_rows) {
     nRows = x.n_rows;
-  } 
+  }
   arma::umat output(nRows, nCols);
   output.fill(0);
   parallelOrderMatrix parallelOrderMatrix(x, sortDirection, nRows, output);
@@ -49,9 +50,9 @@ arma::umat orderMatrix(arma::mat& x, const int sortDirection, const int k) {
 arma::umat orderMatrix(arma::mat& x, const int sortDirection, const int k) {
   int nCols = x.n_cols;
   int nRows = k;
-  if (k == 0) {
+  if (k <= 0 || k > (int)x.n_rows) {
     nRows = x.n_rows;
-  } 
+  }
   arma::umat output(nRows, nCols);
   arma::uvec order(x.n_rows);
   const char* sortDir = (sortDirection == 0) ? "ascend" : "descend";
@@ -69,12 +70,4 @@ arma::umat orderMatrix(arma::mat& x, const int sortDirection, const int k) {
 // [[Rcpp::export]]
 arma::umat cpp_orderMatrix(arma::mat& x, const int sortDirection, int k = 5) {
   return orderMatrix(x, sortDirection, k);
-}
-
-// [[Rcpp::export]]
-arma::uvec cpp_orderVector(arma::vec x, const int sortDirection, int k = 0) {
-  arma::uvec order = arma::sort_index(x, "ascend") + 1;
-  if (k > 0)
-    order.resize(k);
-  return order;
 }
