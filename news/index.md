@@ -64,6 +64,16 @@
 
 ### New features
 
+- Regression models (`CoxModel`, `LinearModel`, `LogisticModel`) support
+  any rms term: splines (`rcs()`, `pol()`, …), interactions and so on
+  ([\#11](https://github.com/sipemu/case-based-reasoning/issues/11)).
+  Distances are computed in *contribution space*: each term’s
+  contribution to the linear predictor, `c_t(x) = X_t(x) %*% beta_t`,
+  compared with a weighted L1 distance. For main effects this is
+  identical to the previous weighted distance (Dippon et al., 2002)
+  ([\#22](https://github.com/sipemu/case-based-reasoning/issues/22)).
+- New public field `variables` holds the data columns used by the
+  formula; `terms` holds the term labels.
 - `get_similar_cases(exclude_self = TRUE)` excludes training cases with
   the same row name as the query, so in-sample queries do not return
   themselves

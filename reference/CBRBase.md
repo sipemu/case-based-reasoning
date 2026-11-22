@@ -24,7 +24,11 @@ Root class for common functionality of this package
 
 - `terms`:
 
-  terms of the formula
+  terms of the formula (term labels, e.g. `"rcs(age, 3)"`)
+
+- `variables`:
+
+  variables used by the terms of the formula
 
 - `endpoint`:
 

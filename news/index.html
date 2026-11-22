@@ -66,7 +66,9 @@
 </ul></div>
 <div class="section level3">
 <h3 id="new-features-development-version">New features<a class="anchor" aria-label="anchor" href="#new-features-development-version"></a></h3>
-<ul><li>
+<ul><li>Regression models (<code>CoxModel</code>, <code>LinearModel</code>, <code>LogisticModel</code>) support any rms term: splines (<code>rcs()</code>, <code>pol()</code>, …), interactions and so on (<a href="https://github.com/sipemu/case-based-reasoning/issues/11" class="external-link">#11</a>). Distances are computed in <em>contribution space</em>: each term’s contribution to the linear predictor, <code>c_t(x) = X_t(x) %*% beta_t</code>, compared with a weighted L1 distance. For main effects this is identical to the previous weighted distance (Dippon et al., 2002) (<a href="https://github.com/sipemu/case-based-reasoning/issues/22" class="external-link">#22</a>).</li>
+<li>New public field <code>variables</code> holds the data columns used by the formula; <code>terms</code> holds the term labels.</li>
+<li>
 <code>get_similar_cases(exclude_self = TRUE)</code> excludes training cases with the same row name as the query, so in-sample queries do not return themselves (<a href="https://github.com/sipemu/case-based-reasoning/issues/13" class="external-link">#13</a>).</li>
 </ul></div>
 <div class="section level3">
