@@ -36,3 +36,7 @@ cpp_orderMatrix <- function(x, sortDirection, k = 5L) {
 #' @importFrom RcppParallel RcppParallelLibs
 NULL
 
+cpp_oobProximity <- function(xNodes, yNodes, inbag, yInbag, type) {
+    .Call(`_CaseBasedReasoning_cpp_oobProximity`, xNodes, yNodes, inbag, yInbag, type)
+}
+

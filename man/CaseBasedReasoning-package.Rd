@@ -12,6 +12,7 @@ Case-based reasoning is a problem-solving methodology that involves solving a ne
 Useful links:
 \itemize{
   \item \url{https://github.com/sipemu/case-based-reasoning}
+  \item \url{https://sipemu.github.io/case-based-reasoning/}
   \item Report bugs at \url{https://github.com/sipemu/case-based-reasoning/issues}
 }
 

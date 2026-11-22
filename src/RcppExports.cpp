@@ -108,6 +108,21 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// cpp_oobProximity
+arma::mat cpp_oobProximity(arma::mat& xNodes, arma::mat& yNodes, arma::mat& inbag, arma::mat& yInbag, int type);
+RcppExport SEXP _CaseBasedReasoning_cpp_oobProximity(SEXP xNodesSEXP, SEXP yNodesSEXP, SEXP inbagSEXP, SEXP yInbagSEXP, SEXP typeSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< arma::mat& >::type xNodes(xNodesSEXP);
+    Rcpp::traits::input_parameter< arma::mat& >::type yNodes(yNodesSEXP);
+    Rcpp::traits::input_parameter< arma::mat& >::type inbag(inbagSEXP);
+    Rcpp::traits::input_parameter< arma::mat& >::type yInbag(yInbagSEXP);
+    Rcpp::traits::input_parameter< int >::type type(typeSEXP);
+    rcpp_result_gen = Rcpp::wrap(cpp_oobProximity(xNodes, yNodes, inbag, yInbag, type));
+    return rcpp_result_gen;
+END_RCPP
+}
 
 static const R_CallMethodDef CallEntries[] = {
     {"_CaseBasedReasoning_cpp_weightedDistance", (DL_FUNC) &_CaseBasedReasoning_cpp_weightedDistance, 2},
@@ -118,6 +133,7 @@ static const R_CallMethodDef CallEntries[] = {
     {"_CaseBasedReasoning_cpp_depthMatrix", (DL_FUNC) &_CaseBasedReasoning_cpp_depthMatrix, 2},
     {"_CaseBasedReasoning_cpp_depthMatrixRangerXY", (DL_FUNC) &_CaseBasedReasoning_cpp_depthMatrixRangerXY, 3},
     {"_CaseBasedReasoning_cpp_orderMatrix", (DL_FUNC) &_CaseBasedReasoning_cpp_orderMatrix, 3},
+    {"_CaseBasedReasoning_cpp_oobProximity", (DL_FUNC) &_CaseBasedReasoning_cpp_oobProximity, 5},
     {NULL, NULL, 0}
 };
 
