@@ -59,6 +59,7 @@
 <code>RFModel</code> no longer forces <code>verbose = TRUE</code> for ranger (<a href="https://github.com/sipemu/case-based-reasoning/issues/15" class="external-link">#15</a>).</li>
 <li>The <code>threads</code> argument of <code><a href="../reference/distance_random_forest.html">distance_random_forest()</a></code> only applies to that call, and the previous RcppParallel setting is restored (<a href="https://github.com/sipemu/case-based-reasoning/issues/17" class="external-link">#17</a>).</li>
 <li>Regression weights for numeric variables are no longer double-named (<a href="https://github.com/sipemu/case-based-reasoning/issues/18" class="external-link">#18</a>).</li>
+<li>Depth distance no longer precomputes a table over all pairs of terminal nodes. Edge counts are computed on demand from each tree’s parent and depth arrays: n = 1500 with 100 trees now takes seconds instead of not finishing, and memory is linear in the number of nodes (<a href="https://github.com/sipemu/case-based-reasoning/issues/12" class="external-link">#12</a>).</li>
 <li>
 <code>orderMatrix()</code> honours <code>sortDirection</code> in TBB builds and clamps <code>k</code> to the number of rows (<a href="https://github.com/sipemu/case-based-reasoning/issues/25" class="external-link">#25</a>).</li>
 <li>Corrected the DOI of Englund &amp; Verikas (2012) (<a href="https://github.com/sipemu/case-based-reasoning/issues/19" class="external-link">#19</a>).</li>

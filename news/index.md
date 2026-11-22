@@ -51,6 +51,11 @@
   ([\#17](https://github.com/sipemu/case-based-reasoning/issues/17)).
 - Regression weights for numeric variables are no longer double-named
   ([\#18](https://github.com/sipemu/case-based-reasoning/issues/18)).
+- Depth distance no longer precomputes a table over all pairs of
+  terminal nodes. Edge counts are computed on demand from each tree’s
+  parent and depth arrays: n = 1500 with 100 trees now takes seconds
+  instead of not finishing, and memory is linear in the number of nodes
+  ([\#12](https://github.com/sipemu/case-based-reasoning/issues/12)).
 - `orderMatrix()` honours `sortDirection` in TBB builds and clamps `k`
   to the number of rows
   ([\#25](https://github.com/sipemu/case-based-reasoning/issues/25)).
