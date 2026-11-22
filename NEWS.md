@@ -1,3 +1,12 @@
+## 0.4.2
+
+### Bug fixes
+
+- Removed blanket `import(rms)` and `import(survival)` from NAMESPACE. Newer
+  versions of rms export `cluster()`, which clashed with `survival::cluster()`
+  and caused an install-time warning on CRAN. All rms/survival functions are
+  already called with explicit namespaces.
+
 ## 0.4.1
 
 ### Breaking changes

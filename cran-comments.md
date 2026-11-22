@@ -1,3 +1,9 @@
+## Resubmission
+
+This release fixes the install warning reported on the CRAN check page
+("replacing previous import rms::cluster by survival::cluster") by no longer
+importing the full rms and survival namespaces.
+
 ## Test environments
 
 - macOS (GitHub Actions): R release
