@@ -41,6 +41,14 @@
 
 ### New features
 
+- Out-of-bag and RF-GAP random forest proximities (Rhodes, Cutler & Moon,
+  2023): `proximity_distance(type = c("original", "oob", "rfgap"))`,
+  `distance_random_forest(proximity_type = )` and
+  `RFModel$set_distance_method("Proximity", proximity_type = )`. RF-GAP
+  removes the in-bag bias of the original proximity, and its
+  proximity-weighted average of the training outcomes reproduces the forest's
+  (out-of-bag) prediction. `RFModel` now keeps the in-bag counts by default
+  (#20).
 - Regression models (`CoxModel`, `LinearModel`, `LogisticModel`) support any
   rms term: splines (`rcs()`, `pol()`, ...), interactions and so on (#11).
   Distances are computed in *contribution space*: each term's contribution to

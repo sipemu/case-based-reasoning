@@ -31,6 +31,10 @@ in a random forest: An exploratory study. Expert Systems with Applications,
 \item{\code{model_params}}{model arguments}
 
 \item{\code{dist_method}}{Distance method}
+
+\item{\code{proximity_type}}{Proximity type for \code{dist_method = "Proximity"}:
+\code{"original"}, \code{"oob"} or \code{"rfgap"}
+(see \code{\link{proximity_distance}}).}
 }
 \if{html}{\out{</div>}}
 }
@@ -100,13 +104,20 @@ Fit the RandomForest
 \subsection{Method \code{set_distance_method()}}{
 Set the distance method. Available are Proximity and Depth
 \subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{RFModel$set_distance_method(method = "Depth")}\if{html}{\out{</div>}}
+\if{html}{\out{<div class="r">}}\preformatted{RFModel$set_distance_method(method = "Depth", proximity_type = "original")}\if{html}{\out{</div>}}
 }
 
 \subsection{Arguments}{
 \if{html}{\out{<div class="arguments">}}
 \describe{
 \item{\code{method}}{Distance calculation method (default: Depth)}
+
+\item{\code{proximity_type}}{Proximity type for \code{method = "Proximity"}:
+\code{"original"} (default), \code{"oob"} or \code{"rfgap"}. The
+latter two use the forest's in-bag counts; for a query given to
+\code{get_similar_cases()} or \code{calc_distance_matrix()} the query is
+treated as new data, without a query (\code{calc_distance_matrix()}) the
+in-sample, out-of-bag version is computed.}
 }
 \if{html}{\out{</div>}}
 }
