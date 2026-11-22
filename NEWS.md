@@ -1,4 +1,4 @@
-## CaseBasedReasoning (development version)
+## CaseBasedReasoning 0.5.0
 
 ### Bug fixes
 
