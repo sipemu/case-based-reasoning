@@ -9,6 +9,18 @@
   `evaluate_survival()` for survival endpoints. `predict()` gains
   `type = c("cases", "outcome", "survival")`; the default still returns the
   similar cases (#43).
+- `GowerModel` and `gower_distance()`: the model-free Gower (1971) distance
+  for mixed data (numeric, nominal, ordinal and logical variables, optional
+  weights) as a baseline for the model-derived distances. Ranges come from the
+  training cases, so query distances do not depend on the batch. All CBR
+  methods (retrieval, outcome and survival prediction, counterfactuals,
+  `explain_match()`) work with it (#44).
+
+### Bug fixes
+
+- Ordered factors in queries stay ordered. Queries were converted to
+  unordered factors when aligned to the training data, which changed the
+  design matrix of regression models fitted with ordered factors.
 
 ## CaseBasedReasoning 0.5.0
 

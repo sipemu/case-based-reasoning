@@ -164,3 +164,20 @@ private_summary_regression <- function(object, type_label) {
   cat("Training data : ", nrow(object$data), " x ", ncol(object$data), "\n")
   invisible(object)
 }
+
+#' Predict method for GowerModel
+#'
+#' @param object A \code{GowerModel} R6 object
+#' @inheritParams predict.CoxModel
+#' @return A data.frame of similar cases, a data.frame of predictions, or a
+#'   matrix of survival probabilities
+#' @export
+predict.GowerModel <- function(object, newdata, k = NULL, type = c("cases", "outcome", "survival"), ...) {
+  cbr_predict(object, newdata, k, type, ...)
+}
+
+#' Print method for GowerModel
+#' @param x A \code{GowerModel} R6 object
+#' @param ... Additional arguments (currently unused)
+#' @export
+print.GowerModel <- function(x, ...) x$print()
