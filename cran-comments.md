@@ -1,14 +1,23 @@
-## Resubmission
+## Submission
 
 This release fixes the install warning reported on the CRAN check page
 ("replacing previous import rms::cluster by survival::cluster") by no longer
-importing the full rms and survival namespaces.
+importing the full rms and survival namespaces, and importing only the
+functions used (`rms::fastbw`, `survival::cox.zph`).
+
+It also fixes several correctness bugs (factor level alignment between query
+and training data, missing value handling, the random forest depth distance)
+and adds new features: splines and interactions in regression-based
+distances, out-of-bag and RF-GAP random forest proximities, survival
+prediction from retrieved cases, counterfactual case retrieval and match
+explanations. See NEWS.md.
 
 ## Test environments
 
 - macOS (GitHub Actions): R release
 - Windows (GitHub Actions): R release
-- Ubuntu 22.04 (GitHub Actions): R devel, R release, R oldrel-1
+- Ubuntu (GitHub Actions): R devel, R release, R oldrel-1
+- Local: Manjaro Linux, R release
 
 ## R CMD check results
 
