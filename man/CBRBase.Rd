@@ -103,7 +103,13 @@ Calculates the distance matrix
 \subsection{Method \code{get_similar_cases()}}{
 Extracts similar cases
 \subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{CBRBase$get_similar_cases(query, k = 1, add_distance = TRUE, merge = FALSE)}\if{html}{\out{</div>}}
+\if{html}{\out{<div class="r">}}\preformatted{CBRBase$get_similar_cases(
+  query,
+  k = 1,
+  add_distance = TRUE,
+  merge = FALSE,
+  exclude_self = FALSE
+)}\if{html}{\out{</div>}}
 }
 
 \subsection{Arguments}{
@@ -116,6 +122,11 @@ Extracts similar cases
 \item{\code{add_distance}}{Add distance to result data.frame}
 
 \item{\code{merge}}{Add query data to matched cases data.frame}
+
+\item{\code{exclude_self}}{Exclude training cases whose row name equals
+the query's row name. Use this when the query rows are taken
+from the training data, so that a case is not returned as its
+own nearest neighbour.}
 }
 \if{html}{\out{</div>}}
 }

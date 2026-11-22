@@ -16,8 +16,9 @@ from learning, calculating the distance matrix and searching for similar
 cases.
 }
 \references{
-Englund and Verikas. A novel approach to estimate proximity in a random
-forest: An exploratory study.
+Englund, C. and Verikas, A. (2012). A novel approach to estimate proximity
+in a random forest: An exploratory study. Expert Systems with Applications,
+39(17), 13046--13050. \doi{10.1016/j.eswa.2012.05.094}
 }
 \section{Super class}{
 \code{\link[CaseBasedReasoning:CBRBase]{CaseBasedReasoning::CBRBase}} -> \code{RFModel}
@@ -77,7 +78,8 @@ Initialize a RandomForest object for searching similar cases.
 
 \item{\code{data}}{Training data of class data.frame}
 
-\item{\code{...}}{ranger RandomForest arguments}
+\item{\code{...}}{ranger RandomForest arguments. \code{write.forest} is always
+set to \code{TRUE}; \code{verbose} defaults to \code{FALSE}.}
 }
 \if{html}{\out{</div>}}
 }
@@ -104,7 +106,7 @@ Set the distance method. Available are Proximity and Depth
 \subsection{Arguments}{
 \if{html}{\out{<div class="arguments">}}
 \describe{
-\item{\code{method}}{Distance calculation method (default: Proximity)}
+\item{\code{method}}{Distance calculation method (default: Depth)}
 }
 \if{html}{\out{</div>}}
 }

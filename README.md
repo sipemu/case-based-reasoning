@@ -185,7 +185,7 @@ The Robert Bosch Foundation funded this work. Special thanks go to Professor Dr.
 
 ### Other {#other}
 
--   Englund and Verikas [A novel approach to estimate proximity in a random forest: An exploratory study](https://doi.org/10.1016/j.eswa.2012.01.157)
+-   Englund and Verikas [A novel approach to estimate proximity in a random forest: An exploratory study](https://doi.org/10.1016/j.eswa.2012.05.094)
 
 -   Stuart, E. et al. [Matching methods for causal inference: Designing observational studies](https://doi.org/10.4135/9781412995627.d14)
 

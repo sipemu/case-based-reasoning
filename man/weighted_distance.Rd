@@ -10,23 +10,23 @@ weightedDistance(x, y = NULL, weights = NULL)
 weighted_distance(x, y = NULL, weights = NULL)
 }
 \arguments{
-\item{x}{a new dataset}
+\item{x}{a numeric matrix}
 
-\item{y}{a second new dataset}
+\item{y}{a second numeric matrix with the same columns as \code{x}
+(default: \code{NULL}, pairwise distances within \code{x})}
 
-\item{weights}{a vector of weights}
+\item{weights}{a vector of weights, one per column (default: all 1)}
 }
 \value{
-a \code{dist} or \code{matrix} object
+a \code{dist} object (if \code{y} is \code{NULL}) or a
+  \code{nrow(x)} x \code{nrow(y)} matrix
 }
 \description{
-Weighted Distance calculation
+Computes \eqn{d(x_i, y_j) = \sum_k |w_k (x_{ik} - y_{jk})|}.
 }
 \examples{
-\donttest{
-library(ranger)
-rf <- ranger(Species ~ ., data = iris, num.trees = 5, write.forest = TRUE)
-terminal_nodes(iris[, -5], rf)
-}
+x <- as.matrix(iris[1:5, 1:4])
+weighted_distance(x)
+weighted_distance(x, as.matrix(iris[6:7, 1:4]), weights = c(1, 1, 2, 2))
 
 }

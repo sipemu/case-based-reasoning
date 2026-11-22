@@ -54,7 +54,7 @@ test_that("Validation: k must be valid", {
   rf_model <- RFModel$new(class ~ ., data = df)
   rf_model$fit()
 
-  expect_error(rf_model$get_similar_cases(query = df[1:5, ], k = "a"), "'k' must be numeric")
+  expect_error(rf_model$get_similar_cases(query = df[1:5, ], k = "a"), "'k' must be a single whole number")
   expect_error(rf_model$get_similar_cases(query = df[1:5, ], k = 0), "'k' must be >= 1")
 })
 
@@ -82,7 +82,7 @@ test_that("Validation: RFModel requires trained model for distance", {
     x2 = rnorm(100)
   )
   rf_model <- RFModel$new(class ~ ., data = df)
-  expect_error(rf_model$calc_distance_matrix(), "Expected a 'ranger' object")
+  expect_error(rf_model$calc_distance_matrix(), "Model not trained")
 })
 
 test_that("Validation: RegressionModel requires trained model for distance", {

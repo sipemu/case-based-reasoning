@@ -59,25 +59,39 @@ CBRBase <- R6Class("CBRBase",
                      #' @param k number of similar cases
                      #' @param add_distance Add distance to result data.frame
                      #' @param merge Add query data to matched cases data.frame
-                     get_similar_cases = function(query, k = 1, add_distance = TRUE, merge = FALSE) {
-                       if (!is.numeric(k)) {
-                         stop("'k' must be numeric.")
+                     #' @param exclude_self Exclude training cases whose row name equals
+                     #'   the query's row name. Use this when the query rows are taken
+                     #'   from the training data, so that a case is not returned as its
+                     #'   own nearest neighbour.
+                     get_similar_cases = function(query, k = 1, add_distance = TRUE, merge = FALSE,
+                                                  exclude_self = FALSE) {
+                       if (missing(query)) {
+                         stop("'query' is required. Pass the data for which you want to find similar cases.")
+                       }
+                       if (!is.numeric(k) || length(k) != 1 || is.na(k) || k != round(k)) {
+                         stop("'k' must be a single whole number.")
                        }
                        if (k < 1) {
                          stop("'k' must be >= 1.")
                        }
                        k <- as.integer(k)
-
-                       if (missing(query)) {
-                         stop("'query' is required. Pass the data for which you want to find similar cases.")
+                       private$ensure_fitted()
+                       n_avail <- length(private$train_idx) - as.integer(isTRUE(exclude_self))
+                       if (k > n_avail) {
+                         stop("'k' (", k, ") is larger than the number of available training cases (",
+                              n_avail, ").")
                        }
 
                        # calculate distance matrix
-                       distance_matrix <- private$get_distance_matrix(query = query)
+                       distance_matrix <- as.matrix(private$get_distance_matrix(query = query))
+                       if (isTRUE(exclude_self)) {
+                         self_match <- outer(rownames(private$training_rows()), rownames(query), "==")
+                         distance_matrix[self_match] <- Inf
+                       }
 
                        # calculate distance and order of cases based on distance calculation
                        similar_cases_tbl <- private$extract_similar_cases(
-                         x              = self$data,
+                         x              = private$training_rows(),
                          query          = query,
                          distanceMatrix = distance_matrix,
                          k              = k,
@@ -120,28 +134,69 @@ CBRBase <- R6Class("CBRBase",
                      }
                    ),
                    private = list(
-                     check_data = function(x, isLearning = TRUE) {
-                       # drop cases with missing values in the relevant variables
-                       x <- private$drop_missing(x, isLearning)
-                       if (nrow(x) == 0) {
-                         if (isLearning) {
-                           stop("Learning data is empty after NA elimination.")
-                         } else {
-                           stop("Query is empty after NA elimination.")
+                     # row indices (into self$data) of the cases used for fitting
+                     train_idx = NULL,
+                     # levels of factor terms in the fitted training data
+                     factor_levels = NULL,
+                     ensure_fitted = function() {
+                       if (is.null(private$train_idx)) {
+                         stop("Model not trained: call $fit() first.")
+                       }
+                       invisible(TRUE)
+                     },
+                     # training cases (all columns) that were used for fitting
+                     training_rows = function() {
+                       self$data[private$train_idx, , drop = FALSE]
+                     },
+                     # select model variables, drop incomplete cases, convert characters
+                     # to factors and remember the factor levels for aligning queries
+                     prepare_training = function() {
+                       x <- self$data[, c(self$endpoint, self$terms), drop = FALSE]
+                       keep <- stats::complete.cases(x)
+                       if (!any(keep)) {
+                         stop("Learning data is empty after NA elimination.")
+                       }
+                       if (!all(keep)) {
+                         warning("Dropped cases with missing values: ", sum(!keep))
+                       }
+                       x <- x[keep, , drop = FALSE]
+                       x <- private$check_factor(x)
+                       x <- droplevels(x)
+                       private$train_idx <- which(keep)
+                       is_fct <- vapply(self$terms, function(v) is.factor(x[[v]]), logical(1))
+                       private$factor_levels <- lapply(x[self$terms[is_fct]], levels)
+                       x
+                     },
+                     # align new data (query or training rows) to the fitted training data:
+                     # factor levels are matched by name, numeric variables must stay numeric
+                     prepare_newdata = function(df, what = "query") {
+                       missing_vars <- setdiff(self$terms, names(df))
+                       if (length(missing_vars) > 0) {
+                         stop("Variables not found in ", what, ": ", paste(missing_vars, collapse = ", "))
+                       }
+                       df <- df[, self$terms, drop = FALSE]
+                       for (v in self$terms) {
+                         lev <- private$factor_levels[[v]]
+                         if (!is.null(lev)) {
+                           val <- as.character(df[[v]])
+                           unseen <- setdiff(unique(val[!is.na(val)]), lev)
+                           if (length(unseen) > 0) {
+                             stop("Unknown level(s) of '", v, "' in ", what, ": ",
+                                  paste(unseen, collapse = ", "))
+                           }
+                           df[[v]] <- factor(val, levels = lev)
+                         } else if (is.logical(df[[v]])) {
+                           df[[v]] <- as.numeric(df[[v]])
+                         } else if (!is.numeric(df[[v]])) {
+                           stop("Variable '", v, "' is numeric in the training data but '",
+                                class(df[[v]])[1], "' in ", what, ".")
                          }
                        }
-                       # check character variables: need factors
-                       x <- private$check_factor(x)
-                       return(x)
-                     },
-                     drop_missing = function(df, isLearning = FALSE) {
-                       cols <- c(self$endpoint, self$terms)
-                       df <- df[, cols, drop = FALSE]
-                       rs <- rowSums(is.na(df))
-                       idDrop <- which(rs > 0)
-                       if (length(idDrop) > 0) {
-                         df <- df[-idDrop, ]
-                         warning(paste0("Dropped cases with missing values: ", length(idDrop)))
+                       incomplete <- which(!stats::complete.cases(df))
+                       if (length(incomplete) > 0) {
+                         stop("Missing values in ", what, " (rows: ",
+                              paste(utils::head(incomplete, 10), collapse = ", "),
+                              if (length(incomplete) > 10) ", ..." else "", ").")
                        }
                        df
                      },
@@ -159,19 +214,6 @@ CBRBase <- R6Class("CBRBase",
                        }
                        return(x)
                      },
-                     # transforms data to integer representation;
-                     # necessary for c++ functions
-                     to_int = function(x) {
-                       if (is.null(x))
-                         return(x)
-
-                       for (i in 1:ncol(x)) {
-                         if (!is.numeric(x[[i]])) {
-                           x[[i]] <- as.numeric(as.factor(x[[i]]))
-                         }
-                       }
-                       return(x)
-                     },
                      get_distance_matrix = function(query = NULL) {
                        # virtual function
                      },
@@ -180,17 +222,14 @@ CBRBase <- R6Class("CBRBase",
 
                        # get closest elements
                        orderedMatrix <- cpp_orderMatrix(
-                         as.matrix(distanceMatrix),
+                         distanceMatrix,
                          sortDirection = 0,
                          k             = k
                        )
 
-                       colnames(orderedMatrix) <- paste0("c", 1:ncol(orderedMatrix))
-
-                       # replace purrr::map2 + purrr::reduce with base R
-                       df_list <- lapply(seq_len(ncol(orderedMatrix)), function(colID) {
+                       df_list <- lapply(seq_len(m), function(colID) {
                          rowIDs <- orderedMatrix[, colID]
-                         dtTmp <- x[rowIDs, ]
+                         dtTmp <- x[rowIDs, , drop = FALSE]
                          if (add_distance) {
                            dtTmp$scDist <- distanceMatrix[rowIDs, colID]
                          }
@@ -199,7 +238,7 @@ CBRBase <- R6Class("CBRBase",
                        df_sc <- do.call(rbind, df_list)
 
                        # mark similar cases: 1:n ids
-                       df_sc$caseId <- rep(1:k, m)
+                       df_sc$caseId <- rep(seq_len(k), m)
 
                        if (merge) {
                          df_sc <- private$merge_matched_data(
@@ -212,16 +251,20 @@ CBRBase <- R6Class("CBRBase",
                      },
                      merge_matched_data = function(query, df_sc, k) {
                        # scCaseId: finally sort data.frame such that matched cases are close
-                       query$scCaseId <- 1:nrow(query)
+                       query$scCaseId <- seq_len(nrow(query))
                        query$group <- "Query"
                        query$scDist <- 0.0
-                       query$caseId <- 0
+                       query$caseId <- 0L
                        matchedData <- df_sc
-                       matchedData$scCaseId <- rep(1:nrow(query), each = k)
+                       matchedData$scCaseId <- rep(seq_len(nrow(query)), each = k)
                        matchedData$group <- "Matched"
+                       # the query may lack columns of the training data (e.g. the endpoint)
+                       for (col in setdiff(names(matchedData), names(query))) {
+                         query[[col]] <- NA
+                       }
                        query <- query[, names(matchedData), drop = FALSE]
-                       result <- rbind(query, matchedData)
-                       result[order(result$scCaseId), ]
+                       result <- rbind(matchedData, query)
+                       result[order(result$scCaseId, result$caseId), , drop = FALSE]
                      }
                    )
 )

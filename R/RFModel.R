@@ -7,8 +7,9 @@
 #' cases.
 #'
 #' @references
-#' Englund and Verikas. A novel approach to estimate proximity in a random
-#' forest: An exploratory study.
+#' Englund, C. and Verikas, A. (2012). A novel approach to estimate proximity
+#' in a random forest: An exploratory study. Expert Systems with Applications,
+#' 39(17), 13046--13050. \doi{10.1016/j.eswa.2012.05.094}
 #' @export
 RFModel <- R6Class(
   classname = "RFModel",
@@ -36,29 +37,32 @@ RFModel <- R6Class(
     #'
     #' @param formula Object of class formula or character describing the model fit.
     #' @param data Training data of class data.frame
-    #' @param ... ranger RandomForest arguments
+    #' @param ... ranger RandomForest arguments. \code{write.forest} is always
+    #'   set to \code{TRUE}; \code{verbose} defaults to \code{FALSE}.
     initialize = function(formula, data, ...) {
       super$initialize(formula, data)
       self$model_params <- list(...)
       self$model_params$write.forest <- TRUE
-      self$model_params$verbose <- TRUE
+      if (is.null(self$model_params$verbose)) {
+        self$model_params$verbose <- FALSE
+      }
     },
     #' @description
     #' Fit the RandomForest
     fit = function() {
-      train_tbl <- self$data[, c(self$endpoint, self$terms), drop = FALSE]
-      train_tbl <- private$check_data(train_tbl)
+      train_tbl <- private$prepare_training()
 
       # train model
       params <- self$model_params
       params$data <- train_tbl
       params$formula <- self$formula
       self$model_fit <- do.call(ranger::ranger, params)
+      invisible(self)
     },
     #' @description
     #' Set the distance method. Available are Proximity and Depth
     #'
-    #' @param method Distance calculation method (default: Proximity)
+    #' @param method Distance calculation method (default: Depth)
     set_distance_method = function(method = "Depth") {
       method <- match.arg(method, c("Proximity", "Depth"))
       self$dist_method <- method
@@ -66,10 +70,13 @@ RFModel <- R6Class(
   ),
   private = list(
     get_distance_matrix = function(query = NULL) {
+      private$ensure_fitted()
       validate_ranger(self$model_fit)
+      x <- private$prepare_newdata(private$training_rows(), "training data")
+      y <- if (is.null(query)) NULL else private$prepare_newdata(query)
       self$dist_matrix <- distance_random_forest(
-        x        = private$to_int(self$data[, self$terms, drop = FALSE]),
-        y        = private$to_int(query),
+        x        = x,
+        y        = y,
         method   = self$dist_method,
         rfObject = self$model_fit
       )

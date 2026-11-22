@@ -141,7 +141,7 @@ observations.
 For more details and a thorough explanation of the depth measure, refer
 to the publication by Englund and Verikas: "[A novel approach to
 estimate proximity in a random forest: An exploratory
-study.](https://doi.org/10.1016/j.eswa.2012.01.157)"
+study.](https://doi.org/10.1016/j.eswa.2012.05.094)"
 
 By accounting for tree structure, the depth measure provides a more
 nuanced similarity assessment than the binary proximity measure.

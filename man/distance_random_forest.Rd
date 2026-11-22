@@ -30,7 +30,8 @@ distance_random_forest(
 
 \item{method}{distance calculation method, Proximity (Default) or Depth.}
 
-\item{threads}{number of threads to use}
+\item{threads}{number of threads to use. The previous RcppParallel thread
+setting is restored on exit.}
 }
 \value{
 a \code{dist} or a matrix object with pairwise distance of
