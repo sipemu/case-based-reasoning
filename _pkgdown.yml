@@ -9,6 +9,7 @@ reference:
       - LinearModel
       - LogisticModel
       - RFModel
+      - GowerModel
   - title: S3 methods
     contents:
       - starts_with("predict.")
@@ -20,6 +21,7 @@ reference:
       - proximity_distance
       - depth_distance
       - weighted_distance
+      - gower_distance
   - title: Random forest internals
     contents:
       - terminal_nodes

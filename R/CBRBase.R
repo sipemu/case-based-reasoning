@@ -382,6 +382,8 @@ CBRBase <- R6Class("CBRBase",
                      train_idx = NULL,
                      # levels of factor terms in the fitted training data
                      factor_levels = NULL,
+                     # ordered factor variables of the fitted training data
+                     ordered_vars = NULL,
                      ensure_fitted = function() {
                        if (is.null(private$train_idx)) {
                          stop("Model not trained: call $fit() first.")
@@ -457,6 +459,8 @@ CBRBase <- R6Class("CBRBase",
                        private$train_idx <- which(keep)
                        is_fct <- vapply(self$variables, function(v) is.factor(x[[v]]), logical(1))
                        private$factor_levels <- lapply(x[self$variables[is_fct]], levels)
+                       is_ord <- vapply(self$variables, function(v) is.ordered(x[[v]]), logical(1))
+                       private$ordered_vars <- self$variables[is_ord]
                        x
                      },
                      # align new data (query or training rows) to the fitted training data:
@@ -476,7 +480,7 @@ CBRBase <- R6Class("CBRBase",
                              stop("Unknown level(s) of '", v, "' in ", what, ": ",
                                   paste(unseen, collapse = ", "))
                            }
-                           df[[v]] <- factor(val, levels = lev)
+                           df[[v]] <- factor(val, levels = lev, ordered = v %in% private$ordered_vars)
                          } else if (is.logical(df[[v]])) {
                            df[[v]] <- as.numeric(df[[v]])
                          } else if (!is.numeric(df[[v]])) {

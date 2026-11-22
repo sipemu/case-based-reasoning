@@ -27,6 +27,7 @@ Imports:
     survival,
     ggplot2
 Suggests:
+    cluster,
     testthat,
     knitr,
     rmarkdown,
