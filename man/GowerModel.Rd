@@ -55,6 +55,7 @@ properties. Biometrics, 27(4), 857--871. \doi{10.2307/2528823}
 <details><summary>Inherited methods</summary>
 <ul>
 <li><span class="pkg-link" data-pkg="CaseBasedReasoning" data-topic="CBRBase" data-id="add_cases"><a href='../../CaseBasedReasoning/html/CBRBase.html#method-CBRBase-add_cases'><code>CaseBasedReasoning::CBRBase$add_cases()</code></a></span></li>
+<li><span class="pkg-link" data-pkg="CaseBasedReasoning" data-topic="CBRBase" data-id="assess_cases"><a href='../../CaseBasedReasoning/html/CBRBase.html#method-CBRBase-assess_cases'><code>CaseBasedReasoning::CBRBase$assess_cases()</code></a></span></li>
 <li><span class="pkg-link" data-pkg="CaseBasedReasoning" data-topic="CBRBase" data-id="calc_distance_matrix"><a href='../../CaseBasedReasoning/html/CBRBase.html#method-CBRBase-calc_distance_matrix'><code>CaseBasedReasoning::CBRBase$calc_distance_matrix()</code></a></span></li>
 <li><span class="pkg-link" data-pkg="CaseBasedReasoning" data-topic="CBRBase" data-id="evaluate"><a href='../../CaseBasedReasoning/html/CBRBase.html#method-CBRBase-evaluate'><code>CaseBasedReasoning::CBRBase$evaluate()</code></a></span></li>
 <li><span class="pkg-link" data-pkg="CaseBasedReasoning" data-topic="CBRBase" data-id="evaluate_survival"><a href='../../CaseBasedReasoning/html/CBRBase.html#method-CBRBase-evaluate_survival'><code>CaseBasedReasoning::CBRBase$evaluate_survival()</code></a></span></li>

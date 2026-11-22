@@ -20,6 +20,12 @@
   name or position, and `get_case_base()` returns the current case base. New
   cases are validated like queries. OOB and RF-GAP proximities of `RFModel`
   need a refit after the case base was changed (#45).
+- Case-base maintenance: `assess_cases()` retrieves each case against the
+  others (leave-one-out) and reports the agreement with its neighbours, noisy
+  cases (Wilson editing, 1972) and the competence categories of Smyth & Keane
+  (1995): pivotal cases that no other case solves and redundant (auxiliary)
+  cases whose coverage another case subsumes. Combine it with
+  `remove_cases()` to edit the case base (#46).
 
 ### Bug fixes
 
