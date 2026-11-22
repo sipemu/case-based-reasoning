@@ -69,6 +69,8 @@ Counterfactuals for Explainable AI. ICCBR 2020, LNCS 12311,
 \item \href{#method-CBRBase-fit}{\code{CBRBase$fit()}}
 \item \href{#method-CBRBase-calc_distance_matrix}{\code{CBRBase$calc_distance_matrix()}}
 \item \href{#method-CBRBase-get_similar_cases}{\code{CBRBase$get_similar_cases()}}
+\item \href{#method-CBRBase-predict_outcome}{\code{CBRBase$predict_outcome()}}
+\item \href{#method-CBRBase-evaluate}{\code{CBRBase$evaluate()}}
 \item \href{#method-CBRBase-predict_survival}{\code{CBRBase$predict_survival()}}
 \item \href{#method-CBRBase-evaluate_survival}{\code{CBRBase$evaluate_survival()}}
 \item \href{#method-CBRBase-get_counterfactual_cases}{\code{CBRBase$get_counterfactual_cases()}}
@@ -154,6 +156,81 @@ from the training data, so that a case is not returned as its
 own nearest neighbour.}
 }
 \if{html}{\out{</div>}}
+}
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-CBRBase-predict_outcome"></a>}}
+\if{latex}{\out{\hypertarget{method-CBRBase-predict_outcome}{}}}
+\subsection{Method \code{predict_outcome()}}{
+Predict the outcome of class and numeric endpoints from the
+\code{k} most similar training cases (the Reuse step of the
+CBR cycle): a (weighted) majority vote with class
+probabilities, or a (weighted) mean. For survival endpoints
+use \code{predict_survival()}.
+
+Class endpoints are factors, characters, logicals or 0/1
+variables; all other endpoints are numeric.
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{CBRBase$predict_outcome(query, k = 10, weighted = FALSE, exclude_self = FALSE)}\if{html}{\out{</div>}}
+}
+
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{query}}{Query data of class data.frame}
+
+\item{\code{k}}{number of similar cases}
+
+\item{\code{weighted}}{If \code{TRUE}, cases are weighted with a
+tricube kernel of their distance to the query.}
+
+\item{\code{exclude_self}}{Exclude training cases whose row name
+equals the query's row name (leave-one-out predictions
+for in-sample queries).}
+}
+\if{html}{\out{</div>}}
+}
+\subsection{Returns}{
+A data.frame with one row per query and the column
+  \code{prediction}. For class endpoints \code{prediction} is
+  a factor, and there is one column \code{prob_<level>} with
+  the share of (weighted) cases per class.
+}
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-CBRBase-evaluate"></a>}}
+\if{latex}{\out{\hypertarget{method-CBRBase-evaluate}{}}}
+\subsection{Method \code{evaluate()}}{
+Evaluate predictions from retrieved cases on test data. Class
+endpoints: accuracy, Brier score and log loss; numeric
+endpoints: root mean squared error (RMSE) and mean absolute
+error (MAE); survival endpoints: see
+\code{evaluate_survival()}. Use it to choose \code{k} and the
+distance method on held-out data.
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{CBRBase$evaluate(test, k = 10, weighted = FALSE, ...)}\if{html}{\out{</div>}}
+}
+
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{test}}{Test data with the endpoint column(s)}
+
+\item{\code{k}}{number of similar cases}
+
+\item{\code{weighted}}{If \code{TRUE}, cases are weighted with a
+tricube kernel of their distance to the query.}
+
+\item{\code{...}}{further arguments: \code{exclude_self} for class
+and numeric endpoints, \code{times} and \code{tau} for
+survival endpoints.}
+}
+\if{html}{\out{</div>}}
+}
+\subsection{Returns}{
+A named list of scores and the number of test cases
+  \code{n} (for survival endpoints the list of
+  \code{evaluate_survival()}).
 }
 }
 \if{html}{\out{<hr>}}

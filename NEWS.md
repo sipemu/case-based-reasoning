@@ -1,3 +1,15 @@
+## CaseBasedReasoning (development version)
+
+### New features
+
+- `predict_outcome()` predicts class and numeric outcomes from the `k` most
+  similar training cases: a (tricube-weighted) majority vote with class
+  probabilities, or a (weighted) mean. `evaluate()` scores the predictions on
+  test data (accuracy, Brier score and log loss; RMSE and MAE) and delegates to
+  `evaluate_survival()` for survival endpoints. `predict()` gains
+  `type = c("cases", "outcome", "survival")`; the default still returns the
+  similar cases (#43).
+
 ## CaseBasedReasoning 0.5.0
 
 ### Bug fixes

@@ -71,26 +71,10 @@ CBRBase <- R6Class("CBRBase",
                        if (missing(query)) {
                          stop("'query' is required. Pass the data for which you want to find similar cases.")
                        }
-                       if (!is.numeric(k) || length(k) != 1 || is.na(k) || k != round(k)) {
-                         stop("'k' must be a single whole number.")
-                       }
-                       if (k < 1) {
-                         stop("'k' must be >= 1.")
-                       }
-                       k <- as.integer(k)
-                       private$ensure_fitted()
-                       n_avail <- length(private$train_idx) - as.integer(isTRUE(exclude_self))
-                       if (k > n_avail) {
-                         stop("'k' (", k, ") is larger than the number of available training cases (",
-                              n_avail, ").")
-                       }
+                       k <- private$check_k(k, exclude_self)
 
                        # calculate distance matrix
-                       distance_matrix <- as.matrix(private$get_distance_matrix(query = query))
-                       if (isTRUE(exclude_self)) {
-                         self_match <- outer(rownames(private$training_rows()), rownames(query), "==")
-                         distance_matrix[self_match] <- Inf
-                       }
+                       distance_matrix <- private$query_distances(query, exclude_self)
 
                        # calculate distance and order of cases based on distance calculation
                        similar_cases_tbl <- private$extract_similar_cases(
@@ -102,6 +86,70 @@ CBRBase <- R6Class("CBRBase",
                          merge          = merge
                        )
                        similar_cases_tbl
+                     },
+                     #' @description
+                     #' Predict the outcome of class and numeric endpoints from the
+                     #' \code{k} most similar training cases (the Reuse step of the
+                     #' CBR cycle): a (weighted) majority vote with class
+                     #' probabilities, or a (weighted) mean. For survival endpoints
+                     #' use \code{predict_survival()}.
+                     #'
+                     #' Class endpoints are factors, characters, logicals or 0/1
+                     #' variables; all other endpoints are numeric.
+                     #'
+                     #' @param query Query data of class data.frame
+                     #' @param k number of similar cases
+                     #' @param weighted If \code{TRUE}, cases are weighted with a
+                     #'   tricube kernel of their distance to the query.
+                     #' @param exclude_self Exclude training cases whose row name
+                     #'   equals the query's row name (leave-one-out predictions
+                     #'   for in-sample queries).
+                     #' @return A data.frame with one row per query and the column
+                     #'   \code{prediction}. For class endpoints \code{prediction} is
+                     #'   a factor, and there is one column \code{prob_<level>} with
+                     #'   the share of (weighted) cases per class.
+                     predict_outcome = function(query, k = 10, weighted = FALSE, exclude_self = FALSE) {
+                       y <- private$prediction_target()
+                       k <- private$check_k(k, exclude_self)
+                       dist <- private$query_distances(query, exclude_self)
+                       predict_outcome_cases(dist, y, k, weighted)
+                     },
+                     #' @description
+                     #' Evaluate predictions from retrieved cases on test data. Class
+                     #' endpoints: accuracy, Brier score and log loss; numeric
+                     #' endpoints: root mean squared error (RMSE) and mean absolute
+                     #' error (MAE); survival endpoints: see
+                     #' \code{evaluate_survival()}. Use it to choose \code{k} and the
+                     #' distance method on held-out data.
+                     #'
+                     #' @param test Test data with the endpoint column(s)
+                     #' @param k number of similar cases
+                     #' @param weighted If \code{TRUE}, cases are weighted with a
+                     #'   tricube kernel of their distance to the query.
+                     #' @param ... further arguments: \code{exclude_self} for class
+                     #'   and numeric endpoints, \code{times} and \code{tau} for
+                     #'   survival endpoints.
+                     #' @return A named list of scores and the number of test cases
+                     #'   \code{n} (for survival endpoints the list of
+                     #'   \code{evaluate_survival()}).
+                     evaluate = function(test, k = 10, weighted = FALSE, ...) {
+                       private$ensure_fitted()
+                       if (length(self$endpoint) == 2) {
+                         return(self$evaluate_survival(test, k = k, weighted = weighted, ...))
+                       }
+                       if (!self$endpoint %in% names(test)) {
+                         stop("Endpoint column '", self$endpoint, "' not found in test data.")
+                       }
+                       truth <- test[[self$endpoint]]
+                       if (anyNA(truth)) {
+                         stop("Missing values in the endpoint of the test data.")
+                       }
+                       y <- private$prediction_target()
+                       pred <- self$predict_outcome(test, k = k, weighted = weighted, ...)
+                       if (y$type == "class") {
+                         truth <- outcome_values(test, self$endpoint, NULL)$value
+                       }
+                       evaluate_predictions(pred, truth, y)
                      },
                      #' @description
                      #' Predict survival curves from the \code{k} most similar
@@ -247,12 +295,11 @@ CBRBase <- R6Class("CBRBase",
                            !anyNA(query[, self$endpoint, drop = FALSE])) {
                          y_query <- outcome_values(query, self$endpoint, horizon)$value
                        } else {
-                         nn <- cpp_orderMatrix(dist, sortDirection = 0, k = k_outcome)
-                         y_query <- vapply(seq_len(ncol(dist)), function(q) {
-                           v <- y_train$value[nn[, q]]
-                           if (y_train$type == "numeric") as.character(mean(v)) else majority(v)
-                         }, character(1))
-                         if (y_train$type == "numeric") y_query <- as.numeric(y_query)
+                         if (y_train$type != "numeric") {
+                           y_train$levels <- sort(unique(y_train$value[!is.na(y_train$value)]))
+                         }
+                         y_query <- predict_outcome_cases(dist, y_train, k_outcome)$prediction
+                         if (y_train$type != "numeric") y_query <- as.character(y_query)
                        }
 
                        # mask cases that are not counterfactuals
@@ -341,16 +388,39 @@ CBRBase <- R6Class("CBRBase",
                        }
                        invisible(TRUE)
                      },
-                     check_k = function(k) {
-                       if (!is.numeric(k) || length(k) != 1 || is.na(k) || k != round(k) || k < 1) {
-                         stop("'k' must be a single whole number >= 1.")
+                     check_k = function(k, exclude_self = FALSE) {
+                       if (!is.numeric(k) || length(k) != 1 || is.na(k) || k != round(k)) {
+                         stop("'k' must be a single whole number.")
+                       }
+                       if (k < 1) {
+                         stop("'k' must be >= 1.")
                        }
                        private$ensure_fitted()
-                       if (k > length(private$train_idx)) {
+                       n_avail <- length(private$train_idx) - as.integer(isTRUE(exclude_self))
+                       if (k > n_avail) {
                          stop("'k' (", k, ") is larger than the number of available training cases (",
-                              length(private$train_idx), ").")
+                              n_avail, ").")
                        }
                        as.integer(k)
+                     },
+                     # distance matrix (training cases x queries); with exclude_self,
+                     # training cases with the query's row name get distance Inf
+                     query_distances = function(query, exclude_self = FALSE) {
+                       d <- as.matrix(private$get_distance_matrix(query = query))
+                       if (isTRUE(exclude_self)) {
+                         self_match <- outer(rownames(private$training_rows()), rownames(query), "==")
+                         d[self_match] <- Inf
+                       }
+                       d
+                     },
+                     # outcome of the training cases for predict_outcome()
+                     prediction_target = function() {
+                       private$ensure_fitted()
+                       if (length(self$endpoint) != 1) {
+                         stop("predict_outcome() needs a class or numeric endpoint; ",
+                              "use predict_survival() for survival endpoints.")
+                       }
+                       prediction_outcome(private$training_rows(), self$endpoint)
                      },
                      # time and status of the training cases for survival endpoints
                      survival_outcome = function() {

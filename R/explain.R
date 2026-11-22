@@ -21,13 +21,6 @@ outcome_values <- function(df, endpoint, horizon) {
   list(type = "numeric", value = as.numeric(y))
 }
 
-majority <- function(x) {
-  x <- x[!is.na(x)]
-  if (length(x) == 0) return(NA_character_)
-  tab <- table(x)
-  names(tab)[which.max(tab)]
-}
-
 # Explain why two cases of a random forest are similar: in each tree where the
 # cases fall into different terminal nodes, the split variable of the node at
 # which their paths diverge (their lowest common ancestor).
