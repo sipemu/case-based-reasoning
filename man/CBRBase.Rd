@@ -74,6 +74,9 @@ Counterfactuals for Explainable AI. ICCBR 2020, LNCS 12311,
 \item \href{#method-CBRBase-predict_survival}{\code{CBRBase$predict_survival()}}
 \item \href{#method-CBRBase-evaluate_survival}{\code{CBRBase$evaluate_survival()}}
 \item \href{#method-CBRBase-get_counterfactual_cases}{\code{CBRBase$get_counterfactual_cases()}}
+\item \href{#method-CBRBase-add_cases}{\code{CBRBase$add_cases()}}
+\item \href{#method-CBRBase-remove_cases}{\code{CBRBase$remove_cases()}}
+\item \href{#method-CBRBase-get_case_base}{\code{CBRBase$get_case_base()}}
 \item \href{#method-CBRBase-explain_match}{\code{CBRBase$explain_match()}}
 \item \href{#method-CBRBase-clone}{\code{CBRBase$clone()}}
 }
@@ -360,6 +363,80 @@ query's outcome if it is not given}
 \subsection{Returns}{
 A data.frame like \code{get_similar_cases()} with the
   additional column \code{queryOutcome}.
+}
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-CBRBase-add_cases"></a>}}
+\if{latex}{\out{\hypertarget{method-CBRBase-add_cases}{}}}
+\subsection{Method \code{add_cases()}}{
+Add solved cases to the case base (the Retain step of the
+CBR cycle). By default the model is not refitted: the new
+cases are retrievable at once, and distances use the
+fitted model (for \code{GowerModel}: the ranges of the
+fitted cases). The new cases are checked like queries
+(variables, factor levels, missing values) and need a
+complete endpoint.
+
+For \code{RFModel} the OOB and RF-GAP proximities need the
+in-bag counts of all cases; refit the model to use them
+after adding cases.
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{CBRBase$add_cases(newdata, refit = FALSE)}\if{html}{\out{</div>}}
+}
+
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{newdata}}{New cases (data.frame) with the variables and
+the endpoint of the model. Other columns of the training
+data are filled with \code{NA}.}
+
+\item{\code{refit}}{If \code{TRUE}, refit the model on the extended
+case base; new factor levels are then allowed.}
+}
+\if{html}{\out{</div>}}
+}
+\subsection{Returns}{
+The object, invisibly.
+}
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-CBRBase-remove_cases"></a>}}
+\if{latex}{\out{\hypertarget{method-CBRBase-remove_cases}{}}}
+\subsection{Method \code{remove_cases()}}{
+Remove cases from the case base, e.g. noisy or redundant
+cases found by \code{assess_cases()}.
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{CBRBase$remove_cases(cases, refit = FALSE)}\if{html}{\out{</div>}}
+}
+
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{cases}}{row names (character) or positions (integer)
+of cases in the case base (\code{get_case_base()}).}
+
+\item{\code{refit}}{If \code{TRUE}, refit the model on the
+remaining cases.}
+}
+\if{html}{\out{</div>}}
+}
+\subsection{Returns}{
+The object, invisibly.
+}
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-CBRBase-get_case_base"></a>}}
+\if{latex}{\out{\hypertarget{method-CBRBase-get_case_base}{}}}
+\subsection{Method \code{get_case_base()}}{
+The case base: the training cases used for retrieval
+(complete cases, including added cases).
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{CBRBase$get_case_base()}\if{html}{\out{</div>}}
+}
+
+\subsection{Returns}{
+A data.frame.
 }
 }
 \if{html}{\out{<hr>}}
