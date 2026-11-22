@@ -4,10 +4,17 @@
 \alias{proximity_distance}
 \title{Get proximity matrix of an ranger object}
 \usage{
-proximity_distance(x, y = NULL, rfObject, as_dist = TRUE)
+proximity_distance(
+  x,
+  y = NULL,
+  rfObject,
+  as_dist = TRUE,
+  type = c("original", "oob", "rfgap")
+)
 }
 \arguments{
-\item{x}{a new dataset}
+\item{x}{a new dataset. For \code{type = "oob"} and \code{"rfgap"}: the
+training data of \code{rfObject}.}
 
 \item{y}{a second new dataset (Default: NULL)}
 
@@ -15,14 +22,43 @@ proximity_distance(x, y = NULL, rfObject, as_dist = TRUE)
 
 \item{as_dist}{Bool, convert proximity \eqn{p} to the distance
 \eqn{\sqrt{1 - p}}.}
+
+\item{type}{proximity type: \code{"original"} (default), \code{"oob"} or
+\code{"rfgap"}.}
 }
 \value{
-a \code{dist} object (if \code{y} is \code{NULL}) or a matrix with
-pairwise proximities (or distances, see \code{as_dist}) of observations in
-x vs y
+For \code{type = "original"}: a \code{dist} object (if \code{y} is
+\code{NULL}) or a matrix with pairwise proximities (or distances, see
+\code{as_dist}) of observations in x (rows) vs y (columns). For the other
+types always a matrix; RF-GAP proximities are not symmetric.
 }
 \description{
-Get proximity matrix of an ranger object
+Random forest proximities between the observations in \code{x} and
+\code{y}, converted to the distance \eqn{\sqrt{1 - p}} by default.
+}
+\details{
+Three types of proximity are available:
+\describe{
+  \item{\code{"original"}}{Breiman's proximity: the share of trees in which
+    two observations share a terminal node. In-sample proximities are
+    inflated because observations are counted in the trees they were
+    trained on.}
+  \item{\code{"oob"}}{Only trees in which the training observation (and,
+    for in-sample queries, the query) is out-of-bag are used.}
+  \item{\code{"rfgap"}}{RF-GAP proximities (Rhodes, Cutler & Moon, 2023):
+    for query \eqn{q} and training observation \eqn{j},
+    \eqn{p(q, j) = \frac{1}{|S_q|} \sum_{t \in S_q} c_j(t) 1[j \in
+    leaf_t(q)] / |M_q(t)|}, where \eqn{S_q} are the trees in which \eqn{q}
+    is out-of-bag (all trees for new data), \eqn{c_j(t)} is the in-bag count
+    of \eqn{j} and \eqn{|M_q(t)|} the total in-bag count in \eqn{q}'s leaf.
+    For each query the proximities sum to 1, and the proximity-weighted
+    average of the training outcomes reproduces the forest's (out-of-bag)
+    prediction for regression forests.}
+}
+\code{"oob"} and \code{"rfgap"} need the in-bag counts: fit the forest
+with \code{keep.inbag = TRUE} and pass the forest's training data as
+\code{x} (same rows, same order). If \code{y} is \code{NULL}, the training
+data is also used as query (in-sample proximities).
 }
 \examples{
 \donttest{
@@ -33,7 +69,16 @@ proximity_distance(x = iris[, -5], rfObject = rf)
 set.seed(1234L)
 learn <- sample(1:150, 100)
 test <- (1:150)[-learn]
-rf <- ranger(Species ~ ., data = iris[learn, ], num.trees = 500, write.forest = TRUE)
+rf <- ranger(Species ~ ., data = iris[learn, ], num.trees = 500,
+             write.forest = TRUE, keep.inbag = TRUE)
 proximity_distance(x = iris[learn, -5], y = iris[test, -5], rfObject = rf)
+proximity_distance(x = iris[learn, -5], y = iris[test, -5], rfObject = rf,
+                   type = "rfgap")
 }
+}
+\references{
+Rhodes, J. S., Cutler, A. and Moon, K. R. (2023). Geometry- and
+Accuracy-Preserving Random Forest Proximities. IEEE Transactions on Pattern
+Analysis and Machine Intelligence, 45(9), 10947--10959.
+\doi{10.1109/TPAMI.2023.3263774}
 }

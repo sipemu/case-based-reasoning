@@ -21,6 +21,10 @@ RFModel <- R6Class(
     model_params = list(write.forest = TRUE, verbose = TRUE),
     #' @field  dist_method Distance method
     dist_method  = "Depth",
+    #' @field proximity_type Proximity type for \code{dist_method = "Proximity"}:
+    #'   \code{"original"}, \code{"oob"} or \code{"rfgap"}
+    #'   (see \code{\link{proximity_distance}}).
+    proximity_type = "original",
     #' @description
     #' Prints information of the initialized object
     print = function() {
@@ -29,7 +33,8 @@ RFModel <- R6Class(
       cat("Model     : ", paste(self$model, collapse = ", "), "\n")
       cat("Endpoints : ", paste(self$endpoint, collapse = ", "), "\n")
       cat("Variables : ", paste(self$terms, collapse = ", "), "\n")
-      cat("Method    : ", paste(self$dist_method, collapse = ", "), "\n")
+      cat("Method    : ", paste(self$dist_method, collapse = ", "),
+          if (self$dist_method == "Proximity") paste0("(", self$proximity_type, ")"), "\n")
       cat("Trained   : ", ifelse(is.null(self$model_fit), FALSE, TRUE), "\n")
     },
     #' @description
@@ -43,6 +48,10 @@ RFModel <- R6Class(
       super$initialize(formula, data)
       self$model_params <- list(...)
       self$model_params$write.forest <- TRUE
+      # in-bag counts are needed for OOB and RF-GAP proximities
+      if (is.null(self$model_params$keep.inbag)) {
+        self$model_params$keep.inbag <- TRUE
+      }
       if (is.null(self$model_params$verbose)) {
         self$model_params$verbose <- FALSE
       }
@@ -63,9 +72,18 @@ RFModel <- R6Class(
     #' Set the distance method. Available are Proximity and Depth
     #'
     #' @param method Distance calculation method (default: Depth)
-    set_distance_method = function(method = "Depth") {
+    #' @param proximity_type Proximity type for \code{method = "Proximity"}:
+    #'   \code{"original"} (default), \code{"oob"} or \code{"rfgap"}. The
+    #'   latter two use the forest's in-bag counts; for a query given to
+    #'   \code{get_similar_cases()} or \code{calc_distance_matrix()} the query is
+    #'   treated as new data, without a query (\code{calc_distance_matrix()}) the
+    #'   in-sample, out-of-bag version is computed.
+    set_distance_method = function(method = "Depth", proximity_type = "original") {
       method <- match.arg(method, c("Proximity", "Depth"))
+      proximity_type <- match.arg(proximity_type, c("original", "oob", "rfgap"))
       self$dist_method <- method
+      self$proximity_type <- proximity_type
+      invisible(self)
     }
   ),
   private = list(
@@ -78,6 +96,7 @@ RFModel <- R6Class(
         x        = x,
         y        = y,
         method   = self$dist_method,
+        proximity_type = self$proximity_type,
         rfObject = self$model_fit
       )
     }
