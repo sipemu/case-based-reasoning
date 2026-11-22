@@ -12,6 +12,7 @@
 <url><loc>https://sipemu.github.io/case-based-reasoning/reference/CBRBase.html</loc></url>
 <url><loc>https://sipemu.github.io/case-based-reasoning/reference/CaseBasedReasoning-package.html</loc></url>
 <url><loc>https://sipemu.github.io/case-based-reasoning/reference/CoxModel.html</loc></url>
+<url><loc>https://sipemu.github.io/case-based-reasoning/reference/GowerModel.html</loc></url>
 <url><loc>https://sipemu.github.io/case-based-reasoning/reference/LinearModel.html</loc></url>
 <url><loc>https://sipemu.github.io/case-based-reasoning/reference/LogisticModel.html</loc></url>
 <url><loc>https://sipemu.github.io/case-based-reasoning/reference/RFModel.html</loc></url>
@@ -21,12 +22,15 @@
 <url><loc>https://sipemu.github.io/case-based-reasoning/reference/distance_random_forest.html</loc></url>
 <url><loc>https://sipemu.github.io/case-based-reasoning/reference/edges_between_terminal_nodes.html</loc></url>
 <url><loc>https://sipemu.github.io/case-based-reasoning/reference/generate_grid.html</loc></url>
+<url><loc>https://sipemu.github.io/case-based-reasoning/reference/gower_distance.html</loc></url>
 <url><loc>https://sipemu.github.io/case-based-reasoning/reference/index.html</loc></url>
 <url><loc>https://sipemu.github.io/case-based-reasoning/reference/predict.CoxModel.html</loc></url>
+<url><loc>https://sipemu.github.io/case-based-reasoning/reference/predict.GowerModel.html</loc></url>
 <url><loc>https://sipemu.github.io/case-based-reasoning/reference/predict.LinearModel.html</loc></url>
 <url><loc>https://sipemu.github.io/case-based-reasoning/reference/predict.LogisticModel.html</loc></url>
 <url><loc>https://sipemu.github.io/case-based-reasoning/reference/predict.RFModel.html</loc></url>
 <url><loc>https://sipemu.github.io/case-based-reasoning/reference/print.CoxModel.html</loc></url>
+<url><loc>https://sipemu.github.io/case-based-reasoning/reference/print.GowerModel.html</loc></url>
 <url><loc>https://sipemu.github.io/case-based-reasoning/reference/print.LinearModel.html</loc></url>
 <url><loc>https://sipemu.github.io/case-based-reasoning/reference/print.LogisticModel.html</loc></url>
 <url><loc>https://sipemu.github.io/case-based-reasoning/reference/print.RFModel.html</loc></url>
