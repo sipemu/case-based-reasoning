@@ -52,14 +52,18 @@ properties. Biometrics, 27(4), 857–871.
 
 Inherited methods
 
+- [`CaseBasedReasoning::CBRBase$add_cases()`](https://sipemu.github.io/case-based-reasoning/reference/CBRBase.html#method-add_cases)
+- [`CaseBasedReasoning::CBRBase$assess_cases()`](https://sipemu.github.io/case-based-reasoning/reference/CBRBase.html#method-assess_cases)
 - [`CaseBasedReasoning::CBRBase$calc_distance_matrix()`](https://sipemu.github.io/case-based-reasoning/reference/CBRBase.html#method-calc_distance_matrix)
 - [`CaseBasedReasoning::CBRBase$evaluate()`](https://sipemu.github.io/case-based-reasoning/reference/CBRBase.html#method-evaluate)
 - [`CaseBasedReasoning::CBRBase$evaluate_survival()`](https://sipemu.github.io/case-based-reasoning/reference/CBRBase.html#method-evaluate_survival)
 - [`CaseBasedReasoning::CBRBase$explain_match()`](https://sipemu.github.io/case-based-reasoning/reference/CBRBase.html#method-explain_match)
+- [`CaseBasedReasoning::CBRBase$get_case_base()`](https://sipemu.github.io/case-based-reasoning/reference/CBRBase.html#method-get_case_base)
 - [`CaseBasedReasoning::CBRBase$get_counterfactual_cases()`](https://sipemu.github.io/case-based-reasoning/reference/CBRBase.html#method-get_counterfactual_cases)
 - [`CaseBasedReasoning::CBRBase$get_similar_cases()`](https://sipemu.github.io/case-based-reasoning/reference/CBRBase.html#method-get_similar_cases)
 - [`CaseBasedReasoning::CBRBase$predict_outcome()`](https://sipemu.github.io/case-based-reasoning/reference/CBRBase.html#method-predict_outcome)
 - [`CaseBasedReasoning::CBRBase$predict_survival()`](https://sipemu.github.io/case-based-reasoning/reference/CBRBase.html#method-predict_survival)
+- [`CaseBasedReasoning::CBRBase$remove_cases()`](https://sipemu.github.io/case-based-reasoning/reference/CBRBase.html#method-remove_cases)
 
 ------------------------------------------------------------------------
 

@@ -20,7 +20,8 @@ Root class for common functionality of this package"></head><body>
       <ul class="navbar-nav me-auto"><li class="active nav-item"><a class="nav-link" href="../reference/index.html">Reference</a></li>
 <li class="nav-item dropdown">
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-articles" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Articles</button>
-  <ul class="dropdown-menu" aria-labelledby="dropdown-articles"><li><a class="dropdown-item" href="../articles/distance_measures.html">Motivation</a></li>
+  <ul class="dropdown-menu" aria-labelledby="dropdown-articles"><li><a class="dropdown-item" href="../articles/benchmark.html">Benchmark: Model-Derived Distances vs. Learned Metrics</a></li>
+    <li><a class="dropdown-item" href="../articles/distance_measures.html">Motivation</a></li>
     <li><a class="dropdown-item" href="../articles/get_started.html">Get Started</a></li>
   </ul></li>
 <li class="nav-item"><a class="nav-link" href="../news/index.html">Changelog</a></li>
@@ -62,6 +63,13 @@ Statistics in Medicine, 18(17-18), 2529–2545.</p>
 Where to Find Them: A Case-Based Technique for Generating
 Counterfactuals for Explainable AI. ICCBR 2020, LNCS 12311,
 163–178. <a href="https://doi.org/10.1007/978-3-030-58342-2_11" class="external-link">doi:10.1007/978-3-030-58342-2_11</a></p>
+<p>Smyth, B. and Keane, M. T. (1995). Remembering to forget: A
+competence-preserving case deletion policy for case-based
+reasoning systems. Proceedings of IJCAI-95, 377–382.</p>
+<p>Wilson, D. L. (1972). Asymptotic properties of nearest
+neighbor rules using edited data. IEEE Transactions on
+Systems, Man, and Cybernetics, 2(3), 408–421.
+<a href="https://doi.org/10.1109/TSMC.1972.4309137" class="external-link">doi:10.1109/TSMC.1972.4309137</a></p>
     </div>
     <div class="section level2">
     <h2 id="public-fields">Public fields<a class="anchor" aria-label="anchor" href="#public-fields"></a></h2>
@@ -134,6 +142,10 @@ Counterfactuals for Explainable AI. ICCBR 2020, LNCS 12311,
 <li><p><a href="#method-CBRBase-predict_survival"><code>CBRBase$predict_survival()</code></a></p></li>
 <li><p><a href="#method-CBRBase-evaluate_survival"><code>CBRBase$evaluate_survival()</code></a></p></li>
 <li><p><a href="#method-CBRBase-get_counterfactual_cases"><code>CBRBase$get_counterfactual_cases()</code></a></p></li>
+<li><p><a href="#method-CBRBase-add_cases"><code>CBRBase$add_cases()</code></a></p></li>
+<li><p><a href="#method-CBRBase-remove_cases"><code>CBRBase$remove_cases()</code></a></p></li>
+<li><p><a href="#method-CBRBase-assess_cases"><code>CBRBase$assess_cases()</code></a></p></li>
+<li><p><a href="#method-CBRBase-get_case_base"><code>CBRBase$get_case_base()</code></a></p></li>
 <li><p><a href="#method-CBRBase-explain_match"><code>CBRBase$explain_match()</code></a></p></li>
 <li><p><a href="#method-CBRBase-clone"><code>CBRBase$clone()</code></a></p></li>
 </ul></div><p></p><hr><a id="method-CBRBase-new"></a><div class="section">
@@ -455,6 +467,136 @@ query's outcome if it is not given</p></dd>
   additional column <code>queryOutcome</code>.</p>
 </div>
 
+</div><p></p><hr><a id="method-CBRBase-add_cases"></a><div class="section">
+<h3 id="method-add-cases-">Method <code>add_cases()</code><a class="anchor" aria-label="anchor" href="#method-add-cases-"></a></h3>
+<p>Add solved cases to the case base (the Retain step of the
+CBR cycle). By default the model is not refitted: the new
+cases are retrievable at once, and distances use the
+fitted model (for <code>GowerModel</code>: the ranges of the
+fitted cases). The new cases are checked like queries
+(variables, factor levels, missing values) and need a
+complete endpoint.</p>
+<p>For <code>RFModel</code> the OOB and RF-GAP proximities need the
+in-bag counts of all cases; refit the model to use them
+after adding cases.</p><div class="section">
+<h4 id="usage-9">Usage<a class="anchor" aria-label="anchor" href="#usage-9"></a></h4>
+<p></p><div class="r"><div class="sourceCode"><pre><code><span><span class="va">CBRBase</span><span class="op">$</span><span class="fu">add_cases</span><span class="op">(</span><span class="va">newdata</span>, refit <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span></code></pre></div><p></p></div>
+</div>
+
+<div class="section">
+<h4 id="arguments-8">Arguments<a class="anchor" aria-label="anchor" href="#arguments-8"></a></h4>
+<p></p><div class="arguments"><dl><dt><code>newdata</code></dt>
+<dd><p>New cases (data.frame) with the variables and
+the endpoint of the model. Other columns of the training
+data are filled with <code>NA</code>.</p></dd>
+
+
+<dt><code>refit</code></dt>
+<dd><p>If <code>TRUE</code>, refit the model on the extended
+case base; new factor levels are then allowed.</p></dd>
+
+
+</dl><p></p></div>
+</div>
+<div class="section">
+<h4 id="returns-5">Returns<a class="anchor" aria-label="anchor" href="#returns-5"></a></h4>
+<p>The object, invisibly.</p>
+</div>
+
+</div><p></p><hr><a id="method-CBRBase-remove_cases"></a><div class="section">
+<h3 id="method-remove-cases-">Method <code>remove_cases()</code><a class="anchor" aria-label="anchor" href="#method-remove-cases-"></a></h3>
+<p>Remove cases from the case base, e.g. noisy or redundant
+cases found by <code>assess_cases()</code>.</p><div class="section">
+<h4 id="usage-10">Usage<a class="anchor" aria-label="anchor" href="#usage-10"></a></h4>
+<p></p><div class="r"><div class="sourceCode"><pre><code><span><span class="va">CBRBase</span><span class="op">$</span><span class="fu">remove_cases</span><span class="op">(</span><span class="va">cases</span>, refit <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span></code></pre></div><p></p></div>
+</div>
+
+<div class="section">
+<h4 id="arguments-9">Arguments<a class="anchor" aria-label="anchor" href="#arguments-9"></a></h4>
+<p></p><div class="arguments"><dl><dt><code>cases</code></dt>
+<dd><p>row names (character) or positions (integer)
+of cases in the case base (<code>get_case_base()</code>).</p></dd>
+
+
+<dt><code>refit</code></dt>
+<dd><p>If <code>TRUE</code>, refit the model on the
+remaining cases.</p></dd>
+
+
+</dl><p></p></div>
+</div>
+<div class="section">
+<h4 id="returns-6">Returns<a class="anchor" aria-label="anchor" href="#returns-6"></a></h4>
+<p>The object, invisibly.</p>
+</div>
+
+</div><p></p><hr><a id="method-CBRBase-assess_cases"></a><div class="section">
+<h3 id="method-assess-cases-">Method <code>assess_cases()</code><a class="anchor" aria-label="anchor" href="#method-assess-cases-"></a></h3>
+<p>Assess the cases of the case base for case-base maintenance.
+Each case is retrieved against the other cases
+(leave-one-out) with its <code>k</code> nearest neighbours.</p>
+<p>Case \(j\) <em>solves</em> case \(i\) if \(j\) is among
+the <code>k</code> nearest neighbours of \(i\) and has the same
+outcome (same class, numeric outcomes within
+<code>tolerance</code>, survival: same event status at
+<code>horizon</code>). Following Smyth &amp; Keane (1995), a case is
+<em>pivotal</em> if no other case solves it (removing it
+loses competence), and <em>auxiliary</em> if its coverage
+(the cases it solves, and itself) is contained in the
+coverage of a case that solves it (it is redundant). A case
+is <em>noisy</em> if the majority of its neighbours predicts a
+different outcome (Wilson editing, 1972); pivotal cases are
+often noisy.</p>
+<p>For <code>RFModel</code> with OOB or RF-GAP proximities, the
+in-sample (out-of-bag) proximities are used.</p><div class="section">
+<h4 id="usage-11">Usage<a class="anchor" aria-label="anchor" href="#usage-11"></a></h4>
+<p></p><div class="r"><div class="sourceCode"><pre><code><span><span class="va">CBRBase</span><span class="op">$</span><span class="fu">assess_cases</span><span class="op">(</span>k <span class="op">=</span> <span class="fl">5</span>, horizon <span class="op">=</span> <span class="cn">NULL</span>, tolerance <span class="op">=</span> <span class="cn">NULL</span><span class="op">)</span></span></code></pre></div><p></p></div>
+</div>
+
+<div class="section">
+<h4 id="arguments-10">Arguments<a class="anchor" aria-label="anchor" href="#arguments-10"></a></h4>
+<p></p><div class="arguments"><dl><dt><code>k</code></dt>
+<dd><p>number of neighbours</p></dd>
+
+
+<dt><code>horizon</code></dt>
+<dd><p>time horizon for survival endpoints (default:
+median event time). Cases censored before
+<code>horizon</code> are not assessed.</p></dd>
+
+
+<dt><code>tolerance</code></dt>
+<dd><p>numeric endpoints: largest outcome
+difference counted as the same outcome (default: half the
+standard deviation of the outcome).</p></dd>
+
+
+</dl><p></p></div>
+</div>
+<div class="section">
+<h4 id="returns-7">Returns<a class="anchor" aria-label="anchor" href="#returns-7"></a></h4>
+<p>A data.frame with one row per case of the case base
+  (row names as in <code>get_case_base()</code>): <code>outcome</code>,
+  <code>agreement</code> (share of neighbours with the same
+  outcome), <code>noisy</code>, <code>n_reachable</code> (number of cases
+  that solve the case), <code>n_coverage</code> (number of cases it
+  solves) and <code>category</code> (<code>"pivotal"</code>,
+  <code>"auxiliary"</code> or <code>"other"</code>).</p>
+</div>
+
+</div><p></p><hr><a id="method-CBRBase-get_case_base"></a><div class="section">
+<h3 id="method-get-case-base-">Method <code>get_case_base()</code><a class="anchor" aria-label="anchor" href="#method-get-case-base-"></a></h3>
+<p>The case base: the training cases used for retrieval
+(complete cases, including added cases).</p><div class="section">
+<h4 id="usage-12">Usage<a class="anchor" aria-label="anchor" href="#usage-12"></a></h4>
+<p></p><div class="r"><div class="sourceCode"><pre><code><span><span class="va">CBRBase</span><span class="op">$</span><span class="fu">get_case_base</span><span class="op">(</span><span class="op">)</span></span></code></pre></div><p></p></div>
+</div>
+
+<div class="section">
+<h4 id="returns-8">Returns<a class="anchor" aria-label="anchor" href="#returns-8"></a></h4>
+<p>A data.frame.</p>
+</div>
+
 </div><p></p><hr><a id="method-CBRBase-explain_match"></a><div class="section">
 <h3 id="method-explain-match-">Method <code>explain_match()</code><a class="anchor" aria-label="anchor" href="#method-explain-match-"></a></h3>
 <p>Explain why a training case is similar to a query.
@@ -463,12 +605,12 @@ linear predictor of query and case, and its share of the
 distance. For random forests: in the trees where query and
 case end in different terminal nodes, the split variable at
 which their paths diverge.</p><div class="section">
-<h4 id="usage-9">Usage<a class="anchor" aria-label="anchor" href="#usage-9"></a></h4>
+<h4 id="usage-13">Usage<a class="anchor" aria-label="anchor" href="#usage-13"></a></h4>
 <p></p><div class="r"><div class="sourceCode"><pre><code><span><span class="va">CBRBase</span><span class="op">$</span><span class="fu">explain_match</span><span class="op">(</span><span class="va">query</span>, <span class="va">case</span><span class="op">)</span></span></code></pre></div><p></p></div>
 </div>
 
 <div class="section">
-<h4 id="arguments-8">Arguments<a class="anchor" aria-label="anchor" href="#arguments-8"></a></h4>
+<h4 id="arguments-11">Arguments<a class="anchor" aria-label="anchor" href="#arguments-11"></a></h4>
 <p></p><div class="arguments"><dl><dt><code>query</code></dt>
 <dd><p>One query case (data.frame with one row)</p></dd>
 
@@ -481,7 +623,7 @@ returned by <code>get_similar_cases()</code></p></dd>
 </dl><p></p></div>
 </div>
 <div class="section">
-<h4 id="returns-5">Returns<a class="anchor" aria-label="anchor" href="#returns-5"></a></h4>
+<h4 id="returns-9">Returns<a class="anchor" aria-label="anchor" href="#returns-9"></a></h4>
 <p>A data.frame with one row per term (regression) or
   variable (random forest).</p>
 </div>
@@ -489,12 +631,12 @@ returned by <code>get_similar_cases()</code></p></dd>
 </div><p></p><hr><a id="method-CBRBase-clone"></a><div class="section">
 <h3 id="method-clone-">Method <code>clone()</code><a class="anchor" aria-label="anchor" href="#method-clone-"></a></h3>
 <p>The objects of this class are cloneable with this method.</p><div class="section">
-<h4 id="usage-10">Usage<a class="anchor" aria-label="anchor" href="#usage-10"></a></h4>
+<h4 id="usage-14">Usage<a class="anchor" aria-label="anchor" href="#usage-14"></a></h4>
 <p></p><div class="r"><div class="sourceCode"><pre><code><span><span class="va">CBRBase</span><span class="op">$</span><span class="fu">clone</span><span class="op">(</span>deep <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span></code></pre></div><p></p></div>
 </div>
 
 <div class="section">
-<h4 id="arguments-9">Arguments<a class="anchor" aria-label="anchor" href="#arguments-9"></a></h4>
+<h4 id="arguments-12">Arguments<a class="anchor" aria-label="anchor" href="#arguments-12"></a></h4>
 <p></p><div class="arguments"><dl><dt><code>deep</code></dt>
 <dd><p>Whether to make a deep clone.</p></dd>
 

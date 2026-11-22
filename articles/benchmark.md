@@ -1,0 +1,325 @@
+# Benchmark: Model-Derived Distances vs. Learned Metrics
+
+How good are the distances this package derives from statistical models?
+This article compares them with two baselines on a few public data sets:
+
+- the **Gower distance** (`GowerModel`), a model-free distance for mixed
+  data that weights all variables equally, and
+- **Neighbourhood Components Analysis** (NCA; Goldberger et al., 2004),
+  a metric learned specifically to optimise the k-nearest-neighbour
+  rule.
+
+All methods predict with the same rule: the unweighted vote (or
+Kaplan–Meier estimate) of the `k` nearest training cases. Only the
+distance differs. We use 5-fold cross-validation, repeated twice, with
+`k = 10` for classification and `k = 20` for survival, and report the
+mean and, in parentheses, the standard deviation over the folds. No
+method is tuned.
+
+LMNN (Weinberger & Saul, 2009), the other common metric-learning
+baseline, is left out because there is no maintained R implementation.
+
+## Setup
+
+### Diagonal NCA
+
+NCA learns one weight $`a_d`$ per standardised feature so that the
+expected leave-one-out accuracy of a soft nearest-neighbour rule is
+maximal. With $`D_{ij} = \sum_d a_d^2 (x_{id} - x_{jd})^2`$, case $`i`$
+picks neighbour $`j`$ with probability $`p_{ij} \propto \exp(-D_{ij})`$,
+and NCA maximises the mean probability of picking a neighbour of the
+same class. Without regularisation the weights grow without bound and
+noise variables can get large weights, so we add a small penalty
+$`\lambda \sum_d a_d^2`$ with $`\lambda = 0.01`$.
+
+``` r
+
+nca_weights <- function(X, y, lambda = 0.01, maxit = 200) {
+  y <- as.integer(factor(y)); n <- nrow(X); p <- ncol(X)
+  same <- outer(y, y, "==")
+  sq <- lapply(seq_len(p), function(d) outer(X[, d], X[, d], "-")^2)
+  objective <- function(a) {
+    D <- Reduce(`+`, Map(function(s, w) w^2 * s, sq, a))
+    diag(D) <- Inf
+    K <- exp(-(D - apply(D, 1, min)))
+    P <- K / rowSums(K)
+    p_i <- rowSums(P * same)
+    grad <- vapply(seq_len(p), function(d) {
+      2 * a[d] * sum(p_i * rowSums(P * sq[[d]]) - rowSums(P * same * sq[[d]]))
+    }, numeric(1))
+    list(value = -mean(p_i) + lambda * sum(a^2), gradient = -grad / n + 2 * lambda * a)
+  }
+  opt <- optim(rep(1, p), function(a) objective(a)$value,
+               function(a) objective(a)$gradient,
+               method = "L-BFGS-B", control = list(maxit = maxit))
+  abs(opt$par)
+}
+
+# standardised design matrices, scaled with the training data
+design <- function(train, test, vars) {
+  f <- stats::reformulate(vars)
+  Xtr <- stats::model.matrix(f, train)[, -1, drop = FALSE]
+  Xte <- stats::model.matrix(f, test)[, -1, drop = FALSE]
+  mu <- colMeans(Xtr); s <- apply(Xtr, 2, sd); s[s == 0] <- 1
+  list(train = scale(Xtr, mu, s), test = scale(Xte, mu, s))
+}
+
+class_scores <- function(probs, truth, lev) {
+  onehot <- outer(as.character(truth), lev, "==") * 1
+  pred <- lev[max.col(probs, ties.method = "first")]
+  c(accuracy = mean(pred == as.character(truth)),
+    brier = mean(rowSums((probs - onehot)^2)))
+}
+
+nca_knn <- function(train, test, endpoint, vars, k) {
+  X <- design(train, test, vars)
+  a <- nca_weights(X$train, train[[endpoint]])
+  Xtr <- sweep(X$train, 2, a, "*"); Xte <- sweep(X$test, 2, a, "*")
+  D <- as.matrix(dist(rbind(Xtr, Xte)))[seq_len(nrow(Xtr)), nrow(Xtr) + seq_len(nrow(Xte)), drop = FALSE]
+  lev <- levels(factor(train[[endpoint]]))
+  y <- as.character(train[[endpoint]])
+  probs <- t(apply(D, 2, function(d) {
+    nn <- order(d)[seq_len(k)]
+    as.numeric(table(factor(y[nn], levels = lev))) / k
+  }))
+  class_scores(probs, test[[endpoint]], lev)
+}
+```
+
+### Cross-validation
+
+The package’s models are scored with `$evaluate()`, which uses the same
+majority vote and Brier score.
+
+``` r
+
+cbr_scores <- function(model, test, k) {
+  ev <- model$evaluate(test, k = k)
+  c(accuracy = ev$accuracy, brier = ev$brier)
+}
+
+run_cv <- function(df, methods, folds = 5, repeats = 2, seed = 1) {
+  set.seed(seed)
+  res <- list()
+  for (r in seq_len(repeats)) {
+    fold <- sample(rep(seq_len(folds), length.out = nrow(df)))
+    for (f in seq_len(folds)) {
+      train <- df[fold != f, ]
+      test <- df[fold == f, ]
+      for (m in names(methods)) {
+        res[[length(res) + 1]] <- data.frame(method = m, t(methods[[m]](train, test)))
+      }
+    }
+  }
+  do.call(rbind, res)
+}
+
+class_methods <- function(endpoint, vars, k = 10, logistic = TRUE) {
+  fml <- stats::reformulate(vars, endpoint)
+  rf <- function(train, type = NULL) {
+    m <- RFModel$new(fml, train, num.trees = 300)
+    m$fit()
+    if (!is.null(type)) m$set_distance_method("Proximity", proximity_type = type)
+    m
+  }
+  methods <- list(
+    "Gower" = function(train, test) {
+      m <- GowerModel$new(fml, train); m$fit(); cbr_scores(m, test, k)
+    },
+    "RF depth" = function(train, test) cbr_scores(rf(train), test, k),
+    "RF-GAP" = function(train, test) cbr_scores(rf(train, "rfgap"), test, k),
+    "NCA" = function(train, test) nca_knn(train, test, endpoint, vars, k)
+  )
+  if (logistic) {
+    methods <- c(list("Logistic regression" = function(train, test) {
+      m <- LogisticModel$new(fml, train); m$fit(); cbr_scores(m, test, k)
+    }), methods)
+  }
+  methods
+}
+
+summarise_cv <- function(res, cols) {
+  out <- data.frame(method = unique(res$method))
+  for (cl in cols) {
+    out[[cl]] <- vapply(out$method, function(m) {
+      v <- res[[cl]][res$method == m]
+      sprintf("%.3f (%.3f)", mean(v), sd(v))
+    }, character(1))
+  }
+  out
+}
+```
+
+## Classification
+
+Higher accuracy and lower Brier score are better.
+
+### Pima Indians diabetes
+
+532 women, 7 numeric predictors, outcome: diabetes
+([`MASS::Pima.tr`](https://rdrr.io/pkg/MASS/man/Pima.tr.html) and
+[`MASS::Pima.te`](https://rdrr.io/pkg/MASS/man/Pima.tr.html) combined).
+
+``` r
+
+pima <- rbind(MASS::Pima.tr, MASS::Pima.te)
+vars_pima <- setdiff(names(pima), "type")
+res_pima <- run_cv(pima, class_methods("type", vars_pima))
+knitr::kable(summarise_cv(res_pima, c("accuracy", "brier")))
+```
+
+| method              | accuracy      | brier         |
+|:--------------------|:--------------|:--------------|
+| Logistic regression | 0.765 (0.035) | 0.319 (0.036) |
+| Gower               | 0.760 (0.028) | 0.324 (0.034) |
+| RF depth            | 0.776 (0.040) | 0.334 (0.044) |
+| RF-GAP              | 0.743 (0.039) | 0.366 (0.038) |
+| NCA                 | 0.767 (0.033) | 0.322 (0.038) |
+
+### Breast cancer biopsies
+
+683 biopsies with 9 cytological scores, outcome: benign or malignant
+([`MASS::biopsy`](https://rdrr.io/pkg/MASS/man/biopsy.html), complete
+cases).
+
+``` r
+
+biopsy <- na.omit(MASS::biopsy)[, -1]
+vars_biopsy <- paste0("V", 1:9)
+res_biopsy <- run_cv(biopsy, class_methods("class", vars_biopsy))
+knitr::kable(summarise_cv(res_biopsy, c("accuracy", "brier")))
+```
+
+| method              | accuracy      | brier         |
+|:--------------------|:--------------|:--------------|
+| Logistic regression | 0.969 (0.019) | 0.050 (0.022) |
+| Gower               | 0.963 (0.013) | 0.050 (0.019) |
+| RF depth            | 0.968 (0.016) | 0.052 (0.026) |
+| RF-GAP              | 0.971 (0.017) | 0.057 (0.024) |
+| NCA                 | 0.960 (0.013) | 0.055 (0.021) |
+
+### Iris
+
+Three classes; the logistic model is binary only and is left out.
+
+``` r
+
+vars_iris <- names(iris)[1:4]
+res_iris <- run_cv(iris, class_methods("Species", vars_iris, logistic = FALSE))
+knitr::kable(summarise_cv(res_iris, c("accuracy", "brier")))
+```
+
+| method   | accuracy      | brier         |
+|:---------|:--------------|:--------------|
+| Gower    | 0.957 (0.045) | 0.060 (0.040) |
+| RF depth | 0.943 (0.052) | 0.101 (0.106) |
+| RF-GAP   | 0.943 (0.042) | 0.092 (0.080) |
+| NCA      | 0.953 (0.036) | 0.065 (0.043) |
+
+### Irrelevant variables
+
+The Gower distance weights every variable equally. To see what that
+costs, we add 10 pure-noise variables to the Pima data.
+
+``` r
+
+set.seed(10)
+noise <- as.data.frame(matrix(rnorm(nrow(pima) * 10), ncol = 10,
+                              dimnames = list(NULL, paste0("noise", 1:10))))
+pima_noise <- cbind(pima, noise)
+vars_noise <- setdiff(names(pima_noise), "type")
+res_noise <- run_cv(pima_noise, class_methods("type", vars_noise))
+knitr::kable(summarise_cv(res_noise, c("accuracy", "brier")))
+```
+
+| method              | accuracy      | brier         |
+|:--------------------|:--------------|:--------------|
+| Logistic regression | 0.766 (0.025) | 0.311 (0.036) |
+| Gower               | 0.734 (0.043) | 0.333 (0.038) |
+| RF depth            | 0.782 (0.025) | 0.331 (0.056) |
+| RF-GAP              | 0.742 (0.032) | 0.365 (0.014) |
+| NCA                 | 0.761 (0.034) | 0.323 (0.036) |
+
+## Survival
+
+Lung cancer patients
+([`survival::lung`](https://rdrr.io/pkg/survival/man/lung.html),
+complete cases, 167 patients). The distances are compared with Uno’s
+C-index (higher is better) and the integrated Brier score (IBS, lower is
+better) of the Kaplan–Meier estimate over the 20 nearest cases
+(`$evaluate()`). NCA is a classification method and is not included.
+
+``` r
+
+lung2 <- na.omit(lung[, c("time", "status", "age", "sex", "ph.ecog", "ph.karno", "wt.loss")])
+lung2$status <- lung2$status - 1
+lung2$sex <- factor(lung2$sex, labels = c("male", "female"))
+fml <- Surv(time, status) ~ age + sex + ph.ecog + ph.karno + wt.loss
+
+surv_scores <- function(model, test, k = 20) {
+  ev <- model$evaluate(test, k = k)
+  c(c_index = ev$c_index, ibs = ev$ibs)
+}
+rf_surv <- function(train, type = NULL) {
+  m <- RFModel$new(fml, train, num.trees = 300)
+  m$fit()
+  if (!is.null(type)) m$set_distance_method("Proximity", proximity_type = type)
+  m
+}
+surv_methods <- list(
+  "Cox regression" = function(train, test) {
+    m <- CoxModel$new(Surv(time, status) ~ rcs(age, 3) + sex + ph.ecog + ph.karno + wt.loss, train)
+    m$fit(); surv_scores(m, test)
+  },
+  "Gower" = function(train, test) {
+    m <- GowerModel$new(fml, train); m$fit(); surv_scores(m, test)
+  },
+  "RF depth" = function(train, test) surv_scores(rf_surv(train), test),
+  "RF-GAP" = function(train, test) surv_scores(rf_surv(train, "rfgap"), test)
+)
+res_lung <- run_cv(lung2, surv_methods)
+knitr::kable(summarise_cv(res_lung, c("c_index", "ibs")))
+```
+
+| method         | c_index       | ibs           |
+|:---------------|:--------------|:--------------|
+| Cox regression | 0.564 (0.041) | 0.207 (0.037) |
+| Gower          | 0.584 (0.048) | 0.204 (0.037) |
+| RF depth       | 0.580 (0.042) | 0.216 (0.036) |
+| RF-GAP         | 0.554 (0.050) | 0.217 (0.040) |
+
+## Conclusions
+
+- On these data sets, **no distance is clearly best**. Most differences
+  are smaller than the variation between folds. The model-derived
+  distances are as good as the metric that is learned specifically for
+  nearest-neighbour classification (NCA).
+- **With irrelevant variables, the model-free Gower distance gets
+  worse**, while the model-derived distances and NCA are hardly
+  affected: the model gives irrelevant variables (almost) no weight.
+  This is the main argument for deriving the distance from a model when
+  not all variables are known to be relevant.
+- **The gain of the model-derived distances lies in interpretability**:
+  the distance follows the fitted model, so `explain_match()` can
+  attribute it to model terms, and the model can be checked with the
+  usual tools (e.g. `check_ph()` for the Cox model).
+- RF-GAP proximities, which reproduce the forest’s predictions, do not
+  improve the k-nearest-neighbour predictions here compared with the
+  depth distance. Small data sets with few, mostly relevant variables
+  are easy for all methods; the comparison may differ for larger and
+  noisier data.
+
+## References
+
+- Goldberger, J., Roweis, S., Hinton, G. and Salakhutdinov, R. (2004).
+  Neighbourhood Components Analysis. *Advances in Neural Information
+  Processing Systems 17*.
+- Gower, J. C. (1971). A general coefficient of similarity and some of
+  its properties. *Biometrics*, 27(4), 857–871.
+  [doi:10.2307/2528823](https://doi.org/10.2307/2528823)
+- Rhodes, J. S., Cutler, A. and Moon, K. R. (2023). Geometry- and
+  Accuracy-Preserving Random Forest Proximities. *IEEE TPAMI*, 45(9),
+  10947–10959.
+  [doi:10.1109/TPAMI.2023.3263774](https://doi.org/10.1109/TPAMI.2023.3263774)
+- Weinberger, K. Q. and Saul, L. K. (2009). Distance metric learning for
+  large margin nearest neighbor classification. *JMLR*, 10, 207–244.
