@@ -19,7 +19,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">CaseBasedReasoning</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.4.2.9000</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.5.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -157,18 +157,51 @@ We will define them as:</p>
 is numerical, then</p>
 <p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>d</mi><mo stretchy="false" form="prefix">(</mo><msubsup><mi>x</mi><mi>i</mi><mi>k</mi></msubsup><mo>,</mo><msubsup><mi>x</mi><mi>j</mi><mi>k</mi></msubsup><mo stretchy="false" form="postfix">)</mo><mo>=</mo><msubsup><mi>x</mi><mi>i</mi><mi>k</mi></msubsup><mo>−</mo><msubsup><mi>x</mi><mi>j</mi><mi>k</mi></msubsup></mrow><annotation encoding="application/x-tex">d(x_i^k, x_j^k) = x_i^k - x_j^k</annotation></semantics></math>
 and</p>
-<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>α</mi><mo stretchy="false" form="prefix">(</mo><msubsup><mi>x</mi><mi>i</mi><mi>k</mi></msubsup><mo>,</mo><msubsup><mi>x</mi><mi>j</mi><mi>k</mi></msubsup><mo stretchy="false" form="postfix">)</mo><mo>=</mo><mover><msub><mi>β</mi><mi>k</mi></msub><mo accent="true">̂</mo></mover></mrow><annotation encoding="application/x-tex">\alpha(x_i^k, x_j^k) = \hat{\beta_k}</annotation></semantics></math></p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>α</mi><mo stretchy="false" form="prefix">(</mo><msubsup><mi>x</mi><mi>i</mi><mi>k</mi></msubsup><mo>,</mo><msubsup><mi>x</mi><mi>j</mi><mi>k</mi></msubsup><mo stretchy="false" form="postfix">)</mo><mo>=</mo><msub><mover><mi>β</mi><mo accent="true">̂</mo></mover><mi>k</mi></msub></mrow><annotation encoding="application/x-tex">\alpha(x_i^k, x_j^k) = \hat{\beta}_k</annotation></semantics></math></p>
 <p>If feature
 <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>k</mi><annotation encoding="application/x-tex">k</annotation></semantics></math>
 is categorical, then</p>
-<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>d</mi><mo stretchy="false" form="prefix">(</mo><msubsup><mi>x</mi><mi>i</mi><mi>k</mi></msubsup><mo>,</mo><msubsup><mi>x</mi><mi>j</mi><mi>k</mi></msubsup><mo stretchy="false" form="postfix">)</mo><mo>=</mo><mn>1</mn><mrow><mspace width="0.333em"></mspace><mtext mathvariant="normal"> when </mtext><mspace width="0.333em"></mspace></mrow><msubsup><mi>x</mi><mi>i</mi><mi>k</mi></msubsup><mo>=</mo><msubsup><mi>x</mi><mi>j</mi><mi>k</mi></msubsup><mrow><mspace width="0.333em"></mspace><mtext mathvariant="normal"> else </mtext><mspace width="0.333em"></mspace></mrow><mn>0</mn></mrow><annotation encoding="application/x-tex">d(x_i^k, x_j^k) = 1 \text{ when } x_i^k = x_j^k \text{ else } 0</annotation></semantics></math>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>d</mi><mo stretchy="false" form="prefix">(</mo><msubsup><mi>x</mi><mi>i</mi><mi>k</mi></msubsup><mo>,</mo><msubsup><mi>x</mi><mi>j</mi><mi>k</mi></msubsup><mo stretchy="false" form="postfix">)</mo><mo>=</mo><mn>1</mn><mrow><mspace width="0.333em"></mspace><mtext mathvariant="normal"> when </mtext><mspace width="0.333em"></mspace></mrow><msubsup><mi>x</mi><mi>i</mi><mi>k</mi></msubsup><mo>≠</mo><msubsup><mi>x</mi><mi>j</mi><mi>k</mi></msubsup><mrow><mspace width="0.333em"></mspace><mtext mathvariant="normal"> else </mtext><mspace width="0.333em"></mspace></mrow><mn>0</mn></mrow><annotation encoding="application/x-tex">d(x_i^k, x_j^k) = 1 \text{ when } x_i^k \neq x_j^k \text{ else } 0</annotation></semantics></math>
 and
-<math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>α</mi><mo stretchy="false" form="prefix">(</mo><msubsup><mi>x</mi><mi>i</mi><mi>k</mi></msubsup><mo>,</mo><msubsup><mi>x</mi><mi>j</mi><mi>k</mi></msubsup><mo stretchy="false" form="postfix">)</mo><mo>=</mo><msup><mover><msub><mi>β</mi><mi>k</mi></msub><mo accent="true">̂</mo></mover><mi>i</mi></msup><mo>−</mo><msup><mover><msub><mi>β</mi><mi>k</mi></msub><mo accent="true">̂</mo></mover><mi>j</mi></msup><mo>,</mo></mrow><annotation encoding="application/x-tex">\alpha(x_i^k, x_j^k) = \hat{\beta_k}^i - \hat{\beta_k}^j,</annotation></semantics></math></p>
+<math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>α</mi><mo stretchy="false" form="prefix">(</mo><msubsup><mi>x</mi><mi>i</mi><mi>k</mi></msubsup><mo>,</mo><msubsup><mi>x</mi><mi>j</mi><mi>k</mi></msubsup><mo stretchy="false" form="postfix">)</mo><mo>=</mo><msubsup><mover><mi>β</mi><mo accent="true">̂</mo></mover><mi>k</mi><mrow><mo stretchy="false" form="prefix">(</mo><msubsup><mi>x</mi><mi>i</mi><mi>k</mi></msubsup><mo stretchy="false" form="postfix">)</mo></mrow></msubsup><mo>−</mo><msubsup><mover><mi>β</mi><mo accent="true">̂</mo></mover><mi>k</mi><mrow><mo stretchy="false" form="prefix">(</mo><msubsup><mi>x</mi><mi>j</mi><mi>k</mi></msubsup><mo stretchy="false" form="postfix">)</mo></mrow></msubsup><mo>,</mo></mrow><annotation encoding="application/x-tex">\alpha(x_i^k, x_j^k) = \hat{\beta}_k^{(x_i^k)} - \hat{\beta}_k^{(x_j^k)},</annotation></semantics></math></p>
 <p>where
-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msup><mover><msub><mi>β</mi><mi>k</mi></msub><mo accent="true">̂</mo></mover><mi>k</mi></msup><annotation encoding="application/x-tex">\hat{\beta_k}^k</annotation></semantics></math>
-are the coefficients of a regression model (linear, logistic, or CPH
-model). The regression coefficients thus serve as weights that reflect
-each feature’s importance and scale.</p>
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msubsup><mover><mi>β</mi><mo accent="true">̂</mo></mover><mi>k</mi><mrow><mo stretchy="false" form="prefix">(</mo><mi>l</mi><mo stretchy="false" form="postfix">)</mo></mrow></msubsup><annotation encoding="application/x-tex">\hat{\beta}_k^{(l)}</annotation></semantics></math>
+is the coefficient of level
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>l</mi><annotation encoding="application/x-tex">l</annotation></semantics></math>
+(zero for the reference level) in a regression model (linear, logistic,
+or CPH model). The regression coefficients thus serve as weights that
+reflect each feature’s importance and scale.</p>
+<div class="section level3">
+<h3 id="contribution-space">Contribution Space<a class="anchor" aria-label="anchor" href="#contribution-space"></a>
+</h3>
+<p>Both cases are special cases of one definition. Let
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>c</mi><mi>t</mi></msub><mo stretchy="false" form="prefix">(</mo><mi>x</mi><mo stretchy="false" form="postfix">)</mo><mo>=</mo><msub><mi>X</mi><mi>t</mi></msub><mo stretchy="false" form="prefix">(</mo><mi>x</mi><mo stretchy="false" form="postfix">)</mo><msub><mover><mi>β</mi><mo accent="true">̂</mo></mover><mi>t</mi></msub></mrow><annotation encoding="application/x-tex">c_t(x) = X_t(x)\hat{\beta}_t</annotation></semantics></math>
+be the contribution of model term
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>t</mi><annotation encoding="application/x-tex">t</annotation></semantics></math>
+to the linear predictor, where
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>X</mi><mi>t</mi></msub><mo stretchy="false" form="prefix">(</mo><mi>x</mi><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">X_t(x)</annotation></semantics></math>
+are the columns of the design matrix that belong to term
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>t</mi><annotation encoding="application/x-tex">t</annotation></semantics></math>
+and
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mover><mi>β</mi><mo accent="true">̂</mo></mover><mi>t</mi></msub><annotation encoding="application/x-tex">\hat{\beta}_t</annotation></semantics></math>
+their coefficients. The package computes</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>d</mi><mo stretchy="false" form="prefix">(</mo><msub><mi>x</mi><mi>i</mi></msub><mo>,</mo><msub><mi>x</mi><mi>j</mi></msub><mo stretchy="false" form="postfix">)</mo><mo>=</mo><munder><mo>∑</mo><mi>t</mi></munder><mo stretchy="false" form="prefix">|</mo><msub><mi>c</mi><mi>t</mi></msub><mo stretchy="false" form="prefix">(</mo><msub><mi>x</mi><mi>i</mi></msub><mo stretchy="false" form="postfix">)</mo><mo>−</mo><msub><mi>c</mi><mi>t</mi></msub><mo stretchy="false" form="prefix">(</mo><msub><mi>x</mi><mi>j</mi></msub><mo stretchy="false" form="postfix">)</mo><mo stretchy="false" form="prefix">|</mo><mi>.</mi></mrow><annotation encoding="application/x-tex">
+d(x_i, x_j) = \sum\limits_{t} |c_t(x_i) - c_t(x_j)|.
+</annotation></semantics></math></p>
+<p>For a numerical main effect,
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>c</mi><mi>t</mi></msub><mo stretchy="false" form="prefix">(</mo><mi>x</mi><mo stretchy="false" form="postfix">)</mo><mo>=</mo><msub><mover><mi>β</mi><mo accent="true">̂</mo></mover><mi>k</mi></msub><msup><mi>x</mi><mi>k</mi></msup></mrow><annotation encoding="application/x-tex">c_t(x) = \hat{\beta}_k x^k</annotation></semantics></math>;
+for a categorical one,
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>c</mi><mi>t</mi></msub><mo stretchy="false" form="prefix">(</mo><mi>x</mi><mo stretchy="false" form="postfix">)</mo><mo>=</mo><msubsup><mover><mi>β</mi><mo accent="true">̂</mo></mover><mi>k</mi><mrow><mo stretchy="false" form="prefix">(</mo><msup><mi>x</mi><mi>k</mi></msup><mo stretchy="false" form="postfix">)</mo></mrow></msubsup></mrow><annotation encoding="application/x-tex">c_t(x) = \hat{\beta}_k^{(x^k)}</annotation></semantics></math>,
+so the distance is exactly the weighted distance above. The definition
+also covers any other term of an <strong>rms</strong> model: splines
+such as <code>rcs(age, 4)</code>, polynomials and interactions. Two
+cases are then close if the model assigns them similar contributions,
+even if a non-linear effect makes equal differences in a variable count
+differently in different ranges.</p>
+<p><code>explain_match()</code> reports the terms
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo stretchy="false" form="prefix">|</mo><msub><mi>c</mi><mi>t</mi></msub><mo stretchy="false" form="prefix">(</mo><msub><mi>x</mi><mi>i</mi></msub><mo stretchy="false" form="postfix">)</mo><mo>−</mo><msub><mi>c</mi><mi>t</mi></msub><mo stretchy="false" form="prefix">(</mo><msub><mi>x</mi><mi>j</mi></msub><mo stretchy="false" form="postfix">)</mo><mo stretchy="false" form="prefix">|</mo></mrow><annotation encoding="application/x-tex">|c_t(x_i) - c_t(x_j)|</annotation></semantics></math>
+and their share of the distance, which shows why two cases match.</p>
+</div>
 </div>
 <div class="section level2">
 <h2 id="random-forests">Random Forests<a class="anchor" aria-label="anchor" href="#random-forests"></a>
@@ -180,17 +213,18 @@ each feature’s importance and scale.</p>
 <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>i</mi><annotation encoding="application/x-tex">i</annotation></semantics></math>
 and
 <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>j</mi><annotation encoding="application/x-tex">j</annotation></semantics></math>
-are considered more similar when the fraction of trees in which patient
-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>i</mi><annotation encoding="application/x-tex">i</annotation></semantics></math>
-and
-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>j</mi><annotation encoding="application/x-tex">j</annotation></semantics></math>
-share the same terminal node is close to one (Breiman, 2002).</p>
-<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>d</mi><mo stretchy="false" form="prefix">(</mo><msub><mi>x</mi><mi>i</mi></msub><mo>,</mo><msub><mi>x</mi><mi>j</mi></msub><msup><mo stretchy="false" form="postfix">)</mo><mn>2</mn></msup><mo>=</mo><mn>1</mn><mo>−</mo><mfrac><mn>1</mn><mi>M</mi></mfrac><munderover><mo>∑</mo><mrow><mi>t</mi><mo>=</mo><mn>1</mn></mrow><mi>T</mi></munderover><msub><mn>1</mn><mrow><mo stretchy="false" form="prefix">[</mo><msub><mi>x</mi><mi>i</mi></msub><mrow><mspace width="0.333em"></mspace><mtext mathvariant="normal"> and </mtext><mspace width="0.333em"></mspace></mrow><msub><mi>x</mi><mi>j</mi></msub><mrow><mspace width="0.333em"></mspace><mtext mathvariant="normal"> share the same terminal node in tree </mtext><mspace width="0.333em"></mspace></mrow><mi>t</mi><mo stretchy="false" form="postfix">]</mo></mrow></msub><mo>,</mo></mrow><annotation encoding="application/x-tex">d(x_i, x_j)^2 = 1 - \frac{1}{M}\sum\limits_{t=1}^T 1_{[x_i \text{ and } x_j \text{ share the same terminal node in tree } t]},</annotation></semantics></math>
-where
-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>M</mi><annotation encoding="application/x-tex">M</annotation></semantics></math>
-is the number of trees that contain both observations and
+are considered more similar when the fraction of trees in which they
+share the same terminal node is close to one (Breiman, 2002). With
+proximity</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>p</mi><mo stretchy="false" form="prefix">(</mo><msub><mi>x</mi><mi>i</mi></msub><mo>,</mo><msub><mi>x</mi><mi>j</mi></msub><mo stretchy="false" form="postfix">)</mo><mo>=</mo><mfrac><mn>1</mn><mi>T</mi></mfrac><munderover><mo>∑</mo><mrow><mi>t</mi><mo>=</mo><mn>1</mn></mrow><mi>T</mi></munderover><msub><mn>1</mn><mrow><mo stretchy="false" form="prefix">[</mo><msub><mi>x</mi><mi>i</mi></msub><mrow><mspace width="0.333em"></mspace><mtext mathvariant="normal"> and </mtext><mspace width="0.333em"></mspace></mrow><msub><mi>x</mi><mi>j</mi></msub><mrow><mspace width="0.333em"></mspace><mtext mathvariant="normal"> share the same terminal node in tree </mtext><mspace width="0.333em"></mspace></mrow><mi>t</mi><mo stretchy="false" form="postfix">]</mo></mrow></msub><mo>,</mo></mrow><annotation encoding="application/x-tex">
+p(x_i, x_j) = \frac{1}{T}\sum\limits_{t=1}^T 1_{[x_i \text{ and } x_j \text{ share the same terminal node in tree } t]},
+</annotation></semantics></math></p>
+<p>where
 <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>T</mi><annotation encoding="application/x-tex">T</annotation></semantics></math>
-is the total number of trees.</p>
+is the number of trees, the distance is</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>d</mi><mo stretchy="false" form="prefix">(</mo><msub><mi>x</mi><mi>i</mi></msub><mo>,</mo><msub><mi>x</mi><mi>j</mi></msub><mo stretchy="false" form="postfix">)</mo><mo>=</mo><msqrt><mrow><mn>1</mn><mo>−</mo><mi>p</mi><mo stretchy="false" form="prefix">(</mo><msub><mi>x</mi><mi>i</mi></msub><mo>,</mo><msub><mi>x</mi><mi>j</mi></msub><mo stretchy="false" form="postfix">)</mo></mrow></msqrt><mi>.</mi></mrow><annotation encoding="application/x-tex">
+d(x_i, x_j) = \sqrt{1 - p(x_i, x_j)}.
+</annotation></semantics></math></p>
 <p>A drawback of this measure is that the decision is binary, meaning
 that potentially similar observations might be counted as dissimilar.
 For example, suppose a final cut-off is consistently made around age 58,
@@ -202,33 +236,100 @@ sensitive to small differences between observations, potentially
 affecting the overall analysis of similarity.</p>
 </div>
 <div class="section level3">
+<h3 id="oob-rfgap">Out-of-Bag and RF-GAP Proximities<a class="anchor" aria-label="anchor" href="#oob-rfgap"></a>
+</h3>
+<p>The original proximity is biased for training cases: a tree is grown
+until its leaves are small, so cases in a tree’s bootstrap sample tend
+to share leaves with each other. Two variants avoid this
+(<code>proximity_type</code> in <code><a href="../reference/proximity_distance.html">proximity_distance()</a></code>,
+<code><a href="../reference/distance_random_forest.html">distance_random_forest()</a></code> and
+<code>RFModel$set_distance_method()</code>):</p>
+<ul>
+<li><p><strong>OOB</strong>: only the trees in which both observations
+are out-of-bag are counted, and
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>T</mi><annotation encoding="application/x-tex">T</annotation></semantics></math>
+is replaced by the number of these trees.</p></li>
+<li><p><strong>RF-GAP</strong> (Rhodes, Cutler &amp; Moon, 2023): for a
+query
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>q</mi><annotation encoding="application/x-tex">q</annotation></semantics></math>
+and a training case
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>j</mi><annotation encoding="application/x-tex">j</annotation></semantics></math>,
+<math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>p</mi><mo stretchy="false" form="prefix">(</mo><mi>q</mi><mo>,</mo><mi>j</mi><mo stretchy="false" form="postfix">)</mo><mo>=</mo><mfrac><mn>1</mn><mrow><mo stretchy="false" form="prefix">|</mo><msub><mi>S</mi><mi>q</mi></msub><mo stretchy="false" form="prefix">|</mo></mrow></mfrac><munder><mo>∑</mo><mrow><mi>t</mi><mo>∈</mo><msub><mi>S</mi><mi>q</mi></msub></mrow></munder><mfrac><mrow><msub><mi>c</mi><mi>j</mi></msub><mo stretchy="false" form="prefix">(</mo><mi>t</mi><mo stretchy="false" form="postfix">)</mo><mspace width="0.167em"></mspace><msub><mn>1</mn><mrow><mo stretchy="false" form="prefix">[</mo><mi>j</mi><mo>∈</mo><msub><mi>v</mi><mi>q</mi></msub><mo stretchy="false" form="prefix">(</mo><mi>t</mi><mo stretchy="false" form="postfix">)</mo><mo stretchy="false" form="postfix">]</mo></mrow></msub></mrow><mrow><mo stretchy="false" form="prefix">|</mo><msub><mi>M</mi><mi>q</mi></msub><mo stretchy="false" form="prefix">(</mo><mi>t</mi><mo stretchy="false" form="postfix">)</mo><mo stretchy="false" form="prefix">|</mo></mrow></mfrac><mo>,</mo></mrow><annotation encoding="application/x-tex">
+p(q, j) = \frac{1}{|S_q|}\sum\limits_{t \in S_q} \frac{c_j(t)\, 1_{[j \in v_q(t)]}}{|M_q(t)|},
+</annotation></semantics></math> where
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>S</mi><mi>q</mi></msub><annotation encoding="application/x-tex">S_q</annotation></semantics></math>
+are the trees in which
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>q</mi><annotation encoding="application/x-tex">q</annotation></semantics></math>
+is out-of-bag (all trees for new data),
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>v</mi><mi>q</mi></msub><mo stretchy="false" form="prefix">(</mo><mi>t</mi><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">v_q(t)</annotation></semantics></math>
+is the terminal node of
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>q</mi><annotation encoding="application/x-tex">q</annotation></semantics></math>
+in tree
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>t</mi><annotation encoding="application/x-tex">t</annotation></semantics></math>,
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>c</mi><mi>j</mi></msub><mo stretchy="false" form="prefix">(</mo><mi>t</mi><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">c_j(t)</annotation></semantics></math>
+is the in-bag count of
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>j</mi><annotation encoding="application/x-tex">j</annotation></semantics></math>
+in tree
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>t</mi><annotation encoding="application/x-tex">t</annotation></semantics></math>,
+and
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo stretchy="false" form="prefix">|</mo><msub><mi>M</mi><mi>q</mi></msub><mo stretchy="false" form="prefix">(</mo><mi>t</mi><mo stretchy="false" form="postfix">)</mo><mo stretchy="false" form="prefix">|</mo></mrow><annotation encoding="application/x-tex">|M_q(t)|</annotation></semantics></math>
+is the total in-bag count in
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>v</mi><mi>q</mi></msub><mo stretchy="false" form="prefix">(</mo><mi>t</mi><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">v_q(t)</annotation></semantics></math>.</p></li>
+</ul>
+<p>The RF-GAP proximities of a query sum to one over the training cases,
+and the proximity-weighted average of the training outcomes equals the
+forest’s (out-of-bag) prediction. Retrieval with RF-GAP therefore uses
+the same notion of similarity as the forest’s predictions. Because the
+proximities are small, RF-GAP distances lie close to 1; only their order
+matters. Both variants need the in-bag counts, which
+<code>RFModel</code> keeps by default
+(<code>keep.inbag = TRUE</code>).</p>
+</div>
+<div class="section level3">
 <h3 id="depth-measure-a-modified-proximity-measure">Depth Measure: A modified proximity measure<a class="anchor" aria-label="anchor" href="#depth-measure-a-modified-proximity-measure"></a>
 </h3>
 <p>In contrast to the proximity measure, the depth measure takes into
-account the number of edges between two observations instead of their
-final nodes in each tree. This distance measure is averaged over all
-trees and is defined as:</p>
-<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>d</mi><mo stretchy="false" form="prefix">(</mo><msub><mi>x</mi><mi>i</mi></msub><mo>,</mo><msub><mi>x</mi><mi>j</mi></msub><mo stretchy="false" form="postfix">)</mo><mo>=</mo><mfrac><mn>1</mn><mi>M</mi></mfrac><munderover><mo>∑</mo><mrow><mi>t</mi><mo>=</mo><mn>1</mn></mrow><mi>T</mi></munderover><msub><mi>g</mi><mrow><mi>i</mi><mi>j</mi></mrow></msub><mo>,</mo></mrow><annotation encoding="application/x-tex">
-d(x_i, x_j) = \frac{1}{M}\sum\limits_{t=1}^T g_{ij},
+account the number of edges between the terminal nodes of two
+observations, not only whether they coincide. It is summed over all
+trees:</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>d</mi><mo stretchy="false" form="prefix">(</mo><msub><mi>x</mi><mi>i</mi></msub><mo>,</mo><msub><mi>x</mi><mi>j</mi></msub><mo stretchy="false" form="postfix">)</mo><mo>=</mo><munderover><mo>∑</mo><mrow><mi>t</mi><mo>=</mo><mn>1</mn></mrow><mi>T</mi></munderover><msub><mi>g</mi><mrow><mi>i</mi><mi>j</mi></mrow></msub><mo stretchy="false" form="prefix">(</mo><mi>t</mi><mo stretchy="false" form="postfix">)</mo><mo>,</mo></mrow><annotation encoding="application/x-tex">
+d(x_i, x_j) = \sum\limits_{t=1}^T g_{ij}(t),
 </annotation></semantics></math></p>
 <p>where
-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>M</mi><annotation encoding="application/x-tex">M</annotation></semantics></math>
-is the number of trees containing both observations, and
-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>g</mi><mrow><mi>i</mi><mi>j</mi></mrow></msub><annotation encoding="application/x-tex">g_{ij}</annotation></semantics></math>
-is the number of edges between the end nodes of observation
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>g</mi><mrow><mi>i</mi><mi>j</mi></mrow></msub><mo stretchy="false" form="prefix">(</mo><mi>t</mi><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">g_{ij}(t)</annotation></semantics></math>
+is the number of edges on the path between the terminal nodes of
+observation
 <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>i</mi><annotation encoding="application/x-tex">i</annotation></semantics></math>
 and
 <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>j</mi><annotation encoding="application/x-tex">j</annotation></semantics></math>
 in tree
-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>t</mi><annotation encoding="application/x-tex">t</annotation></semantics></math>.
-This measure considers the structure of the trees and provides a more
-nuanced understanding of the similarity between observations.</p>
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>t</mi><annotation encoding="application/x-tex">t</annotation></semantics></math>,
+i.e. the sum of their distances to the deepest common ancestor.
+Observations that end up in neighbouring leaves are close, observations
+in distant parts of the tree are far apart. This is the default distance
+of <code>RFModel</code>.</p>
+<p>The edge counts are computed on demand from each tree’s structure, so
+the cost grows with the number of pairs and the tree depth, not with the
+number of nodes.</p>
 <p>For more details and a thorough explanation of the depth measure,
 refer to the publication by Englund and Verikas: “<a href="https://doi.org/10.1016/j.eswa.2012.05.094" class="external-link">A novel approach to
 estimate proximity in a random forest: An exploratory study.</a>”</p>
-<p>By accounting for tree structure, the depth measure provides a more
-nuanced similarity assessment than the binary proximity measure.</p>
 </div>
+</div>
+<div class="section level2">
+<h2 id="references">References<a class="anchor" aria-label="anchor" href="#references"></a>
+</h2>
+<ul>
+<li>Breiman, L. (2002). Manual on setting up, using, and understanding
+random forests V3.1.</li>
+<li>Dippon, J. et al. (2002). <a href="https://doi.org/10.1016/S0167-9473(02)00058-0" class="external-link">A statistical
+approach to case based reasoning, with application to breast cancer
+data</a>.</li>
+<li>Englund, C. and Verikas, A. (2012). <a href="https://doi.org/10.1016/j.eswa.2012.05.094" class="external-link">A novel approach to
+estimate proximity in a random forest: An exploratory study</a>.</li>
+<li>Rhodes, J. S., Cutler, A. and Moon, K. R. (2023). <a href="https://doi.org/10.1109/TPAMI.2023.3263774" class="external-link">Geometry- and
+Accuracy-Preserving Random Forest Proximities</a>.</li>
+</ul>
 </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>
     </nav></aside>

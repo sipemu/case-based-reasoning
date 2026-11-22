@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">CaseBasedReasoning</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.4.2.9000</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.5.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -38,9 +38,9 @@
     </div>
 
     <div class="section level2">
-<h2 class="pkg-version" data-toc-text="development version" id="casebasedreasoning-development-version">CaseBasedReasoning (development version)<a class="anchor" aria-label="anchor" href="#casebasedreasoning-development-version"></a></h2>
+<h2 class="pkg-version" data-toc-text="0.5.0" id="casebasedreasoning-050">CaseBasedReasoning 0.5.0<a class="anchor" aria-label="anchor" href="#casebasedreasoning-050"></a></h2>
 <div class="section level3">
-<h3 id="bug-fixes-development-version">Bug fixes<a class="anchor" aria-label="anchor" href="#bug-fixes-development-version"></a></h3>
+<h3 id="bug-fixes-0-5-0">Bug fixes<a class="anchor" aria-label="anchor" href="#bug-fixes-0-5-0"></a></h3>
 <ul><li>Factor values in queries are now matched to the training data by level name instead of internal integer code. Queries with different or dropped factor levels previously got silently wrong distances. Unknown levels are now an error (<a href="https://github.com/sipemu/case-based-reasoning/issues/4" class="external-link">#4</a>).</li>
 <li>Character predictors no longer break distance calculation after <code>fit()</code> (<a href="https://github.com/sipemu/case-based-reasoning/issues/5" class="external-link">#5</a>).</li>
 <li>Training cases with missing values are excluded consistently from fitting, distance calculation and retrieval. A single <code>NA</code> used to make <code>get_similar_cases()</code> fail. Missing values in the query are now an informative error (<a href="https://github.com/sipemu/case-based-reasoning/issues/6" class="external-link">#6</a>).</li>
@@ -65,7 +65,7 @@
 <li>Corrected the DOI of Englund &amp; Verikas (2012) (<a href="https://github.com/sipemu/case-based-reasoning/issues/19" class="external-link">#19</a>).</li>
 </ul></div>
 <div class="section level3">
-<h3 id="new-features-development-version">New features<a class="anchor" aria-label="anchor" href="#new-features-development-version"></a></h3>
+<h3 id="new-features-0-5-0">New features<a class="anchor" aria-label="anchor" href="#new-features-0-5-0"></a></h3>
 <ul><li>
 <code>get_counterfactual_cases()</code> returns the nearest training cases whose outcome differs from the query’s: a different class, a numeric outcome differing by at least <code>min_diff</code>, or a different event status at <code>horizon</code> for survival endpoints (Keane &amp; Smyth, 2020). If the query has no outcome, it is predicted from its most similar cases (<a href="https://github.com/sipemu/case-based-reasoning/issues/23" class="external-link">#23</a>).</li>
 <li>
@@ -79,7 +79,11 @@
 <code>get_similar_cases(exclude_self = TRUE)</code> excludes training cases with the same row name as the query, so in-sample queries do not return themselves (<a href="https://github.com/sipemu/case-based-reasoning/issues/13" class="external-link">#13</a>).</li>
 </ul></div>
 <div class="section level3">
-<h3 id="internal-development-version">Internal<a class="anchor" aria-label="anchor" href="#internal-development-version"></a></h3>
+<h3 id="documentation-0-5-0">Documentation<a class="anchor" aria-label="anchor" href="#documentation-0-5-0"></a></h3>
+<ul><li>README and vignettes cover contribution-space distances, survival prediction and evaluation, counterfactual cases, match explanations and OOB/RF-GAP proximities. Corrected the description of the <code>caseId</code> column (the rank of a match) and the proximity and depth formulas (distance <code>sqrt(1 - p)</code>; depth is summed over trees; categorical distance is 1 when levels differ).</li>
+</ul></div>
+<div class="section level3">
+<h3 id="internal-0-5-0">Internal<a class="anchor" aria-label="anchor" href="#internal-0-5-0"></a></h3>
 <ul><li>Removed dead and duplicate C++ code (<code>cpp_weighted_knn()</code>, <code>cpp_orderVector()</code>, unused containers and headers) and fixed compiler warnings (<a href="https://github.com/sipemu/case-based-reasoning/issues/24" class="external-link">#24</a>, <a href="https://github.com/sipemu/case-based-reasoning/issues/25" class="external-link">#25</a>).</li>
 <li>Added value and regression tests for distances and retrieval (<a href="https://github.com/sipemu/case-based-reasoning/issues/26" class="external-link">#26</a>).</li>
 <li>Tests use at most 2 threads.</li>

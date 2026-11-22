@@ -19,7 +19,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">CaseBasedReasoning</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.4.2.9000</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.5.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -73,9 +73,10 @@ Müller</h4>
 </h2>
 <p>Case-Based Reasoning (CBR) solves new problems by finding similar
 past cases. This package uses regression models—Cox Proportional Hazards
-(CPH), linear, and logistic—to define a principled distance between
-cases based on model coefficients. The workflow is: prepare data, fit a
-model, then query for similar cases.</p>
+(CPH), linear, and logistic—and random forests to define a principled
+distance between cases. The workflow is: prepare data, fit a model, then
+query for similar cases. The retrieved cases can then be used to predict
+survival, to find counterfactual cases and to explain matches.</p>
 </div>
 <div class="section level2">
 <h2 id="cox-proportional-hazard-model">Cox Proportional Hazard Model<a class="anchor" aria-label="anchor" href="#cox-proportional-hazard-model"></a>
@@ -89,9 +90,10 @@ from the <strong>survival</strong> package.</p>
 <span></span>
 <span><span class="co"># initialize R6 object</span></span>
 <span><span class="va">cph_model</span> <span class="op">&lt;-</span> <span class="va"><a href="../reference/CoxModel.html">CoxModel</a></span><span class="op">$</span><span class="fu">new</span><span class="op">(</span><span class="fu">Surv</span><span class="op">(</span><span class="va">futime</span>, <span class="va">fustat</span><span class="op">)</span> <span class="op">~</span> <span class="va">age</span> <span class="op">+</span> <span class="va">resid.ds</span> <span class="op">+</span> <span class="va">rx</span> <span class="op">+</span> <span class="va">ecog.ps</span>, <span class="va">ovarian</span><span class="op">)</span></span></code></pre></div>
-<p>During initialization, cases with missing values are removed via
-<code>na.omit</code> and character variables are converted to
-factors.</p>
+<p>When the model is fitted, training cases with missing values are
+dropped (with a warning) and character variables are converted to
+factors. Factor levels of later queries are matched to the training data
+by name.</p>
 </div>
 <div class="section level2">
 <h2 id="available-models">Available Models<a class="anchor" aria-label="anchor" href="#available-models"></a>
@@ -105,6 +107,8 @@ similarity:</p>
 <ul>
 <li>Simple, fast, and interpretable via coefficients.</li>
 <li>Limited to continuous dependent variables.</li>
+<li>All regression models accept any rms term, e.g. splines
+(<code>rcs(age, 4)</code>) and interactions.</li>
 </ul>
 </div>
 <div class="section level3">
@@ -251,42 +255,150 @@ most similar training cases for each query case.</p>
 </tr>
 </tbody>
 </table>
-<p>After identifying the similar cases, you can extract them along with
-the verum data and compile them together. However, keep in mind the
-following notes:</p>
-<p><strong>Note 1:</strong> During the initialization step, we removed
-all cases with missing values in the data and endPoint variables.
-Therefore, it is crucial to perform a missing value analysis before
-proceeding.</p>
+<p><strong>Note 1:</strong> Training cases with missing values are
+dropped when the model is fitted, and missing values in a query are an
+error. Perform a missing value analysis beforehand.</p>
 <p><strong>Note 2:</strong> The data.frame returned from
-<strong><code>cph_model$get_similar_cases</code></strong> includes four
-additional columns:</p>
+<strong><code>cph_model$get_similar_cases</code></strong> contains k
+matched training cases per query, with two additional columns:</p>
 <ol style="list-style-type: decimal">
 <li>
-<code>caseId</code>: This column allows you to map the similar cases
-to cases in the data. For example, if you had chosen k=3, the first
-three elements in the caseId column will be 1 (followed by three 2’s,
-and so on). These three cases are the three most similar cases to case 0
-in the verum data.</li>
+<code>scDist</code>: The distance between the query and the matched
+case.</li>
 <li>
-<code>scDist</code>: The calculated distance between the cases.</li>
-<li>
-<code>scCaseId</code>: Grouping number of the query case with its
-matched data.</li>
-<li>
-<code>group</code>: Grouping indicator for matched or query
-data.</li>
+<code>caseId</code>: Rank of the match for its query (1 = most
+similar).</li>
 </ol>
-<p>These additional columns aid in organizing and interpreting the
-results, ensuring a clear understanding of the most similar cases and
-their corresponding query cases.</p>
+<p>With <code>merge = TRUE</code>, the query cases are included too,
+identified by two more columns:</p>
+<ol start="3" style="list-style-type: decimal">
+<li>
+<code>scCaseId</code>: Number of the query case; a query and its
+matches share the same value.</li>
+<li>
+<code>group</code>: <code>"Query"</code> or
+<code>"Matched"</code>.</li>
+</ol>
+<div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">merged_tbl</span> <span class="op">&lt;-</span> <span class="va">cph_model</span><span class="op">$</span><span class="fu">get_similar_cases</span><span class="op">(</span>query <span class="op">=</span> <span class="va">ovarian</span><span class="op">[</span><span class="va">testID</span><span class="op">[</span><span class="fl">1</span><span class="op">:</span><span class="fl">2</span><span class="op">]</span>, <span class="op">]</span>, k <span class="op">=</span> <span class="fl">2</span>, merge <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span>
+<span><span class="fu">knitr</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/knitr/man/kable.html" class="external-link">kable</a></span><span class="op">(</span><span class="va">merged_tbl</span><span class="op">)</span></span></code></pre></div>
+<table style="width:100%;" class="table">
+<colgroup>
+<col width="3%">
+<col width="8%">
+<col width="8%">
+<col width="10%">
+<col width="11%">
+<col width="3%">
+<col width="10%">
+<col width="12%">
+<col width="8%">
+<col width="11%">
+<col width="10%">
+</colgroup>
+<thead><tr class="header">
+<th align="left"></th>
+<th align="right">futime</th>
+<th align="right">fustat</th>
+<th align="right">age</th>
+<th align="left">resid.ds</th>
+<th align="left">rx</th>
+<th align="left">ecog.ps</th>
+<th align="right">scDist</th>
+<th align="right">caseId</th>
+<th align="right">scCaseId</th>
+<th align="left">group</th>
+</tr></thead>
+<tbody>
+<tr class="odd">
+<td align="left">6</td>
+<td align="right">448</td>
+<td align="right">0</td>
+<td align="right">56.4301</td>
+<td align="left">1</td>
+<td align="left">1</td>
+<td align="left">2</td>
+<td align="right">0.0000000</td>
+<td align="right">0</td>
+<td align="right">1</td>
+<td align="left">Query</td>
+</tr>
+<tr class="even">
+<td align="left">10</td>
+<td align="right">563</td>
+<td align="right">1</td>
+<td align="right">55.1781</td>
+<td align="left">1</td>
+<td align="left">2</td>
+<td align="left">2</td>
+<td align="right">0.7533753</td>
+<td align="right">1</td>
+<td align="right">1</td>
+<td align="left">Matched</td>
+</tr>
+<tr class="odd">
+<td align="left">7</td>
+<td align="right">464</td>
+<td align="right">1</td>
+<td align="right">56.9370</td>
+<td align="left">2</td>
+<td align="left">2</td>
+<td align="left">2</td>
+<td align="right">1.1760552</td>
+<td align="right">2</td>
+<td align="right">1</td>
+<td align="left">Matched</td>
+</tr>
+<tr class="even">
+<td align="left">8</td>
+<td align="right">475</td>
+<td align="right">1</td>
+<td align="right">59.8548</td>
+<td align="left">2</td>
+<td align="left">2</td>
+<td align="left">2</td>
+<td align="right">0.0000000</td>
+<td align="right">0</td>
+<td align="right">2</td>
+<td align="left">Query</td>
+</tr>
+<tr class="odd">
+<td align="left">71</td>
+<td align="right">464</td>
+<td align="right">1</td>
+<td align="right">56.9370</td>
+<td align="left">2</td>
+<td align="left">2</td>
+<td align="left">2</td>
+<td align="right">0.3736327</td>
+<td align="right">1</td>
+<td align="right">2</td>
+<td align="left">Matched</td>
+</tr>
+<tr class="even">
+<td align="left">24</td>
+<td align="right">353</td>
+<td align="right">1</td>
+<td align="right">63.2192</td>
+<td align="left">1</td>
+<td align="left">2</td>
+<td align="left">2</td>
+<td align="right">0.9489132</td>
+<td align="right">2</td>
+<td align="right">2</td>
+<td align="left">Matched</td>
+</tr>
+</tbody>
+</table>
+<p>For in-sample queries, <code>exclude_self = TRUE</code> keeps a
+training case from being returned as its own nearest neighbour.</p>
 </div>
 <div class="section level3">
 <h3 id="check-proportional-hazard-assumption">Check Proportional Hazard Assumption<a class="anchor" aria-label="anchor" href="#check-proportional-hazard-assumption"></a>
 </h3>
 <p>Verify that the proportional hazards assumption holds for the fitted
 model:</p>
-<div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">cph_model</span><span class="op">$</span><span class="fu">check_ph</span><span class="op">(</span><span class="op">)</span></span></code></pre></div>
 <p><img src="get_started_files/figure-html/proportional%20hazard-1.png" class="r-plt" alt="" width="768"></p>
 </div>
@@ -295,7 +407,7 @@ model:</p>
 <h2 id="distance-matrix-calculation">Distance Matrix Calculation<a class="anchor" aria-label="anchor" href="#distance-matrix-calculation"></a>
 </h2>
 <p>You can also compute and visualize the full distance matrix:</p>
-<div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">distance_matrix</span> <span class="op">&lt;-</span> <span class="va">cph_model</span><span class="op">$</span><span class="fu">calc_distance_matrix</span><span class="op">(</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/stats/heatmap.html" class="external-link">heatmap</a></span><span class="op">(</span><span class="va">distance_matrix</span><span class="op">)</span></span></code></pre></div>
 <p><img src="get_started_files/figure-html/distance_matrix-1.png" class="r-plt" alt="" width="768"></p>
@@ -305,6 +417,432 @@ data is omitted, it calculates distances within the training data. Rows
 correspond to training observations and columns to test observations.
 The result is also stored internally as
 <strong><code>cph_model$dist_matrix</code></strong>.</p>
+</div>
+<div class="section level2">
+<h2 id="survival-prediction">Survival Prediction<a class="anchor" aria-label="anchor" href="#survival-prediction"></a>
+</h2>
+<p>The retrieved cases can also predict the outcome of a query. For
+survival endpoints, <code>predict_survival()</code> estimates a
+Kaplan–Meier curve from each query’s <code>k</code> nearest training
+cases (Lowsky et al., 2013). We use the larger <code>lung</code> data
+set and model age with a restricted cubic spline.</p>
+<div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">lung_df</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/na.fail.html" class="external-link">na.omit</a></span><span class="op">(</span><span class="va">lung</span><span class="op">[</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"time"</span>, <span class="st">"status"</span>, <span class="st">"age"</span>, <span class="st">"sex"</span>, <span class="st">"ph.ecog"</span>, <span class="st">"wt.loss"</span><span class="op">)</span><span class="op">]</span><span class="op">)</span></span>
+<span><span class="va">lung_df</span><span class="op">$</span><span class="va">status</span> <span class="op">&lt;-</span> <span class="va">lung_df</span><span class="op">$</span><span class="va">status</span> <span class="op">-</span> <span class="fl">1</span></span>
+<span><span class="va">lung_df</span><span class="op">$</span><span class="va">sex</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/factor.html" class="external-link">factor</a></span><span class="op">(</span><span class="va">lung_df</span><span class="op">$</span><span class="va">sex</span>, labels <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"male"</span>, <span class="st">"female"</span><span class="op">)</span><span class="op">)</span></span>
+<span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/Random.html" class="external-link">set.seed</a></span><span class="op">(</span><span class="fl">1</span><span class="op">)</span></span>
+<span><span class="va">train</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/sample.html" class="external-link">sample</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/nrow.html" class="external-link">nrow</a></span><span class="op">(</span><span class="va">lung_df</span><span class="op">)</span>, <span class="fl">150</span><span class="op">)</span></span>
+<span><span class="va">lung_train</span> <span class="op">&lt;-</span> <span class="va">lung_df</span><span class="op">[</span><span class="va">train</span>, <span class="op">]</span></span>
+<span><span class="va">lung_test</span> <span class="op">&lt;-</span> <span class="va">lung_df</span><span class="op">[</span><span class="op">-</span><span class="va">train</span>, <span class="op">]</span></span>
+<span></span>
+<span><span class="va">lung_model</span> <span class="op">&lt;-</span> <span class="va"><a href="../reference/CoxModel.html">CoxModel</a></span><span class="op">$</span><span class="fu">new</span><span class="op">(</span><span class="fu">Surv</span><span class="op">(</span><span class="va">time</span>, <span class="va">status</span><span class="op">)</span> <span class="op">~</span> <span class="fu">rcs</span><span class="op">(</span><span class="va">age</span>, <span class="fl">3</span><span class="op">)</span> <span class="op">+</span> <span class="va">sex</span> <span class="op">+</span> <span class="va">ph.ecog</span> <span class="op">+</span> <span class="va">wt.loss</span>, <span class="va">lung_train</span><span class="op">)</span></span>
+<span><span class="va">lung_model</span><span class="op">$</span><span class="fu">fit</span><span class="op">(</span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># survival probabilities after 6 months, 1 and 2 years</span></span>
+<span><span class="va">surv</span> <span class="op">&lt;-</span> <span class="va">lung_model</span><span class="op">$</span><span class="fu">predict_survival</span><span class="op">(</span><span class="va">lung_test</span><span class="op">[</span><span class="fl">1</span><span class="op">:</span><span class="fl">5</span>, <span class="op">]</span>, k <span class="op">=</span> <span class="fl">30</span>, times <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">182</span>, <span class="fl">365</span>, <span class="fl">730</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="fu">knitr</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/knitr/man/kable.html" class="external-link">kable</a></span><span class="op">(</span><span class="va">surv</span>, digits <span class="op">=</span> <span class="fl">2</span><span class="op">)</span></span></code></pre></div>
+<table class="table">
+<thead><tr class="header">
+<th align="right">182</th>
+<th align="right">365</th>
+<th align="right">730</th>
+</tr></thead>
+<tbody>
+<tr class="odd">
+<td align="right">0.57</td>
+<td align="right">0.45</td>
+<td align="right">0.06</td>
+</tr>
+<tr class="even">
+<td align="right">0.83</td>
+<td align="right">0.50</td>
+<td align="right">0.16</td>
+</tr>
+<tr class="odd">
+<td align="right">0.56</td>
+<td align="right">0.33</td>
+<td align="right">0.07</td>
+</tr>
+<tr class="even">
+<td align="right">0.79</td>
+<td align="right">0.45</td>
+<td align="right">0.16</td>
+</tr>
+<tr class="odd">
+<td align="right">0.57</td>
+<td align="right">0.44</td>
+<td align="right">0.06</td>
+</tr>
+</tbody>
+</table>
+<p><code>evaluate_survival()</code> scores these predictions on held-out
+data with Uno’s C-index (higher is better) and the integrated Brier
+score (IBS, lower is better). This is a natural way to choose
+<code>k</code>:</p>
+<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">scores</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/lapply.html" class="external-link">sapply</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">10</span>, <span class="fl">30</span>, <span class="fl">60</span><span class="op">)</span>, <span class="kw">function</span><span class="op">(</span><span class="va">k</span><span class="op">)</span> <span class="op">{</span></span>
+<span>  <span class="va">ev</span> <span class="op">&lt;-</span> <span class="va">lung_model</span><span class="op">$</span><span class="fu">evaluate_survival</span><span class="op">(</span><span class="va">lung_test</span>, k <span class="op">=</span> <span class="va">k</span><span class="op">)</span></span>
+<span>  <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span>k <span class="op">=</span> <span class="va">k</span>, c_index <span class="op">=</span> <span class="va">ev</span><span class="op">$</span><span class="va">c_index</span>, ibs <span class="op">=</span> <span class="va">ev</span><span class="op">$</span><span class="va">ibs</span><span class="op">)</span></span>
+<span><span class="op">}</span><span class="op">)</span></span>
+<span><span class="fu">knitr</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/knitr/man/kable.html" class="external-link">kable</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/t.html" class="external-link">t</a></span><span class="op">(</span><span class="va">scores</span><span class="op">)</span>, digits <span class="op">=</span> <span class="fl">3</span><span class="op">)</span></span></code></pre></div>
+<table class="table">
+<thead><tr class="header">
+<th align="right">k</th>
+<th align="right">c_index</th>
+<th align="right">ibs</th>
+</tr></thead>
+<tbody>
+<tr class="odd">
+<td align="right">10</td>
+<td align="right">0.645</td>
+<td align="right">0.193</td>
+</tr>
+<tr class="even">
+<td align="right">30</td>
+<td align="right">0.603</td>
+<td align="right">0.191</td>
+</tr>
+<tr class="odd">
+<td align="right">60</td>
+<td align="right">0.631</td>
+<td align="right">0.184</td>
+</tr>
+</tbody>
+</table>
+<p>With <code>weighted = TRUE</code>, closer cases get larger weights
+(tricube kernel).</p>
+</div>
+<div class="section level2">
+<h2 id="counterfactuals">Counterfactual Cases and Explanations<a class="anchor" aria-label="anchor" href="#counterfactuals"></a>
+</h2>
+<p>A similar case with a <em>different</em> outcome shows what
+distinguishes the query from cases that fared otherwise (Keane &amp;
+Smyth, 2020). For survival endpoints, the outcome is the event status at
+<code>horizon</code>; if the query’s outcome is unknown, it is predicted
+from its most similar cases.</p>
+<div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">query</span> <span class="op">&lt;-</span> <span class="va">lung_test</span><span class="op">[</span><span class="fl">1</span>, <span class="op">]</span></span>
+<span><span class="va">cf</span> <span class="op">&lt;-</span> <span class="va">lung_model</span><span class="op">$</span><span class="fu">get_counterfactual_cases</span><span class="op">(</span><span class="va">query</span>, k <span class="op">=</span> <span class="fl">2</span>, horizon <span class="op">=</span> <span class="fl">365</span><span class="op">)</span></span>
+<span><span class="fu">knitr</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/knitr/man/kable.html" class="external-link">kable</a></span><span class="op">(</span><span class="va">cf</span>, digits <span class="op">=</span> <span class="fl">3</span><span class="op">)</span></span></code></pre></div>
+<table style="width:100%;" class="table">
+<colgroup>
+<col width="4%">
+<col width="7%">
+<col width="10%">
+<col width="5%">
+<col width="7%">
+<col width="11%">
+<col width="11%">
+<col width="10%">
+<col width="10%">
+<col width="19%">
+</colgroup>
+<thead><tr class="header">
+<th align="left"></th>
+<th align="right">time</th>
+<th align="right">status</th>
+<th align="right">age</th>
+<th align="left">sex</th>
+<th align="right">ph.ecog</th>
+<th align="right">wt.loss</th>
+<th align="right">scDist</th>
+<th align="right">caseId</th>
+<th align="left">queryOutcome</th>
+</tr></thead>
+<tbody>
+<tr class="odd">
+<td align="left">55</td>
+<td align="right">689</td>
+<td align="right">1</td>
+<td align="right">59</td>
+<td align="left">male</td>
+<td align="right">1</td>
+<td align="right">15</td>
+<td align="right">0.044</td>
+<td align="right">1</td>
+<td align="left">event</td>
+</tr>
+<tr class="even">
+<td align="left">48</td>
+<td align="right">519</td>
+<td align="right">1</td>
+<td align="right">63</td>
+<td align="left">male</td>
+<td align="right">1</td>
+<td align="right">10</td>
+<td align="right">0.054</td>
+<td align="right">2</td>
+<td align="left">event</td>
+</tr>
+</tbody>
+</table>
+<p><code>explain_match()</code> breaks the distance between two cases
+down by model term: each term’s contribution to the linear predictor for
+both cases, the absolute difference, and its share of the total
+distance.</p>
+<div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu">knitr</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/knitr/man/kable.html" class="external-link">kable</a></span><span class="op">(</span><span class="va">lung_model</span><span class="op">$</span><span class="fu">explain_match</span><span class="op">(</span><span class="va">query</span>, <span class="va">cf</span><span class="op">[</span><span class="fl">1</span>, <span class="op">]</span><span class="op">)</span>, digits <span class="op">=</span> <span class="fl">3</span><span class="op">)</span></span></code></pre></div>
+<table class="table">
+<thead><tr class="header">
+<th align="left">term</th>
+<th align="right">query_contribution</th>
+<th align="right">case_contribution</th>
+<th align="right">distance</th>
+<th align="right">share</th>
+</tr></thead>
+<tbody>
+<tr class="odd">
+<td align="left">wt.loss</td>
+<td align="right">-0.113</td>
+<td align="right">-0.154</td>
+<td align="right">0.041</td>
+<td align="right">0.936</td>
+</tr>
+<tr class="even">
+<td align="left">rcs(age, 3)</td>
+<td align="right">-0.463</td>
+<td align="right">-0.460</td>
+<td align="right">0.003</td>
+<td align="right">0.064</td>
+</tr>
+<tr class="odd">
+<td align="left">sex</td>
+<td align="right">0.000</td>
+<td align="right">0.000</td>
+<td align="right">0.000</td>
+<td align="right">0.000</td>
+</tr>
+<tr class="even">
+<td align="left">ph.ecog</td>
+<td align="right">0.479</td>
+<td align="right">0.479</td>
+<td align="right">0.000</td>
+<td align="right">0.000</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="section level2">
+<h2 id="random-forest-retrieval">Random Forests<a class="anchor" aria-label="anchor" href="#random-forest-retrieval"></a>
+</h2>
+<p><code>RFModel</code> derives the distance from a random forest fitted
+with <strong>ranger</strong>. The default is the depth distance (number
+of edges between the cases’ terminal nodes, summed over trees);
+<code>set_distance_method()</code> switches to the proximity distance,
+optionally with out-of-bag or RF-GAP proximities (Rhodes, Cutler &amp;
+Moon, 2023).</p>
+<div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/Random.html" class="external-link">set.seed</a></span><span class="op">(</span><span class="fl">1</span><span class="op">)</span></span>
+<span><span class="va">rf_model</span> <span class="op">&lt;-</span> <span class="va"><a href="../reference/RFModel.html">RFModel</a></span><span class="op">$</span><span class="fu">new</span><span class="op">(</span><span class="va">Species</span> <span class="op">~</span> <span class="va">.</span>, data <span class="op">=</span> <span class="va">iris</span>, num.trees <span class="op">=</span> <span class="fl">200</span><span class="op">)</span></span>
+<span><span class="va">rf_model</span><span class="op">$</span><span class="fu">fit</span><span class="op">(</span><span class="op">)</span></span>
+<span><span class="fu">knitr</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/knitr/man/kable.html" class="external-link">kable</a></span><span class="op">(</span><span class="va">rf_model</span><span class="op">$</span><span class="fu">get_similar_cases</span><span class="op">(</span><span class="va">iris</span><span class="op">[</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1</span>, <span class="fl">51</span>, <span class="fl">101</span><span class="op">)</span>, <span class="op">]</span>, k <span class="op">=</span> <span class="fl">2</span><span class="op">)</span>, digits <span class="op">=</span> <span class="fl">3</span><span class="op">)</span></span></code></pre></div>
+<table class="table">
+<colgroup>
+<col width="5%">
+<col width="16%">
+<col width="15%">
+<col width="16%">
+<col width="15%">
+<col width="13%">
+<col width="8%">
+<col width="8%">
+</colgroup>
+<thead><tr class="header">
+<th align="left"></th>
+<th align="right">Sepal.Length</th>
+<th align="right">Sepal.Width</th>
+<th align="right">Petal.Length</th>
+<th align="right">Petal.Width</th>
+<th align="left">Species</th>
+<th align="right">scDist</th>
+<th align="right">caseId</th>
+</tr></thead>
+<tbody>
+<tr class="odd">
+<td align="left">1</td>
+<td align="right">5.1</td>
+<td align="right">3.5</td>
+<td align="right">1.4</td>
+<td align="right">0.2</td>
+<td align="left">setosa</td>
+<td align="right">0.000</td>
+<td align="right">1</td>
+</tr>
+<tr class="even">
+<td align="left">3</td>
+<td align="right">4.7</td>
+<td align="right">3.2</td>
+<td align="right">1.3</td>
+<td align="right">0.2</td>
+<td align="left">setosa</td>
+<td align="right">0.000</td>
+<td align="right">2</td>
+</tr>
+<tr class="odd">
+<td align="left">51</td>
+<td align="right">7.0</td>
+<td align="right">3.2</td>
+<td align="right">4.7</td>
+<td align="right">1.4</td>
+<td align="left">versicolor</td>
+<td align="right">0.000</td>
+<td align="right">1</td>
+</tr>
+<tr class="even">
+<td align="left">66</td>
+<td align="right">6.7</td>
+<td align="right">3.1</td>
+<td align="right">4.4</td>
+<td align="right">1.4</td>
+<td align="left">versicolor</td>
+<td align="right">0.215</td>
+<td align="right">2</td>
+</tr>
+<tr class="odd">
+<td align="left">101</td>
+<td align="right">6.3</td>
+<td align="right">3.3</td>
+<td align="right">6.0</td>
+<td align="right">2.5</td>
+<td align="left">virginica</td>
+<td align="right">0.000</td>
+<td align="right">1</td>
+</tr>
+<tr class="even">
+<td align="left">137</td>
+<td align="right">6.3</td>
+<td align="right">3.4</td>
+<td align="right">5.6</td>
+<td align="right">2.4</td>
+<td align="left">virginica</td>
+<td align="right">0.000</td>
+<td align="right">2</td>
+</tr>
+</tbody>
+</table>
+<div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">rf_model</span><span class="op">$</span><span class="fu">set_distance_method</span><span class="op">(</span><span class="st">"Proximity"</span>, proximity_type <span class="op">=</span> <span class="st">"rfgap"</span><span class="op">)</span></span>
+<span><span class="fu">knitr</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/knitr/man/kable.html" class="external-link">kable</a></span><span class="op">(</span><span class="va">rf_model</span><span class="op">$</span><span class="fu">get_similar_cases</span><span class="op">(</span><span class="va">iris</span><span class="op">[</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1</span>, <span class="fl">51</span>, <span class="fl">101</span><span class="op">)</span>, <span class="op">]</span>, k <span class="op">=</span> <span class="fl">2</span><span class="op">)</span>, digits <span class="op">=</span> <span class="fl">3</span><span class="op">)</span></span></code></pre></div>
+<table class="table">
+<colgroup>
+<col width="5%">
+<col width="16%">
+<col width="15%">
+<col width="16%">
+<col width="15%">
+<col width="13%">
+<col width="8%">
+<col width="8%">
+</colgroup>
+<thead><tr class="header">
+<th align="left"></th>
+<th align="right">Sepal.Length</th>
+<th align="right">Sepal.Width</th>
+<th align="right">Petal.Length</th>
+<th align="right">Petal.Width</th>
+<th align="left">Species</th>
+<th align="right">scDist</th>
+<th align="right">caseId</th>
+</tr></thead>
+<tbody>
+<tr class="odd">
+<td align="left">3</td>
+<td align="right">4.7</td>
+<td align="right">3.2</td>
+<td align="right">1.3</td>
+<td align="right">0.2</td>
+<td align="left">setosa</td>
+<td align="right">0.988</td>
+<td align="right">1</td>
+</tr>
+<tr class="even">
+<td align="left">5</td>
+<td align="right">5.0</td>
+<td align="right">3.6</td>
+<td align="right">1.4</td>
+<td align="right">0.2</td>
+<td align="left">setosa</td>
+<td align="right">0.989</td>
+<td align="right">2</td>
+</tr>
+<tr class="odd">
+<td align="left">51</td>
+<td align="right">7.0</td>
+<td align="right">3.2</td>
+<td align="right">4.7</td>
+<td align="right">1.4</td>
+<td align="left">versicolor</td>
+<td align="right">0.977</td>
+<td align="right">1</td>
+</tr>
+<tr class="even">
+<td align="left">87</td>
+<td align="right">6.7</td>
+<td align="right">3.1</td>
+<td align="right">4.7</td>
+<td align="right">1.5</td>
+<td align="left">versicolor</td>
+<td align="right">0.980</td>
+<td align="right">2</td>
+</tr>
+<tr class="odd">
+<td align="left">145</td>
+<td align="right">6.7</td>
+<td align="right">3.3</td>
+<td align="right">5.7</td>
+<td align="right">2.5</td>
+<td align="left">virginica</td>
+<td align="right">0.983</td>
+<td align="right">1</td>
+</tr>
+<tr class="even">
+<td align="left">101</td>
+<td align="right">6.3</td>
+<td align="right">3.3</td>
+<td align="right">6.0</td>
+<td align="right">2.5</td>
+<td align="left">virginica</td>
+<td align="right">0.985</td>
+<td align="right">2</td>
+</tr>
+</tbody>
+</table>
+<p>RF-GAP proximities sum to one over the training cases, so RF-GAP
+distances lie close to 1; only their order matters for retrieval.</p>
+<p>For forests, <code>explain_match()</code> lists the split variables
+at which the two cases’ paths diverge, counted over trees:</p>
+<div class="sourceCode" id="cb12"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu">knitr</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/knitr/man/kable.html" class="external-link">kable</a></span><span class="op">(</span><span class="va">rf_model</span><span class="op">$</span><span class="fu">explain_match</span><span class="op">(</span><span class="va">iris</span><span class="op">[</span><span class="fl">51</span>, <span class="op">]</span>, <span class="va">iris</span><span class="op">[</span><span class="fl">60</span>, <span class="op">]</span><span class="op">)</span>, digits <span class="op">=</span> <span class="fl">3</span><span class="op">)</span></span></code></pre></div>
+<table class="table">
+<thead><tr class="header">
+<th align="left">variable</th>
+<th align="right">n_trees</th>
+<th align="right">share</th>
+</tr></thead>
+<tbody>
+<tr class="odd">
+<td align="left">Sepal.Length</td>
+<td align="right">69</td>
+<td align="right">0.885</td>
+</tr>
+<tr class="even">
+<td align="left">Petal.Length</td>
+<td align="right">5</td>
+<td align="right">0.064</td>
+</tr>
+<tr class="odd">
+<td align="left">Sepal.Width</td>
+<td align="right">4</td>
+<td align="right">0.051</td>
+</tr>
+<tr class="even">
+<td align="left">Petal.Width</td>
+<td align="right">0</td>
+<td align="right">0.000</td>
+</tr>
+</tbody>
+</table>
 </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>
     </nav></aside>

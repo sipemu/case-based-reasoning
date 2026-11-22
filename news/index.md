@@ -1,6 +1,6 @@
 # Changelog
 
-## CaseBasedReasoning (development version)
+## CaseBasedReasoning 0.5.0
 
 ### Bug fixes
 
@@ -107,6 +107,15 @@
   the same row name as the query, so in-sample queries do not return
   themselves
   ([\#13](https://github.com/sipemu/case-based-reasoning/issues/13)).
+
+### Documentation
+
+- README and vignettes cover contribution-space distances, survival
+  prediction and evaluation, counterfactual cases, match explanations
+  and OOB/RF-GAP proximities. Corrected the description of the `caseId`
+  column (the rank of a match) and the proximity and depth formulas
+  (distance `sqrt(1 - p)`; depth is summed over trees; categorical
+  distance is 1 when levels differ).
 
 ### Internal
 

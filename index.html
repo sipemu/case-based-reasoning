@@ -21,7 +21,7 @@
 
     <a class="navbar-brand me-2" href="index.html">CaseBasedReasoning</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.4.2.9000</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.5.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -56,7 +56,7 @@
 <div class="section level1">
 <div class="page-header"><h1 id="case-based-reasoning-using-statistical-models">Case Based Reasoning using Statistical Models<a class="anchor" aria-label="anchor" href="#case-based-reasoning-using-statistical-models"></a>
 </h1></div>
-<p>The R package case-based-reasoning provides an R interface case-based reasoning using machine learning methods.</p>
+<p>The R package CaseBasedReasoning implements case-based reasoning with statistical and machine learning models: it learns a distance between cases from a fitted regression model or random forest, retrieves the most similar past cases, predicts outcomes (including survival curves) from them, and explains why cases match.</p>
 <div class="section level2">
 <h2 id="introduction-what-is-case-based-reasoning">Introduction: What is Case Based Reasoning?<a class="anchor" aria-label="anchor" href="#introduction-what-is-case-based-reasoning"></a>
 </h2>
@@ -88,6 +88,7 @@
 <h3 id="regression-based-distance-cox-linear-logistic">Regression-based distance (Cox, linear, logistic)<a class="anchor" aria-label="anchor" href="#regression-based-distance-cox-linear-logistic"></a>
 </h3>
 <p>A regression model (Cox proportional hazards, OLS, or logistic regression via the <a href="https://CRAN.R-project.org/package=rms" class="external-link">rms</a> package) is fitted on the training data. The estimated regression coefficients are then used as <strong>weights</strong> in a weighted absolute distance function. Variables with larger coefficients contribute more to the distance, while variables the model deems irrelevant contribute little. This follows the approach of Dippon et al. (2002).</p>
+<p>Distances are computed in <em>contribution space</em>: for each model term t, the contribution to the linear predictor, <code>c_t(x) = X_t(x) %*% beta_t</code>, is compared between two cases, and the absolute differences are summed. For main effects this is exactly the weighted distance above; it also covers any other rms term, such as splines (<code>rcs(age, 4)</code>), polynomials and interactions.</p>
 </div>
 <div class="section level3">
 <h3 id="random-forest-distance-proximity-and-depth">Random Forest distance (proximity and depth)<a class="anchor" aria-label="anchor" href="#random-forest-distance-proximity-and-depth"></a>
@@ -95,9 +96,9 @@
 <p>A random forest (via the <a href="https://github.com/imbs-hl/ranger" class="external-link">ranger</a> package) is fitted on the training data. Two distance measures can be extracted:</p>
 <ul>
 <li>
-<strong>Proximity distance</strong>: Two observations are similar if they frequently land in the same terminal node across trees.</li>
+<strong>Proximity distance</strong>: Two observations are similar if they frequently land in the same terminal node across trees; the distance is <code>sqrt(1 - proximity)</code>. Besides Breiman’s original proximity, the out-of-bag (OOB) proximity and RF-GAP (Rhodes, Cutler &amp; Moon, 2023) are available. RF-GAP removes the in-bag bias of the original measure: the RF-GAP weighted average of the training outcomes reproduces the forest’s prediction.</li>
 <li>
-<strong>Depth distance</strong>: The distance between two observations is the sum of edges between their terminal nodes across all trees in the forest, following Englund and Verikas.</li>
+<strong>Depth distance</strong> (default): The distance between two observations is the sum of edges between their terminal nodes across all trees in the forest, following Englund and Verikas (2012). Unlike proximity, it distinguishes cases that end up in neighbouring leaves from cases in distant parts of the tree.</li>
 </ul>
 <p>Both approaches produce an (n x m) distance matrix, where n is the number of training observations and m the number of query observations. This matrix can be used directly for clustering or visualization, or passed to the built-in k-nearest-neighbor search to retrieve the most similar cases.</p>
 </div>
@@ -120,22 +121,27 @@
 <div class="section level2">
 <h2 id="features">Features<a class="anchor" aria-label="anchor" href="#features"></a>
 </h2>
-<p>This R package provides two methods case-based reasoning by using an endpoint:</p>
 <ul>
-<li><p>Linear, logistic, and CPH Regression</p></li>
-<li><p>Proximity and Depth Measure extracted from a fitted random forest (<a href="https://github.com/imbs-hl/ranger" class="external-link">ranger</a> package)</p></li>
-</ul>
-<p>Besides the functionality of searching for similar cases, we added some additional features:</p>
-<ul>
-<li><p>Automatic validation of the critical variables between the query and similar cases dataset</p></li>
-<li><p>Checking proportional hazard assumption for the Cox Model</p></li>
-<li><p>C++-functions for distance calculation</p></li>
+<li>
+<strong>Models</strong>: linear, logistic and Cox regression (with splines and interactions), and random forests (<a href="https://github.com/imbs-hl/ranger" class="external-link">ranger</a>) for numeric, binary, multi-class and survival endpoints.</li>
+<li>
+<strong>Distances</strong>: regression-weighted (contribution-space) distance; random forest proximity (original, OOB, RF-GAP) and depth distance; all implemented in parallel C++.</li>
+<li>
+<strong>Retrieval</strong>: <code>get_similar_cases()</code> / <code><a href="https://rdrr.io/r/stats/predict.html" class="external-link">predict()</a></code> return the k nearest training cases per query, optionally merged with the query and excluding the query itself (<code>exclude_self = TRUE</code>).</li>
+<li>
+<strong>Survival prediction</strong>: <code>predict_survival()</code> estimates a Kaplan–Meier curve from each query’s nearest cases; <code>evaluate_survival()</code> scores it with Uno’s C-index and the integrated Brier score.</li>
+<li>
+<strong>Counterfactuals</strong>: <code>get_counterfactual_cases()</code> returns the most similar cases with a <em>different</em> outcome.</li>
+<li>
+<strong>Explanations</strong>: <code>explain_match()</code> shows which variables make two cases similar or different.</li>
+<li>
+<strong>Checks</strong>: query data are validated against the training data (factor levels are matched by name, unknown levels and missing values are errors), and <code>check_ph()</code> checks the proportional hazards assumption of the Cox model.</li>
 </ul>
 </div>
 <div class="section level2">
-<h2 id="warning-message">Warning Message<a class="anchor" aria-label="anchor" href="#warning-message"></a>
+<h2 id="missing-values">Missing Values<a class="anchor" aria-label="anchor" href="#missing-values"></a>
 </h2>
-<p>“Warning: Cases with missing values in the dependent variable (Y) or predictor variables (X) have been dropped from the analysis. This may lead to a reduced dataset and potential loss of information. Please review your data and consider appropriate missing value imputation techniques to mitigate these issues.”</p>
+<p>Training cases with missing values in the endpoint or the predictors are dropped when the model is fitted, with a warning that lists them. They are excluded consistently from fitting, distance calculation and retrieval. Missing values in a query are an error, so impute them or remove those cases first.</p>
 </div>
 <div class="section level2">
 <h2 id="example-cox-beta-model">Example: Cox Beta Model<a class="anchor" aria-label="anchor" href="#example-cox-beta-model"></a>
@@ -173,18 +179,20 @@
 <span><span class="va">matched_tbl</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/predict.html" class="external-link">predict</a></span><span class="op">(</span><span class="va">cph_model</span>, newdata <span class="op">=</span> <span class="va">ovarian</span><span class="op">[</span><span class="va">testID</span>, <span class="op">]</span>, k <span class="op">=</span> <span class="fl">3</span><span class="op">)</span></span></code></pre></div>
 <p>To analyze the results, you can extract the similar cases and training data and combine them:</p>
 <ul>
-<li><p><strong>Note 1</strong>: During the initialization step, all cases with missing values in the data and endpoint variables were removed. Be sure to conduct a missing value analysis beforehand.</p></li>
+<li><p><strong>Note 1</strong>: Training cases with missing values are dropped when the model is fitted (see <a href="#missing-values">Missing Values</a>).</p></li>
 <li>
-<p><strong>Note 2</strong>: The data.frame returned from <code>cph_model$get_similar_cases()</code> contains four columns that help identify the query cases, their matches, and the distances between them:</p>
+<p><strong>Note 2</strong>: The data.frame returned from <code>cph_model$get_similar_cases()</code> contains the matched training cases, k rows per query, with additional columns:</p>
 <ul>
-<li><p><strong>caseId</strong>: This column allows you to map the similar cases to cases in the data. For example, if you chose k = 3, the first three elements in the caseId column will be 1 (followed by three 2s, and so on). These three cases are the three most similar cases to case 0 in the verum data.</p></li>
-<li><p><strong>scDist</strong>: The calculated distance between the cases.</p></li>
-<li><p><strong>scCaseId</strong>: Grouping number of the query case with its matched data.</p></li>
-<li><p><strong>group</strong>: Grouping indicator for matched or query data.</p></li>
+<li><p><strong>scDist</strong>: The distance between the query and the matched case.</p></li>
+<li><p><strong>caseId</strong>: Rank of the match for its query (1 = most similar, …, k).</p></li>
+</ul>
+<p>With <code>merge = TRUE</code>, the query cases are included as well, and two more columns identify them:</p>
+<ul>
+<li><p><strong>scCaseId</strong>: Number of the query case; a query and its matches share the same value.</p></li>
+<li><p><strong>group</strong>: <code>"Query"</code> or <code>"Matched"</code>.</p></li>
 </ul>
 </li>
 </ul>
-<p>These columns help organize and interpret the results, ensuring a clear understanding of the most similar cases and their corresponding query cases.</p>
 </div>
 <div class="section level3">
 <h3 id="distance-matrix">Distance Matrix<a class="anchor" aria-label="anchor" href="#distance-matrix"></a>
@@ -202,6 +210,59 @@
 <code class="sourceCode R"><span><span class="va">distance_matrix</span> <span class="op">&lt;-</span> <span class="va">cph_model</span><span class="op">$</span><span class="fu">calc_distance_matrix</span><span class="op">(</span><span class="op">)</span></span></code></pre></div>
 <p><code>cph_model$calc_distance_matrix()</code> calculates the distance matrix between train and test data. When test data is omitted, the distances between observations in the training data are calculated. Rows are observations in train and columns observations of test. The distance matrix is saved internally in the <code>CoxModel</code> object: <code>cph_model$dist_matrix</code>.</p>
 </div>
+</div>
+<div class="section level2">
+<h2 id="beyond-retrieval">Beyond Retrieval<a class="anchor" aria-label="anchor" href="#beyond-retrieval"></a>
+</h2>
+<div class="section level3">
+<h3 id="survival-prediction">Survival prediction<a class="anchor" aria-label="anchor" href="#survival-prediction"></a>
+</h3>
+<p>For survival endpoints, the retrieved cases yield a prediction: a Kaplan–Meier estimate over each query’s k nearest training cases (Lowsky et al., 2013). <code>evaluate_survival()</code> scores the predictions on held-out data with Uno’s C-index and the integrated Brier score, so <code>k</code> and the distance method can be tuned. The <code>ovarian</code> test set above is too small for that, so we use <code>lung</code>:</p>
+<div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">lung_df</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/na.fail.html" class="external-link">na.omit</a></span><span class="op">(</span><span class="va">lung</span><span class="op">[</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"time"</span>, <span class="st">"status"</span>, <span class="st">"age"</span>, <span class="st">"sex"</span>, <span class="st">"ph.ecog"</span>, <span class="st">"wt.loss"</span><span class="op">)</span><span class="op">]</span><span class="op">)</span></span>
+<span><span class="va">lung_df</span><span class="op">$</span><span class="va">status</span> <span class="op">&lt;-</span> <span class="va">lung_df</span><span class="op">$</span><span class="va">status</span> <span class="op">-</span> <span class="fl">1</span></span>
+<span><span class="va">lung_df</span><span class="op">$</span><span class="va">sex</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/factor.html" class="external-link">factor</a></span><span class="op">(</span><span class="va">lung_df</span><span class="op">$</span><span class="va">sex</span><span class="op">)</span></span>
+<span><span class="va">train</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/sample.html" class="external-link">sample</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/nrow.html" class="external-link">nrow</a></span><span class="op">(</span><span class="va">lung_df</span><span class="op">)</span>, <span class="fl">150</span><span class="op">)</span></span>
+<span></span>
+<span><span class="va">lung_model</span> <span class="op">&lt;-</span> <span class="va"><a href="reference/CoxModel.html">CoxModel</a></span><span class="op">$</span><span class="fu">new</span><span class="op">(</span><span class="fu">Surv</span><span class="op">(</span><span class="va">time</span>, <span class="va">status</span><span class="op">)</span> <span class="op">~</span> <span class="fu">rcs</span><span class="op">(</span><span class="va">age</span>, <span class="fl">3</span><span class="op">)</span> <span class="op">+</span> <span class="va">sex</span> <span class="op">+</span> <span class="va">ph.ecog</span> <span class="op">+</span> <span class="va">wt.loss</span>,</span>
+<span>                           <span class="va">lung_df</span><span class="op">[</span><span class="va">train</span>, <span class="op">]</span><span class="op">)</span></span>
+<span><span class="va">lung_model</span><span class="op">$</span><span class="fu">fit</span><span class="op">(</span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># survival probabilities at 1 and 2 years: one row per query</span></span>
+<span><span class="va">lung_model</span><span class="op">$</span><span class="fu">predict_survival</span><span class="op">(</span><span class="va">lung_df</span><span class="op">[</span><span class="op">-</span><span class="va">train</span>, <span class="op">]</span>, k <span class="op">=</span> <span class="fl">30</span>, times <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">365</span>, <span class="fl">730</span><span class="op">)</span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># Uno's C-index and integrated Brier score on test data</span></span>
+<span><span class="va">lung_model</span><span class="op">$</span><span class="fu">evaluate_survival</span><span class="op">(</span><span class="va">lung_df</span><span class="op">[</span><span class="op">-</span><span class="va">train</span>, <span class="op">]</span>, k <span class="op">=</span> <span class="fl">30</span><span class="op">)</span></span></code></pre></div>
+</div>
+<div class="section level3">
+<h3 id="counterfactual-cases-and-explanations">Counterfactual cases and explanations<a class="anchor" aria-label="anchor" href="#counterfactual-cases-and-explanations"></a>
+</h3>
+<p><code>get_counterfactual_cases()</code> returns the most similar training cases whose outcome differs from the query’s (Keane &amp; Smyth, 2020). For survival endpoints, the outcome is the event status at <code>horizon</code>. <code>explain_match()</code> breaks a distance down: per model term for regression models, and per split variable at which the tree paths diverge for random forests.</p>
+<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">query</span> <span class="op">&lt;-</span> <span class="va">ovarian</span><span class="op">[</span><span class="va">testID</span><span class="op">[</span><span class="fl">1</span><span class="op">]</span>, <span class="op">]</span></span>
+<span><span class="va">cph_model</span><span class="op">$</span><span class="fu">get_counterfactual_cases</span><span class="op">(</span><span class="va">query</span>, k <span class="op">=</span> <span class="fl">2</span>, horizon <span class="op">=</span> <span class="fl">365</span><span class="op">)</span></span>
+<span></span>
+<span><span class="va">match</span> <span class="op">&lt;-</span> <span class="va">cph_model</span><span class="op">$</span><span class="fu">get_similar_cases</span><span class="op">(</span><span class="va">query</span>, k <span class="op">=</span> <span class="fl">1</span><span class="op">)</span></span>
+<span><span class="va">cph_model</span><span class="op">$</span><span class="fu">explain_match</span><span class="op">(</span><span class="va">query</span>, <span class="va">match</span><span class="op">)</span></span></code></pre></div>
+</div>
+</div>
+<div class="section level2">
+<h2 id="example-random-forest">Example: Random Forest<a class="anchor" aria-label="anchor" href="#example-random-forest"></a>
+</h2>
+<div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">rf_model</span> <span class="op">&lt;-</span> <span class="va"><a href="reference/RFModel.html">RFModel</a></span><span class="op">$</span><span class="fu">new</span><span class="op">(</span><span class="va">Species</span> <span class="op">~</span> <span class="va">.</span>, data <span class="op">=</span> <span class="va">iris</span>, num.trees <span class="op">=</span> <span class="fl">500</span><span class="op">)</span></span>
+<span><span class="va">rf_model</span><span class="op">$</span><span class="fu">fit</span><span class="op">(</span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># default: depth distance</span></span>
+<span><span class="va">rf_model</span><span class="op">$</span><span class="fu">get_similar_cases</span><span class="op">(</span><span class="va">iris</span><span class="op">[</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1</span>, <span class="fl">51</span>, <span class="fl">101</span><span class="op">)</span>, <span class="op">]</span>, k <span class="op">=</span> <span class="fl">3</span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># RF-GAP proximity</span></span>
+<span><span class="va">rf_model</span><span class="op">$</span><span class="fu">set_distance_method</span><span class="op">(</span><span class="st">"Proximity"</span>, proximity_type <span class="op">=</span> <span class="st">"rfgap"</span><span class="op">)</span></span>
+<span><span class="va">rf_model</span><span class="op">$</span><span class="fu">get_similar_cases</span><span class="op">(</span><span class="va">iris</span><span class="op">[</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1</span>, <span class="fl">51</span>, <span class="fl">101</span><span class="op">)</span>, <span class="op">]</span>, k <span class="op">=</span> <span class="fl">3</span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># which variables separate two flowers in the forest?</span></span>
+<span><span class="va">rf_model</span><span class="op">$</span><span class="fu">explain_match</span><span class="op">(</span><span class="va">iris</span><span class="op">[</span><span class="fl">51</span>, <span class="op">]</span>, <span class="va">iris</span><span class="op">[</span><span class="fl">60</span>, <span class="op">]</span><span class="op">)</span></span></code></pre></div>
+<p>RF-GAP proximities are normalised to sum to one over the training cases, so RF-GAP distances lie close to 1; only their order matters for retrieval.</p>
 </div>
 <div class="section level2">
 <h2 id="contribution">Contribution<a class="anchor" aria-label="anchor" href="#contribution"></a>
@@ -243,6 +304,9 @@
 <h3 id="other">Other<a class="anchor" aria-label="anchor" href="#other"></a>
 </h3>
 <ul>
+<li><p>Rhodes, Cutler and Moon <a href="https://doi.org/10.1109/TPAMI.2023.3263774" class="external-link">Geometry- and Accuracy-Preserving Random Forest Proximities</a> (2023)</p></li>
+<li><p>Lowsky et al. <a href="https://doi.org/10.1002/sim.5673" class="external-link">A K-nearest neighbors survival probability prediction method</a> (2013)</p></li>
+<li><p>Keane and Smyth <a href="https://doi.org/10.1007/978-3-030-58342-2_11" class="external-link">Good Counterfactuals and Where to Find Them: A Case-Based Technique for Generating Counterfactuals for Explainable AI</a> (2020)</p></li>
 <li><p>Englund and Verikas <a href="https://doi.org/10.1016/j.eswa.2012.05.094" class="external-link">A novel approach to estimate proximity in a random forest: An exploratory study</a></p></li>
 <li><p>Stuart, E. et al. <a href="https://doi.org/10.4135/9781412995627.d14" class="external-link">Matching methods for causal inference: Designing observational studies</a></p></li>
 <li><p>Defossez et al. <a href="https://doi.org/10.1186/1472-6947-14-24" class="external-link">Temporal representation of care trajectories of cancer patients using data from a regional information system: an application in breast cancer</a></p></li>

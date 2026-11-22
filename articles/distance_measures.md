@@ -74,36 +74,64 @@ d(x_i^k, x_j^k) = x_i^k - x_j^k
 and
 
 ``` math
-\alpha(x_i^k, x_j^k) = \hat{\beta_k}
+\alpha(x_i^k, x_j^k) = \hat{\beta}_k
 ```
 
 If feature $`k`$ is categorical, then
 
 ``` math
-d(x_i^k, x_j^k) = 1 \text{ when } x_i^k = x_j^k \text{ else } 0
+d(x_i^k, x_j^k) = 1 \text{ when } x_i^k \neq x_j^k \text{ else } 0
 ```
 and
 ``` math
-\alpha(x_i^k, x_j^k) = \hat{\beta_k}^i - \hat{\beta_k}^j,
+\alpha(x_i^k, x_j^k) = \hat{\beta}_k^{(x_i^k)} - \hat{\beta}_k^{(x_j^k)},
 ```
 
-where $`\hat{\beta_k}^k`$ are the coefficients of a regression model
-(linear, logistic, or CPH model). The regression coefficients thus serve
-as weights that reflect each feature’s importance and scale.
+where $`\hat{\beta}_k^{(l)}`$ is the coefficient of level $`l`$ (zero
+for the reference level) in a regression model (linear, logistic, or CPH
+model). The regression coefficients thus serve as weights that reflect
+each feature’s importance and scale.
+
+### Contribution Space
+
+Both cases are special cases of one definition. Let
+$`c_t(x) = X_t(x)\hat{\beta}_t`$ be the contribution of model term $`t`$
+to the linear predictor, where $`X_t(x)`$ are the columns of the design
+matrix that belong to term $`t`$ and $`\hat{\beta}_t`$ their
+coefficients. The package computes
+
+``` math
+d(x_i, x_j) = \sum\limits_{t} |c_t(x_i) - c_t(x_j)|.
+```
+
+For a numerical main effect, $`c_t(x) = \hat{\beta}_k x^k`$; for a
+categorical one, $`c_t(x) = \hat{\beta}_k^{(x^k)}`$, so the distance is
+exactly the weighted distance above. The definition also covers any
+other term of an **rms** model: splines such as `rcs(age, 4)`,
+polynomials and interactions. Two cases are then close if the model
+assigns them similar contributions, even if a non-linear effect makes
+equal differences in a variable count differently in different ranges.
+
+`explain_match()` reports the terms $`|c_t(x_i) - c_t(x_j)|`$ and their
+share of the distance, which shows why two cases match.
 
 ## Random Forests
 
 ### Proximity Measure
 
 Two observations $`i`$ and $`j`$ are considered more similar when the
-fraction of trees in which patient $`i`$ and $`j`$ share the same
-terminal node is close to one (Breiman, 2002).
+fraction of trees in which they share the same terminal node is close to
+one (Breiman, 2002). With proximity
 
 ``` math
-d(x_i, x_j)^2 = 1 - \frac{1}{M}\sum\limits_{t=1}^T 1_{[x_i \text{ and } x_j \text{ share the same terminal node in tree } t]},
+p(x_i, x_j) = \frac{1}{T}\sum\limits_{t=1}^T 1_{[x_i \text{ and } x_j \text{ share the same terminal node in tree } t]},
 ```
-where $`M`$ is the number of trees that contain both observations and
-$`T`$ is the total number of trees.
+
+where $`T`$ is the number of trees, the distance is
+
+``` math
+d(x_i, x_j) = \sqrt{1 - p(x_i, x_j)}.
+```
 
 A drawback of this measure is that the decision is binary, meaning that
 potentially similar observations might be counted as dissimilar. For
@@ -115,27 +143,73 @@ an age of 80. This limitation makes the proximity measure less sensitive
 to small differences between observations, potentially affecting the
 overall analysis of similarity.
 
+### Out-of-Bag and RF-GAP Proximities
+
+The original proximity is biased for training cases: a tree is grown
+until its leaves are small, so cases in a tree’s bootstrap sample tend
+to share leaves with each other. Two variants avoid this
+(`proximity_type` in
+[`proximity_distance()`](https://sipemu.github.io/case-based-reasoning/reference/proximity_distance.md),
+[`distance_random_forest()`](https://sipemu.github.io/case-based-reasoning/reference/distance_random_forest.md)
+and `RFModel$set_distance_method()`):
+
+- **OOB**: only the trees in which both observations are out-of-bag are
+  counted, and $`T`$ is replaced by the number of these trees.
+
+- **RF-GAP** (Rhodes, Cutler & Moon, 2023): for a query $`q`$ and a
+  training case $`j`$,
+  ``` math
+  p(q, j) = \frac{1}{|S_q|}\sum\limits_{t \in S_q} \frac{c_j(t)\, 1_{[j \in v_q(t)]}}{|M_q(t)|},
+  ```
+  where $`S_q`$ are the trees in which $`q`$ is out-of-bag (all trees
+  for new data), $`v_q(t)`$ is the terminal node of $`q`$ in tree $`t`$,
+  $`c_j(t)`$ is the in-bag count of $`j`$ in tree $`t`$, and
+  $`|M_q(t)|`$ is the total in-bag count in $`v_q(t)`$.
+
+The RF-GAP proximities of a query sum to one over the training cases,
+and the proximity-weighted average of the training outcomes equals the
+forest’s (out-of-bag) prediction. Retrieval with RF-GAP therefore uses
+the same notion of similarity as the forest’s predictions. Because the
+proximities are small, RF-GAP distances lie close to 1; only their order
+matters. Both variants need the in-bag counts, which `RFModel` keeps by
+default (`keep.inbag = TRUE`).
+
 ### Depth Measure: A modified proximity measure
 
 In contrast to the proximity measure, the depth measure takes into
-account the number of edges between two observations instead of their
-final nodes in each tree. This distance measure is averaged over all
-trees and is defined as:
+account the number of edges between the terminal nodes of two
+observations, not only whether they coincide. It is summed over all
+trees:
 
 ``` math
-d(x_i, x_j) = \frac{1}{M}\sum\limits_{t=1}^T g_{ij},
+d(x_i, x_j) = \sum\limits_{t=1}^T g_{ij}(t),
 ```
 
-where $`M`$ is the number of trees containing both observations, and
-$`g_{ij}`$ is the number of edges between the end nodes of observation
-$`i`$ and $`j`$ in tree $`t`$. This measure considers the structure of
-the trees and provides a more nuanced understanding of the similarity
-between observations.
+where $`g_{ij}(t)`$ is the number of edges on the path between the
+terminal nodes of observation $`i`$ and $`j`$ in tree $`t`$, i.e. the
+sum of their distances to the deepest common ancestor. Observations that
+end up in neighbouring leaves are close, observations in distant parts
+of the tree are far apart. This is the default distance of `RFModel`.
+
+The edge counts are computed on demand from each tree’s structure, so
+the cost grows with the number of pairs and the tree depth, not with the
+number of nodes.
 
 For more details and a thorough explanation of the depth measure, refer
 to the publication by Englund and Verikas: “[A novel approach to
 estimate proximity in a random forest: An exploratory
 study.](https://doi.org/10.1016/j.eswa.2012.05.094)”
 
-By accounting for tree structure, the depth measure provides a more
-nuanced similarity assessment than the binary proximity measure.
+## References
+
+- Breiman, L. (2002). Manual on setting up, using, and understanding
+  random forests V3.1.
+- Dippon, J. et al. (2002). [A statistical approach to case based
+  reasoning, with application to breast cancer
+  data](https://doi.org/10.1016/S0167-9473(02)00058-0).
+- Englund, C. and Verikas, A. (2012). [A novel approach to estimate
+  proximity in a random forest: An exploratory
+  study](https://doi.org/10.1016/j.eswa.2012.05.094).
+- Rhodes, J. S., Cutler, A. and Moon, K. R. (2023). [Geometry- and
+  Accuracy-Preserving Random Forest
+  Proximities](https://doi.org/10.1109/TPAMI.2023.3263774).
