@@ -78,6 +78,12 @@ in a random forest: An exploratory study. Expert Systems with Applications,
 <dd><p>Distance method</p></dd>
 
 
+<dt><code>proximity_type</code></dt>
+<dd><p>Proximity type for <code>dist_method = "Proximity"</code>:
+<code>"original"</code>, <code>"oob"</code> or <code>"rfgap"</code>
+(see <code><a href="proximity_distance.html">proximity_distance</a></code>).</p></dd>
+
+
 </dl><p></p></div>
     </div>
     <div class="section level2">
@@ -138,13 +144,22 @@ set to <code>TRUE</code>; <code>verbose</code> defaults to <code>FALSE</code>.</
 <h3 id="method-set-distance-method-">Method <code>set_distance_method()</code><a class="anchor" aria-label="anchor" href="#method-set-distance-method-"></a></h3>
 <p>Set the distance method. Available are Proximity and Depth</p><div class="section">
 <h4 id="usage-3">Usage<a class="anchor" aria-label="anchor" href="#usage-3"></a></h4>
-<p></p><div class="r"><div class="sourceCode"><pre><code><span><span class="va">RFModel</span><span class="op">$</span><span class="fu">set_distance_method</span><span class="op">(</span>method <span class="op">=</span> <span class="st">"Depth"</span><span class="op">)</span></span></code></pre></div><p></p></div>
+<p></p><div class="r"><div class="sourceCode"><pre><code><span><span class="va">RFModel</span><span class="op">$</span><span class="fu">set_distance_method</span><span class="op">(</span>method <span class="op">=</span> <span class="st">"Depth"</span>, proximity_type <span class="op">=</span> <span class="st">"original"</span><span class="op">)</span></span></code></pre></div><p></p></div>
 </div>
 
 <div class="section">
 <h4 id="arguments-1">Arguments<a class="anchor" aria-label="anchor" href="#arguments-1"></a></h4>
 <p></p><div class="arguments"><dl><dt><code>method</code></dt>
 <dd><p>Distance calculation method (default: Depth)</p></dd>
+
+
+<dt><code>proximity_type</code></dt>
+<dd><p>Proximity type for <code>method = "Proximity"</code>:
+<code>"original"</code> (default), <code>"oob"</code> or <code>"rfgap"</code>. The
+latter two use the forest's in-bag counts; for a query given to
+<code>get_similar_cases()</code> or <code>calc_distance_matrix()</code> the query is
+treated as new data, without a query (<code>calc_distance_matrix()</code>) the
+in-sample, out-of-bag version is computed.</p></dd>
 
 
 </dl><p></p></div>

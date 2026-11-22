@@ -18,7 +18,8 @@ distance_random_forest(
   y = NULL,
   rfObject,
   method = "Proximity",
-  threads = NULL
+  threads = NULL,
+  proximity_type = c("original", "oob", "rfgap")
 )
 ```
 
@@ -44,6 +45,11 @@ distance_random_forest(
 
   number of threads to use. The previous RcppParallel thread setting is
   restored on exit.
+
+- proximity_type:
+
+  type of proximity for `method = "Proximity"`, see
+  [`proximity_distance`](https://sipemu.github.io/case-based-reasoning/reference/proximity_distance.md).
 
 ## Value
 

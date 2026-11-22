@@ -38,6 +38,12 @@ Applications, 39(17), 13046–13050.
 
   Distance method
 
+- `proximity_type`:
+
+  Proximity type for `dist_method = "Proximity"`: `"original"`, `"oob"`
+  or `"rfgap"` (see
+  [`proximity_distance`](https://sipemu.github.io/case-based-reasoning/reference/proximity_distance.md)).
+
 ## Methods
 
 ### Public methods
@@ -110,13 +116,22 @@ Set the distance method. Available are Proximity and Depth
 
 #### Usage
 
-    RFModel$set_distance_method(method = "Depth")
+    RFModel$set_distance_method(method = "Depth", proximity_type = "original")
 
 #### Arguments
 
 - `method`:
 
   Distance calculation method (default: Depth)
+
+- `proximity_type`:
+
+  Proximity type for `method = "Proximity"`: `"original"` (default),
+  `"oob"` or `"rfgap"`. The latter two use the forest's in-bag counts;
+  for a query given to `get_similar_cases()` or `calc_distance_matrix()`
+  the query is treated as new data, without a query
+  (`calc_distance_matrix()`) the in-sample, out-of-bag version is
+  computed.
 
 ------------------------------------------------------------------------
 
