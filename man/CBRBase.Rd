@@ -26,6 +26,15 @@ Keane, M. T. and Smyth, B. (2020). Good Counterfactuals and
 Where to Find Them: A Case-Based Technique for Generating
 Counterfactuals for Explainable AI. ICCBR 2020, LNCS 12311,
 163--178. \doi{10.1007/978-3-030-58342-2_11}
+
+Smyth, B. and Keane, M. T. (1995). Remembering to forget: A
+competence-preserving case deletion policy for case-based
+reasoning systems. Proceedings of IJCAI-95, 377--382.
+
+Wilson, D. L. (1972). Asymptotic properties of nearest
+neighbor rules using edited data. IEEE Transactions on
+Systems, Man, and Cybernetics, 2(3), 408--421.
+\doi{10.1109/TSMC.1972.4309137}
 }
 \keyword{datapreparation}
 \section{Public fields}{
@@ -76,6 +85,7 @@ Counterfactuals for Explainable AI. ICCBR 2020, LNCS 12311,
 \item \href{#method-CBRBase-get_counterfactual_cases}{\code{CBRBase$get_counterfactual_cases()}}
 \item \href{#method-CBRBase-add_cases}{\code{CBRBase$add_cases()}}
 \item \href{#method-CBRBase-remove_cases}{\code{CBRBase$remove_cases()}}
+\item \href{#method-CBRBase-assess_cases}{\code{CBRBase$assess_cases()}}
 \item \href{#method-CBRBase-get_case_base}{\code{CBRBase$get_case_base()}}
 \item \href{#method-CBRBase-explain_match}{\code{CBRBase$explain_match()}}
 \item \href{#method-CBRBase-clone}{\code{CBRBase$clone()}}
@@ -423,6 +433,58 @@ remaining cases.}
 }
 \subsection{Returns}{
 The object, invisibly.
+}
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-CBRBase-assess_cases"></a>}}
+\if{latex}{\out{\hypertarget{method-CBRBase-assess_cases}{}}}
+\subsection{Method \code{assess_cases()}}{
+Assess the cases of the case base for case-base maintenance.
+Each case is retrieved against the other cases
+(leave-one-out) with its \code{k} nearest neighbours.
+
+Case \eqn{j} \emph{solves} case \eqn{i} if \eqn{j} is among
+the \code{k} nearest neighbours of \eqn{i} and has the same
+outcome (same class, numeric outcomes within
+\code{tolerance}, survival: same event status at
+\code{horizon}). Following Smyth & Keane (1995), a case is
+\emph{pivotal} if no other case solves it (removing it
+loses competence), and \emph{auxiliary} if its coverage
+(the cases it solves, and itself) is contained in the
+coverage of a case that solves it (it is redundant). A case
+is \emph{noisy} if the majority of its neighbours predicts a
+different outcome (Wilson editing, 1972); pivotal cases are
+often noisy.
+
+For \code{RFModel} with OOB or RF-GAP proximities, the
+in-sample (out-of-bag) proximities are used.
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{CBRBase$assess_cases(k = 5, horizon = NULL, tolerance = NULL)}\if{html}{\out{</div>}}
+}
+
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{k}}{number of neighbours}
+
+\item{\code{horizon}}{time horizon for survival endpoints (default:
+median event time). Cases censored before
+\code{horizon} are not assessed.}
+
+\item{\code{tolerance}}{numeric endpoints: largest outcome
+difference counted as the same outcome (default: half the
+standard deviation of the outcome).}
+}
+\if{html}{\out{</div>}}
+}
+\subsection{Returns}{
+A data.frame with one row per case of the case base
+  (row names as in \code{get_case_base()}): \code{outcome},
+  \code{agreement} (share of neighbours with the same
+  outcome), \code{noisy}, \code{n_reachable} (number of cases
+  that solve the case), \code{n_coverage} (number of cases it
+  solves) and \code{category} (\code{"pivotal"},
+  \code{"auxiliary"} or \code{"other"}).
 }
 }
 \if{html}{\out{<hr>}}

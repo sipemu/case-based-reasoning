@@ -413,6 +413,72 @@ CBRBase <- R6Class("CBRBase",
                        invisible(self)
                      },
                      #' @description
+                     #' Assess the cases of the case base for case-base maintenance.
+                     #' Each case is retrieved against the other cases
+                     #' (leave-one-out) with its \code{k} nearest neighbours.
+                     #'
+                     #' Case \eqn{j} \emph{solves} case \eqn{i} if \eqn{j} is among
+                     #' the \code{k} nearest neighbours of \eqn{i} and has the same
+                     #' outcome (same class, numeric outcomes within
+                     #' \code{tolerance}, survival: same event status at
+                     #' \code{horizon}). Following Smyth & Keane (1995), a case is
+                     #' \emph{pivotal} if no other case solves it (removing it
+                     #' loses competence), and \emph{auxiliary} if its coverage
+                     #' (the cases it solves, and itself) is contained in the
+                     #' coverage of a case that solves it (it is redundant). A case
+                     #' is \emph{noisy} if the majority of its neighbours predicts a
+                     #' different outcome (Wilson editing, 1972); pivotal cases are
+                     #' often noisy.
+                     #'
+                     #' For \code{RFModel} with OOB or RF-GAP proximities, the
+                     #' in-sample (out-of-bag) proximities are used.
+                     #'
+                     #' @param k number of neighbours
+                     #' @param horizon time horizon for survival endpoints (default:
+                     #'   median event time). Cases censored before
+                     #'   \code{horizon} are not assessed.
+                     #' @param tolerance numeric endpoints: largest outcome
+                     #'   difference counted as the same outcome (default: half the
+                     #'   standard deviation of the outcome).
+                     #' @return A data.frame with one row per case of the case base
+                     #'   (row names as in \code{get_case_base()}): \code{outcome},
+                     #'   \code{agreement} (share of neighbours with the same
+                     #'   outcome), \code{noisy}, \code{n_reachable} (number of cases
+                     #'   that solve the case), \code{n_coverage} (number of cases it
+                     #'   solves) and \code{category} (\code{"pivotal"},
+                     #'   \code{"auxiliary"} or \code{"other"}).
+                     #' @references
+                     #' Smyth, B. and Keane, M. T. (1995). Remembering to forget: A
+                     #' competence-preserving case deletion policy for case-based
+                     #' reasoning systems. Proceedings of IJCAI-95, 377--382.
+                     #'
+                     #' Wilson, D. L. (1972). Asymptotic properties of nearest
+                     #' neighbor rules using edited data. IEEE Transactions on
+                     #' Systems, Man, and Cybernetics, 2(3), 408--421.
+                     #' \doi{10.1109/TSMC.1972.4309137}
+                     assess_cases = function(k = 5, horizon = NULL, tolerance = NULL) {
+                       private$ensure_fitted()
+                       if (length(self$endpoint) == 0) {
+                         stop("assess_cases() needs an endpoint.")
+                       }
+                       k <- private$check_k(k, exclude_self = TRUE)
+                       cases <- private$training_rows()
+                       if (length(self$endpoint) == 2 && is.null(horizon)) {
+                         ev <- cases[[self$endpoint[1]]][as.numeric(cases[[self$endpoint[2]]]) == 1]
+                         horizon <- stats::median(ev)
+                       }
+                       y <- outcome_values(cases, self$endpoint, horizon)
+                       if (y$type == "numeric" && is.null(tolerance)) {
+                         tolerance <- stats::sd(y$value) / 2
+                       }
+                       dist <- as.matrix(private$get_distance_matrix(query = NULL))
+                       res <- assess_case_base(dist, y, k, tolerance)
+                       res <- cbind(data.frame(outcome = y$value, stringsAsFactors = FALSE), res)
+                       rownames(res) <- rownames(cases)
+                       attr(res, "k") <- k
+                       res
+                     },
+                     #' @description
                      #' The case base: the training cases used for retrieval
                      #' (complete cases, including added cases).
                      #' @return A data.frame.
