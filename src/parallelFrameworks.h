@@ -12,14 +12,6 @@
 
 #include <memory>
 
-// TODO: Representation of Results
-// column-wise, row-wise, or full
-#if RCPP_PARALLEL_USE_TBB
-#include "tbb/concurrent_unordered_map.h"
-typedef tbb::concurrent_unordered_map<std::pair<int, int>, double> tbbUPMap;
-typedef tbb::concurrent_unordered_map<int, double> tbbUMap;
-#endif
-
 struct parallelDistance : public RcppParallel::Worker {
   const arma::mat& input_;
   std::shared_ptr<distance> dist_;
@@ -68,23 +60,3 @@ struct parallelDistanceNM : public RcppParallel::Worker {
   }
 };
 
-
-struct parallelMatrixNorm : public RcppParallel::Worker {
-  const arma::mat& inputX_;
-  const arma::mat& inputY_;
-  std::shared_ptr<distance> dist_;
-  arma::vec& output_;
-
-  parallelMatrixNorm(
-    const arma::mat& inputX,
-    const arma::mat& inputY,
-    const std::shared_ptr<distance> dist,
-    arma::vec& output
-  ) : inputX_(inputX), inputY_(inputY), dist_(dist), output_(output) {}
-
-  void operator() (std::size_t begin, std::size_t end) {
-    for (std::size_t i=begin;i<end;++i) {
-      output_(i) = dist_->calc_distance(inputX_.row(i), inputX_.row(i));
-    }
-  }
-};

@@ -1,7 +1,5 @@
 #include "distanceAPI.h"
 
-#include "./containers/RfDistanceContainer.h"
-
 
 void distanceAPI::init() {};
 
@@ -43,7 +41,6 @@ void weightedXYDistanceAPI::set_distance(arma::rowvec& weights) {
 
 arma::mat weightedXYDistanceAPI::calculate_distance(arma::mat& x, arma::mat& y) {
   int nrow = x.n_rows;
-  int ncols = y.n_rows;
   arma::mat output(nrow, y.n_rows);
   parallelDistanceNM parallelDistanceNM(x, y, dist_, nrow, output);
   parallelFor(0, nrow, parallelDistanceNM);

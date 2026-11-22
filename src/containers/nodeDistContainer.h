@@ -20,23 +20,18 @@ public:
   };
   
   void addValue(uint32_t i, uint32_t j, uint32_t tree, uint32_t value) {
-    // check for key pair
-    if (this->container_.find(std::make_pair(i, j)) == this->container_.end()) {
+    // keys are stored as (min, max); normalise before the lookup so that values
+    // of earlier trees are not overwritten when the pair comes in as (max, min)
+    const std::pair<uint32_t, uint32_t> key = (i > j) ? std::make_pair(j, i) : std::make_pair(i, j);
+    auto it = this->container_.find(key);
+    if (it == this->container_.end()) {
       arma::vec vec(ntrees_);
       vec.fill(-1);
-      if (i > j) {
-        this->container_[std::make_pair(j, i)] = vec;
-      } else {
-        this->container_[std::make_pair(i, j)] = vec;
-      }
+      it = this->container_.emplace(key, vec).first;
     }
-    if (i > j) {
-      this->container_[std::make_pair(j, i)][tree] = value;
-    } else {
-      this->container_[std::make_pair(i, j)][tree] = value;
-    }
+    it->second[tree] = value;
   };
-  
+
   int getValue(int i, int j, int tree) const {
     // return -1 if there is no pair
     if (this->container_.find(std::make_pair(i, j)) == this->container_.end()) { return -1.;}
