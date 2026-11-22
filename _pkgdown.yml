@@ -1,0 +1,38 @@
+url: https://sipemu.github.io/case-based-reasoning/
+template:
+  bootstrap: 5
+
+reference:
+  - title: Models
+    contents:
+      - CoxModel
+      - LinearModel
+      - LogisticModel
+      - RFModel
+  - title: S3 methods
+    contents:
+      - starts_with("predict.")
+      - starts_with("print.")
+      - starts_with("summary.")
+  - title: Distances
+    contents:
+      - distance_random_forest
+      - proximity_distance
+      - depth_distance
+      - weighted_distance
+  - title: Random forest internals
+    contents:
+      - terminal_nodes
+      - ranger_forests_to_matrix
+      - edges_between_terminal_nodes
+  - title: Utilities
+    contents:
+      - generate_grid
+      - as_dist_object
+  - title: Base classes
+    contents:
+      - CBRBase
+      - RegressionModel
+  - title: Package
+    contents:
+      - CaseBasedReasoning-package
