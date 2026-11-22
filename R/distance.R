@@ -4,6 +4,8 @@
 #' @param y a second data.frame
 #' @param rfObject \code{ranger} object
 #' @param method distance calculation method, Proximity (Default) or Depth.
+#' @param proximity_type type of proximity for \code{method = "Proximity"},
+#'   see \code{\link{proximity_distance}}.
 #' @param threads number of threads to use. The previous RcppParallel thread
 #'   setting is restored on exit.
 #'
@@ -26,8 +28,10 @@
 #' }
 #'
 #' @export
-distance_random_forest <- function(x, y = NULL, rfObject, method = "Proximity", threads = NULL) {
+distance_random_forest <- function(x, y = NULL, rfObject, method = "Proximity", threads = NULL,
+                                   proximity_type = c("original", "oob", "rfgap")) {
   method <- match.arg(method, c("Proximity", "Depth"))
+  proximity_type <- match.arg(proximity_type)
   validate_ranger(rfObject)
 
   # set number of threads for this call only
@@ -45,7 +49,7 @@ distance_random_forest <- function(x, y = NULL, rfObject, method = "Proximity", 
 
   # Distance calculation
   if (method == "Proximity") {
-    rf_dist <- proximity_distance(x = x, y = y, rfObject = rfObject)
+    rf_dist <- proximity_distance(x = x, y = y, rfObject = rfObject, type = proximity_type)
   } else if (method == "Depth") {
     rf_dist <- depth_distance(x = x, y = y, rfObject = rfObject)
     rf_dist <- rf_dist / rfObject$num.trees
@@ -57,15 +61,51 @@ distance_random_forest <- function(x, y = NULL, rfObject, method = "Proximity", 
 
 #' Get proximity matrix of an ranger object
 #'
-#' @param x a new dataset
+#' Random forest proximities between the observations in \code{x} and
+#' \code{y}, converted to the distance \eqn{\sqrt{1 - p}} by default.
+#'
+#' Three types of proximity are available:
+#' \describe{
+#'   \item{\code{"original"}}{Breiman's proximity: the share of trees in which
+#'     two observations share a terminal node. In-sample proximities are
+#'     inflated because observations are counted in the trees they were
+#'     trained on.}
+#'   \item{\code{"oob"}}{Only trees in which the training observation (and,
+#'     for in-sample queries, the query) is out-of-bag are used.}
+#'   \item{\code{"rfgap"}}{RF-GAP proximities (Rhodes, Cutler & Moon, 2023):
+#'     for query \eqn{q} and training observation \eqn{j},
+#'     \eqn{p(q, j) = \frac{1}{|S_q|} \sum_{t \in S_q} c_j(t) 1[j \in
+#'     leaf_t(q)] / |M_q(t)|}, where \eqn{S_q} are the trees in which \eqn{q}
+#'     is out-of-bag (all trees for new data), \eqn{c_j(t)} is the in-bag count
+#'     of \eqn{j} and \eqn{|M_q(t)|} the total in-bag count in \eqn{q}'s leaf.
+#'     For each query the proximities sum to 1, and the proximity-weighted
+#'     average of the training outcomes reproduces the forest's (out-of-bag)
+#'     prediction for regression forests.}
+#' }
+#' \code{"oob"} and \code{"rfgap"} need the in-bag counts: fit the forest
+#' with \code{keep.inbag = TRUE} and pass the forest's training data as
+#' \code{x} (same rows, same order). If \code{y} is \code{NULL}, the training
+#' data is also used as query (in-sample proximities).
+#'
+#' @param x a new dataset. For \code{type = "oob"} and \code{"rfgap"}: the
+#'   training data of \code{rfObject}.
 #' @param y a second new dataset (Default: NULL)
 #' @param rfObject \code{ranger} object
 #' @param as_dist Bool, convert proximity \eqn{p} to the distance
 #'   \eqn{\sqrt{1 - p}}.
+#' @param type proximity type: \code{"original"} (default), \code{"oob"} or
+#'   \code{"rfgap"}.
 #'
-#' @return a \code{dist} object (if \code{y} is \code{NULL}) or a matrix with
-#' pairwise proximities (or distances, see \code{as_dist}) of observations in
-#' x vs y
+#' @return For \code{type = "original"}: a \code{dist} object (if \code{y} is
+#' \code{NULL}) or a matrix with pairwise proximities (or distances, see
+#' \code{as_dist}) of observations in x (rows) vs y (columns). For the other
+#' types always a matrix; RF-GAP proximities are not symmetric.
+#'
+#' @references
+#' Rhodes, J. S., Cutler, A. and Moon, K. R. (2023). Geometry- and
+#' Accuracy-Preserving Random Forest Proximities. IEEE Transactions on Pattern
+#' Analysis and Machine Intelligence, 45(9), 10947--10959.
+#' \doi{10.1109/TPAMI.2023.3263774}
 #'
 #' @examples
 #' \donttest{
@@ -76,25 +116,51 @@ distance_random_forest <- function(x, y = NULL, rfObject, method = "Proximity", 
 #' set.seed(1234L)
 #' learn <- sample(1:150, 100)
 #' test <- (1:150)[-learn]
-#' rf <- ranger(Species ~ ., data = iris[learn, ], num.trees = 500, write.forest = TRUE)
+#' rf <- ranger(Species ~ ., data = iris[learn, ], num.trees = 500,
+#'              write.forest = TRUE, keep.inbag = TRUE)
 #' proximity_distance(x = iris[learn, -5], y = iris[test, -5], rfObject = rf)
+#' proximity_distance(x = iris[learn, -5], y = iris[test, -5], rfObject = rf,
+#'                    type = "rfgap")
 #' }
 #' @export
-proximity_distance <- function(x, y = NULL, rfObject, as_dist = TRUE) {
+proximity_distance <- function(x, y = NULL, rfObject, as_dist = TRUE,
+                               type = c("original", "oob", "rfgap")) {
+  type <- match.arg(type)
   xNodes <- terminal_nodes(x, rfObject)
-  if (is.null(y)) {
-    d <- cpp_proximityMatrix(xNodes)
-    n <- nrow(x)
-    # convert to dist object
-    rf_dist <- as_dist_object(d, n, "RFProximity")
+  if (type == "original") {
+    if (is.null(y)) {
+      d <- cpp_proximityMatrix(xNodes)
+      n <- nrow(x)
+      # convert to dist object
+      rf_dist <- as_dist_object(d, n, "RFProximity")
+    } else {
+      yNodes <- terminal_nodes(y, rfObject)
+      rf_dist <- cpp_proximityMatrixRangerXY(xNodes, yNodes)
+    }
   } else {
-    yNodes <- terminal_nodes(y, rfObject)
-    rf_dist <- cpp_proximityMatrixRangerXY(xNodes, yNodes)
+    if (is.null(rfObject$inbag.counts)) {
+      stop("Proximity type '", type, "' needs in-bag counts: ",
+           "fit the forest with keep.inbag = TRUE.")
+    }
+    inbag <- do.call(cbind, rfObject$inbag.counts)
+    if (nrow(inbag) != nrow(xNodes)) {
+      stop("For proximity type '", type, "', 'x' must be the training data of ",
+           "the forest (", nrow(inbag), " rows).")
+    }
+    storage.mode(inbag) <- "double"
+    if (is.null(y)) {
+      yNodes <- xNodes
+      yInbag <- inbag
+    } else {
+      yNodes <- terminal_nodes(y, rfObject)
+      yInbag <- matrix(numeric(0), 0, 0)
+    }
+    rf_dist <- cpp_oobProximity(xNodes, yNodes, inbag, yInbag,
+                                type = if (type == "oob") 0L else 1L)
   }
 
   # to distance
-  # proximity is the share of trees in which two cases share a terminal node,
-  # so its maximum is 1, independent of the observations in x and y
+  # proximities lie in [0, 1], independent of the observations in x and y
   if (as_dist) {
     rf_dist <- sqrt(pmax(1 - rf_dist, 0))
   }
