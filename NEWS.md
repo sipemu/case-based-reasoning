@@ -75,6 +75,15 @@
 - `get_similar_cases(exclude_self = TRUE)` excludes training cases with the same
   row name as the query, so in-sample queries do not return themselves (#13).
 
+### Documentation
+
+- README and vignettes cover contribution-space distances, survival
+  prediction and evaluation, counterfactual cases, match explanations and
+  OOB/RF-GAP proximities. Corrected the description of the `caseId` column
+  (the rank of a match) and the proximity and depth formulas (distance
+  `sqrt(1 - p)`; depth is summed over trees; categorical distance is 1 when
+  levels differ).
+
 ### Internal
 
 - Removed dead and duplicate C++ code (`cpp_weighted_knn()`,

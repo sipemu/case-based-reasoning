@@ -9,7 +9,7 @@
 
 # Case Based Reasoning using Statistical Models
 
-The R package case-based-reasoning provides an R interface case-based reasoning using machine learning methods.
+The R package CaseBasedReasoning implements case-based reasoning with statistical and machine learning models: it learns a distance between cases from a fitted regression model or random forest, retrieves the most similar past cases, predicts outcomes (including survival curves) from them, and explains why cases match.
 
 ## Introduction: What is Case Based Reasoning?
 
@@ -43,12 +43,14 @@ The package offers two families of models for this:
 
 A regression model (Cox proportional hazards, OLS, or logistic regression via the [rms](https://CRAN.R-project.org/package=rms) package) is fitted on the training data. The estimated regression coefficients are then used as **weights** in a weighted absolute distance function. Variables with larger coefficients contribute more to the distance, while variables the model deems irrelevant contribute little. This follows the approach of Dippon et al. (2002).
 
+Distances are computed in *contribution space*: for each model term t, the contribution to the linear predictor, `c_t(x) = X_t(x) %*% beta_t`, is compared between two cases, and the absolute differences are summed. For main effects this is exactly the weighted distance above; it also covers any other rms term, such as splines (`rcs(age, 4)`), polynomials and interactions.
+
 ### Random Forest distance (proximity and depth)
 
 A random forest (via the [ranger](https://github.com/imbs-hl/ranger) package) is fitted on the training data. Two distance measures can be extracted:
 
--   **Proximity distance**: Two observations are similar if they frequently land in the same terminal node across trees.
--   **Depth distance**: The distance between two observations is the sum of edges between their terminal nodes across all trees in the forest, following Englund and Verikas.
+-   **Proximity distance**: Two observations are similar if they frequently land in the same terminal node across trees; the distance is `sqrt(1 - proximity)`. Besides Breiman's original proximity, the out-of-bag (OOB) proximity and RF-GAP (Rhodes, Cutler & Moon, 2023) are available. RF-GAP removes the in-bag bias of the original measure: the RF-GAP weighted average of the training outcomes reproduces the forest's prediction.
+-   **Depth distance** (default): The distance between two observations is the sum of edges between their terminal nodes across all trees in the forest, following Englund and Verikas (2012). Unlike proximity, it distinguishes cases that end up in neighbouring leaves from cases in distant parts of the tree.
 
 Both approaches produce an (n x m) distance matrix, where n is the number of training observations and m the number of query observations. This matrix can be used directly for clustering or visualization, or passed to the built-in k-nearest-neighbor search to retrieve the most similar cases.
 
@@ -65,23 +67,17 @@ Both approaches produce an (n x m) distance matrix, where n is the number of tra
 
 ## Features
 
-This R package provides two methods case-based reasoning by using an endpoint:
+-   **Models**: linear, logistic and Cox regression (with splines and interactions), and random forests ([ranger](https://github.com/imbs-hl/ranger)) for numeric, binary, multi-class and survival endpoints.
+-   **Distances**: regression-weighted (contribution-space) distance; random forest proximity (original, OOB, RF-GAP) and depth distance; all implemented in parallel C++.
+-   **Retrieval**: `get_similar_cases()` / `predict()` return the k nearest training cases per query, optionally merged with the query and excluding the query itself (`exclude_self = TRUE`).
+-   **Survival prediction**: `predict_survival()` estimates a Kaplan–Meier curve from each query's nearest cases; `evaluate_survival()` scores it with Uno's C-index and the integrated Brier score.
+-   **Counterfactuals**: `get_counterfactual_cases()` returns the most similar cases with a *different* outcome.
+-   **Explanations**: `explain_match()` shows which variables make two cases similar or different.
+-   **Checks**: query data are validated against the training data (factor levels are matched by name, unknown levels and missing values are errors), and `check_ph()` checks the proportional hazards assumption of the Cox model.
 
--   Linear, logistic, and CPH Regression
+## Missing Values
 
--   Proximity and Depth Measure extracted from a fitted random forest ([ranger](https://github.com/imbs-hl/ranger) package)
-
-Besides the functionality of searching for similar cases, we added some additional features:
-
--   Automatic validation of the critical variables between the query and similar cases dataset
-
--   Checking proportional hazard assumption for the Cox Model
-
--   C++-functions for distance calculation
-
-## Warning Message
-
-"Warning: Cases with missing values in the dependent variable (Y) or predictor variables (X) have been dropped from the analysis. This may lead to a reduced dataset and potential loss of information. Please review your data and consider appropriate missing value imputation techniques to mitigate these issues."
+Training cases with missing values in the endpoint or the predictors are dropped when the model is fitted, with a warning that lists them. They are excluded consistently from fitting, distance calculation and retrieval. Missing values in a query are an error, so impute them or remove those cases first.
 
 
 ## Example: Cox Beta Model
@@ -121,19 +117,19 @@ matched_tbl <- predict(cph_model, newdata = ovarian[testID, ], k = 3)
 
 To analyze the results, you can extract the similar cases and training data and combine them:
 
--   **Note 1**: During the initialization step, all cases with missing values in the data and endpoint variables were removed. Be sure to conduct a missing value analysis beforehand.
+-   **Note 1**: Training cases with missing values are dropped when the model is fitted (see [Missing Values](#missing-values)).
 
--   **Note 2**: The data.frame returned from `cph_model$get_similar_cases()` contains four columns that help identify the query cases, their matches, and the distances between them:
+-   **Note 2**: The data.frame returned from `cph_model$get_similar_cases()` contains the matched training cases, k rows per query, with additional columns:
 
-    -   **caseId**: This column allows you to map the similar cases to cases in the data. For example, if you chose k = 3, the first three elements in the caseId column will be 1 (followed by three 2s, and so on). These three cases are the three most similar cases to case 0 in the verum data.
+    -   **scDist**: The distance between the query and the matched case.
 
-    -   **scDist**: The calculated distance between the cases.
+    -   **caseId**: Rank of the match for its query (1 = most similar, ..., k).
 
-    -   **scCaseId**: Grouping number of the query case with its matched data.
+    With `merge = TRUE`, the query cases are included as well, and two more columns identify them:
 
-    -   **group**: Grouping indicator for matched or query data.
+    -   **scCaseId**: Number of the query case; a query and its matches share the same value.
 
-These columns help organize and interpret the results, ensuring a clear understanding of the most similar cases and their corresponding query cases.
+    -   **group**: `"Query"` or `"Matched"`.
 
 ### Distance Matrix
 
@@ -156,6 +152,60 @@ distance_matrix <- cph_model$calc_distance_matrix()
 ```
 
 `cph_model$calc_distance_matrix()` calculates the distance matrix between train and test data. When test data is omitted, the distances between observations in the training data are calculated. Rows are observations in train and columns observations of test. The distance matrix is saved internally in the `CoxModel` object: `cph_model$dist_matrix`.
+
+## Beyond Retrieval
+
+### Survival prediction
+
+For survival endpoints, the retrieved cases yield a prediction: a Kaplan–Meier estimate over each query's k nearest training cases (Lowsky et al., 2013). `evaluate_survival()` scores the predictions on held-out data with Uno's C-index and the integrated Brier score, so `k` and the distance method can be tuned. The `ovarian` test set above is too small for that, so we use `lung`:
+
+```r
+lung_df <- na.omit(lung[, c("time", "status", "age", "sex", "ph.ecog", "wt.loss")])
+lung_df$status <- lung_df$status - 1
+lung_df$sex <- factor(lung_df$sex)
+train <- sample(nrow(lung_df), 150)
+
+lung_model <- CoxModel$new(Surv(time, status) ~ rcs(age, 3) + sex + ph.ecog + wt.loss,
+                           lung_df[train, ])
+lung_model$fit()
+
+# survival probabilities at 1 and 2 years: one row per query
+lung_model$predict_survival(lung_df[-train, ], k = 30, times = c(365, 730))
+
+# Uno's C-index and integrated Brier score on test data
+lung_model$evaluate_survival(lung_df[-train, ], k = 30)
+```
+
+### Counterfactual cases and explanations
+
+`get_counterfactual_cases()` returns the most similar training cases whose outcome differs from the query's (Keane & Smyth, 2020). For survival endpoints, the outcome is the event status at `horizon`. `explain_match()` breaks a distance down: per model term for regression models, and per split variable at which the tree paths diverge for random forests.
+
+```r
+query <- ovarian[testID[1], ]
+cph_model$get_counterfactual_cases(query, k = 2, horizon = 365)
+
+match <- cph_model$get_similar_cases(query, k = 1)
+cph_model$explain_match(query, match)
+```
+
+## Example: Random Forest
+
+```r
+rf_model <- RFModel$new(Species ~ ., data = iris, num.trees = 500)
+rf_model$fit()
+
+# default: depth distance
+rf_model$get_similar_cases(iris[c(1, 51, 101), ], k = 3)
+
+# RF-GAP proximity
+rf_model$set_distance_method("Proximity", proximity_type = "rfgap")
+rf_model$get_similar_cases(iris[c(1, 51, 101), ], k = 3)
+
+# which variables separate two flowers in the forest?
+rf_model$explain_match(iris[51, ], iris[60, ])
+```
+
+RF-GAP proximities are normalised to sum to one over the training cases, so RF-GAP distances lie close to 1; only their order matters for retrieval.
 
 
 ## Contribution
@@ -185,6 +235,12 @@ The Robert Bosch Foundation funded this work. Special thanks go to Professor Dr.
 -   Friedel et al. [Postoperative Survival of Lung Cancer Patients: Are There Predictors beyond TNM?](https://ar.iiarjournals.org/content/33/4/1609.short) (2012).
 
 ### Other {#other}
+
+-   Rhodes, Cutler and Moon [Geometry- and Accuracy-Preserving Random Forest Proximities](https://doi.org/10.1109/TPAMI.2023.3263774) (2023)
+
+-   Lowsky et al. [A K-nearest neighbors survival probability prediction method](https://doi.org/10.1002/sim.5673) (2013)
+
+-   Keane and Smyth [Good Counterfactuals and Where to Find Them: A Case-Based Technique for Generating Counterfactuals for Explainable AI](https://doi.org/10.1007/978-3-030-58342-2_11) (2020)
 
 -   Englund and Verikas [A novel approach to estimate proximity in a random forest: An exploratory study](https://doi.org/10.1016/j.eswa.2012.05.094)
 
