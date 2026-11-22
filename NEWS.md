@@ -15,6 +15,11 @@
   training cases, so query distances do not depend on the batch. All CBR
   methods (retrieval, outcome and survival prediction, counterfactuals,
   `explain_match()`) work with it (#44).
+- Retain: `add_cases()` adds solved cases to the case base without refitting
+  the model (or with `refit = TRUE`), `remove_cases()` removes cases by row
+  name or position, and `get_case_base()` returns the current case base. New
+  cases are validated like queries. OOB and RF-GAP proximities of `RFModel`
+  need a refit after the case base was changed (#45).
 
 ### Bug fixes
 

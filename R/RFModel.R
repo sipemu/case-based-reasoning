@@ -96,6 +96,12 @@ RFModel <- R6Class(
     get_distance_matrix = function(query = NULL) {
       private$ensure_fitted()
       validate_ranger(self$model_fit)
+      if (self$dist_method == "Proximity" && self$proximity_type != "original" &&
+          isTRUE(private$case_base_modified)) {
+        stop("Proximity type '", self$proximity_type, "' needs the in-bag counts of all ",
+             "cases, but cases were added or removed since the forest was fitted. ",
+             "Refit with $fit(), or use proximity_type = \"original\" or the Depth distance.")
+      }
       x <- private$prepare_newdata(private$training_rows(), "training data")
       y <- if (is.null(query)) NULL else private$prepare_newdata(query)
       self$dist_matrix <- distance_random_forest(

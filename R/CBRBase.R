@@ -324,6 +324,103 @@ CBRBase <- R6Class("CBRBase",
                        res
                      },
                      #' @description
+                     #' Add solved cases to the case base (the Retain step of the
+                     #' CBR cycle). By default the model is not refitted: the new
+                     #' cases are retrievable at once, and distances use the
+                     #' fitted model (for \code{GowerModel}: the ranges of the
+                     #' fitted cases). The new cases are checked like queries
+                     #' (variables, factor levels, missing values) and need a
+                     #' complete endpoint.
+                     #'
+                     #' For \code{RFModel} the OOB and RF-GAP proximities need the
+                     #' in-bag counts of all cases; refit the model to use them
+                     #' after adding cases.
+                     #'
+                     #' @param newdata New cases (data.frame) with the variables and
+                     #'   the endpoint of the model. Other columns of the training
+                     #'   data are filled with \code{NA}.
+                     #' @param refit If \code{TRUE}, refit the model on the extended
+                     #'   case base; new factor levels are then allowed.
+                     #' @return The object, invisibly.
+                     add_cases = function(newdata, refit = FALSE) {
+                       private$ensure_fitted()
+                       newdata <- as.data.frame(newdata)
+                       if (nrow(newdata) == 0) return(invisible(self))
+                       missing_ep <- setdiff(self$endpoint, names(newdata))
+                       if (length(missing_ep) > 0) {
+                         stop("Endpoint column(s) not found in new cases: ",
+                              paste(missing_ep, collapse = ", "))
+                       }
+                       if (!isTRUE(refit)) {
+                         private$prepare_newdata(newdata, "new cases")
+                         if (anyNA(newdata[, self$endpoint, drop = FALSE])) {
+                           stop("Missing values in the endpoint of the new cases.")
+                         }
+                       }
+                       for (col in setdiff(names(self$data), names(newdata))) {
+                         newdata[[col]] <- NA
+                       }
+                       newdata <- newdata[, names(self$data), drop = FALSE]
+                       n_old <- nrow(self$data)
+                       self$data <- rbind(self$data, newdata)
+                       if (isTRUE(refit)) {
+                         self$fit()
+                       } else {
+                         private$train_idx <- c(private$train_idx, n_old + seq_len(nrow(newdata)))
+                         private$case_base_modified <- TRUE
+                       }
+                       invisible(self)
+                     },
+                     #' @description
+                     #' Remove cases from the case base, e.g. noisy or redundant
+                     #' cases found by \code{assess_cases()}.
+                     #'
+                     #' @param cases row names (character) or positions (integer)
+                     #'   of cases in the case base (\code{get_case_base()}).
+                     #' @param refit If \code{TRUE}, refit the model on the
+                     #'   remaining cases.
+                     #' @return The object, invisibly.
+                     remove_cases = function(cases, refit = FALSE) {
+                       private$ensure_fitted()
+                       rows <- private$training_rows()
+                       if (is.character(cases)) {
+                         pos <- match(cases, rownames(rows))
+                         if (anyNA(pos)) {
+                           stop("Unknown case(s): ", paste(cases[is.na(pos)], collapse = ", "))
+                         }
+                       } else if (is.numeric(cases) && all(cases == round(cases)) &&
+                                  all(cases >= 1 & cases <= nrow(rows))) {
+                         pos <- as.integer(cases)
+                       } else {
+                         stop("'cases' must be row names or positions (1..", nrow(rows),
+                              ") of the case base.")
+                       }
+                       pos <- unique(pos)
+                       if (length(pos) == 0) return(invisible(self))
+                       if (length(pos) >= nrow(rows)) {
+                         stop("Cannot remove all cases from the case base.")
+                       }
+                       drop <- private$train_idx[pos]
+                       keep_old <- setdiff(seq_len(nrow(self$data)), drop)
+                       remaining <- private$train_idx[-pos]
+                       self$data <- self$data[keep_old, , drop = FALSE]
+                       if (isTRUE(refit)) {
+                         self$fit()
+                       } else {
+                         private$train_idx <- match(remaining, keep_old)
+                         private$case_base_modified <- TRUE
+                       }
+                       invisible(self)
+                     },
+                     #' @description
+                     #' The case base: the training cases used for retrieval
+                     #' (complete cases, including added cases).
+                     #' @return A data.frame.
+                     get_case_base = function() {
+                       private$ensure_fitted()
+                       private$training_rows()
+                     },
+                     #' @description
                      #' Explain why a training case is similar to a query.
                      #' For regression models: the contribution of each term to the
                      #' linear predictor of query and case, and its share of the
@@ -384,6 +481,8 @@ CBRBase <- R6Class("CBRBase",
                      factor_levels = NULL,
                      # ordered factor variables of the fitted training data
                      ordered_vars = NULL,
+                     # TRUE if cases were added or removed since the model was fitted
+                     case_base_modified = FALSE,
                      ensure_fitted = function() {
                        if (is.null(private$train_idx)) {
                          stop("Model not trained: call $fit() first.")
@@ -457,6 +556,7 @@ CBRBase <- R6Class("CBRBase",
                        x <- private$check_factor(x)
                        x <- droplevels(x)
                        private$train_idx <- which(keep)
+                       private$case_base_modified <- FALSE
                        is_fct <- vapply(self$variables, function(v) is.factor(x[[v]]), logical(1))
                        private$factor_levels <- lapply(x[self$variables[is_fct]], levels)
                        is_ord <- vapply(self$variables, function(v) is.ordered(x[[v]]), logical(1))

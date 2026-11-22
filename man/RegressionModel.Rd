@@ -33,15 +33,18 @@ Root class for Regression Models, e.g., CPH, logistic, and linear regression
 \if{html}{\out{
 <details><summary>Inherited methods</summary>
 <ul>
+<li><span class="pkg-link" data-pkg="CaseBasedReasoning" data-topic="CBRBase" data-id="add_cases"><a href='../../CaseBasedReasoning/html/CBRBase.html#method-CBRBase-add_cases'><code>CaseBasedReasoning::CBRBase$add_cases()</code></a></span></li>
 <li><span class="pkg-link" data-pkg="CaseBasedReasoning" data-topic="CBRBase" data-id="calc_distance_matrix"><a href='../../CaseBasedReasoning/html/CBRBase.html#method-CBRBase-calc_distance_matrix'><code>CaseBasedReasoning::CBRBase$calc_distance_matrix()</code></a></span></li>
 <li><span class="pkg-link" data-pkg="CaseBasedReasoning" data-topic="CBRBase" data-id="evaluate"><a href='../../CaseBasedReasoning/html/CBRBase.html#method-CBRBase-evaluate'><code>CaseBasedReasoning::CBRBase$evaluate()</code></a></span></li>
 <li><span class="pkg-link" data-pkg="CaseBasedReasoning" data-topic="CBRBase" data-id="evaluate_survival"><a href='../../CaseBasedReasoning/html/CBRBase.html#method-CBRBase-evaluate_survival'><code>CaseBasedReasoning::CBRBase$evaluate_survival()</code></a></span></li>
 <li><span class="pkg-link" data-pkg="CaseBasedReasoning" data-topic="CBRBase" data-id="explain_match"><a href='../../CaseBasedReasoning/html/CBRBase.html#method-CBRBase-explain_match'><code>CaseBasedReasoning::CBRBase$explain_match()</code></a></span></li>
+<li><span class="pkg-link" data-pkg="CaseBasedReasoning" data-topic="CBRBase" data-id="get_case_base"><a href='../../CaseBasedReasoning/html/CBRBase.html#method-CBRBase-get_case_base'><code>CaseBasedReasoning::CBRBase$get_case_base()</code></a></span></li>
 <li><span class="pkg-link" data-pkg="CaseBasedReasoning" data-topic="CBRBase" data-id="get_counterfactual_cases"><a href='../../CaseBasedReasoning/html/CBRBase.html#method-CBRBase-get_counterfactual_cases'><code>CaseBasedReasoning::CBRBase$get_counterfactual_cases()</code></a></span></li>
 <li><span class="pkg-link" data-pkg="CaseBasedReasoning" data-topic="CBRBase" data-id="get_similar_cases"><a href='../../CaseBasedReasoning/html/CBRBase.html#method-CBRBase-get_similar_cases'><code>CaseBasedReasoning::CBRBase$get_similar_cases()</code></a></span></li>
 <li><span class="pkg-link" data-pkg="CaseBasedReasoning" data-topic="CBRBase" data-id="initialize"><a href='../../CaseBasedReasoning/html/CBRBase.html#method-CBRBase-initialize'><code>CaseBasedReasoning::CBRBase$initialize()</code></a></span></li>
 <li><span class="pkg-link" data-pkg="CaseBasedReasoning" data-topic="CBRBase" data-id="predict_outcome"><a href='../../CaseBasedReasoning/html/CBRBase.html#method-CBRBase-predict_outcome'><code>CaseBasedReasoning::CBRBase$predict_outcome()</code></a></span></li>
 <li><span class="pkg-link" data-pkg="CaseBasedReasoning" data-topic="CBRBase" data-id="predict_survival"><a href='../../CaseBasedReasoning/html/CBRBase.html#method-CBRBase-predict_survival'><code>CaseBasedReasoning::CBRBase$predict_survival()</code></a></span></li>
+<li><span class="pkg-link" data-pkg="CaseBasedReasoning" data-topic="CBRBase" data-id="remove_cases"><a href='../../CaseBasedReasoning/html/CBRBase.html#method-CBRBase-remove_cases'><code>CaseBasedReasoning::CBRBase$remove_cases()</code></a></span></li>
 </ul>
 </details>
 }}
