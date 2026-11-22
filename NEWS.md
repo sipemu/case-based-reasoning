@@ -56,14 +56,6 @@
   2013). `evaluate_survival()` scores these predictions on test data with
   Uno's C-index and the IPCW (integrated) Brier score, so that `k` and the
   distance method can be chosen on held-out data (#21).
-- Regression models (`CoxModel`, `LinearModel`, `LogisticModel`) support any
-  rms term: splines (`rcs()`, `pol()`, ...), interactions and so on (#11).
-  Distances are computed in *contribution space*: each term's contribution to
-  the linear predictor, `c_t(x) = X_t(x) %*% beta_t`, compared with a
-  weighted L1 distance. For main effects this is identical to the previous
-  weighted distance (Dippon et al., 2002) (#22).
-- New public field `variables` holds the data columns used by the formula;
-  `terms` holds the term labels.
 - Out-of-bag and RF-GAP random forest proximities (Rhodes, Cutler & Moon,
   2023): `proximity_distance(type = c("original", "oob", "rfgap"))`,
   `distance_random_forest(proximity_type = )` and
@@ -72,6 +64,14 @@
   proximity-weighted average of the training outcomes reproduces the forest's
   (out-of-bag) prediction. `RFModel` now keeps the in-bag counts by default
   (#20).
+- Regression models (`CoxModel`, `LinearModel`, `LogisticModel`) support any
+  rms term: splines (`rcs()`, `pol()`, ...), interactions and so on (#11).
+  Distances are computed in *contribution space*: each term's contribution to
+  the linear predictor, `c_t(x) = X_t(x) %*% beta_t`, compared with a
+  weighted L1 distance. For main effects this is identical to the previous
+  weighted distance (Dippon et al., 2002) (#22).
+- New public field `variables` holds the data columns used by the formula;
+  `terms` holds the term labels.
 - `get_similar_cases(exclude_self = TRUE)` excludes training cases with the same
   row name as the query, so in-sample queries do not return themselves (#13).
 
