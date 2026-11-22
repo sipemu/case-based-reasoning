@@ -9,7 +9,7 @@ Root class for common functionality of this package"></head><body>
 
     <a class="navbar-brand me-2" href="../index.html">CaseBasedReasoning</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.5.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.5.0.9000</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -129,6 +129,8 @@ Counterfactuals for Explainable AI. ICCBR 2020, LNCS 12311,
 <li><p><a href="#method-CBRBase-fit"><code>CBRBase$fit()</code></a></p></li>
 <li><p><a href="#method-CBRBase-calc_distance_matrix"><code>CBRBase$calc_distance_matrix()</code></a></p></li>
 <li><p><a href="#method-CBRBase-get_similar_cases"><code>CBRBase$get_similar_cases()</code></a></p></li>
+<li><p><a href="#method-CBRBase-predict_outcome"><code>CBRBase$predict_outcome()</code></a></p></li>
+<li><p><a href="#method-CBRBase-evaluate"><code>CBRBase$evaluate()</code></a></p></li>
 <li><p><a href="#method-CBRBase-predict_survival"><code>CBRBase$predict_survival()</code></a></p></li>
 <li><p><a href="#method-CBRBase-evaluate_survival"><code>CBRBase$evaluate_survival()</code></a></p></li>
 <li><p><a href="#method-CBRBase-get_counterfactual_cases"><code>CBRBase$get_counterfactual_cases()</code></a></p></li>
@@ -219,18 +221,104 @@ own nearest neighbour.</p></dd>
 </dl><p></p></div>
 </div>
 
+</div><p></p><hr><a id="method-CBRBase-predict_outcome"></a><div class="section">
+<h3 id="method-predict-outcome-">Method <code>predict_outcome()</code><a class="anchor" aria-label="anchor" href="#method-predict-outcome-"></a></h3>
+<p>Predict the outcome of class and numeric endpoints from the
+<code>k</code> most similar training cases (the Reuse step of the
+CBR cycle): a (weighted) majority vote with class
+probabilities, or a (weighted) mean. For survival endpoints
+use <code>predict_survival()</code>.</p>
+<p>Class endpoints are factors, characters, logicals or 0/1
+variables; all other endpoints are numeric.</p><div class="section">
+<h4 id="usage-4">Usage<a class="anchor" aria-label="anchor" href="#usage-4"></a></h4>
+<p></p><div class="r"><div class="sourceCode"><pre><code><span><span class="va">CBRBase</span><span class="op">$</span><span class="fu">predict_outcome</span><span class="op">(</span><span class="va">query</span>, k <span class="op">=</span> <span class="fl">10</span>, weighted <span class="op">=</span> <span class="cn">FALSE</span>, exclude_self <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span></code></pre></div><p></p></div>
+</div>
+
+<div class="section">
+<h4 id="arguments-3">Arguments<a class="anchor" aria-label="anchor" href="#arguments-3"></a></h4>
+<p></p><div class="arguments"><dl><dt><code>query</code></dt>
+<dd><p>Query data of class data.frame</p></dd>
+
+
+<dt><code>k</code></dt>
+<dd><p>number of similar cases</p></dd>
+
+
+<dt><code>weighted</code></dt>
+<dd><p>If <code>TRUE</code>, cases are weighted with a
+tricube kernel of their distance to the query.</p></dd>
+
+
+<dt><code>exclude_self</code></dt>
+<dd><p>Exclude training cases whose row name
+equals the query's row name (leave-one-out predictions
+for in-sample queries).</p></dd>
+
+
+</dl><p></p></div>
+</div>
+<div class="section">
+<h4 id="returns">Returns<a class="anchor" aria-label="anchor" href="#returns"></a></h4>
+<p>A data.frame with one row per query and the column
+  <code>prediction</code>. For class endpoints <code>prediction</code> is
+  a factor, and there is one column <code>prob_&lt;level&gt;</code> with
+  the share of (weighted) cases per class.</p>
+</div>
+
+</div><p></p><hr><a id="method-CBRBase-evaluate"></a><div class="section">
+<h3 id="method-evaluate-">Method <code>evaluate()</code><a class="anchor" aria-label="anchor" href="#method-evaluate-"></a></h3>
+<p>Evaluate predictions from retrieved cases on test data. Class
+endpoints: accuracy, Brier score and log loss; numeric
+endpoints: root mean squared error (RMSE) and mean absolute
+error (MAE); survival endpoints: see
+<code>evaluate_survival()</code>. Use it to choose <code>k</code> and the
+distance method on held-out data.</p><div class="section">
+<h4 id="usage-5">Usage<a class="anchor" aria-label="anchor" href="#usage-5"></a></h4>
+<p></p><div class="r"><div class="sourceCode"><pre><code><span><span class="va">CBRBase</span><span class="op">$</span><span class="fu">evaluate</span><span class="op">(</span><span class="va">test</span>, k <span class="op">=</span> <span class="fl">10</span>, weighted <span class="op">=</span> <span class="cn">FALSE</span>, <span class="va">...</span><span class="op">)</span></span></code></pre></div><p></p></div>
+</div>
+
+<div class="section">
+<h4 id="arguments-4">Arguments<a class="anchor" aria-label="anchor" href="#arguments-4"></a></h4>
+<p></p><div class="arguments"><dl><dt><code>test</code></dt>
+<dd><p>Test data with the endpoint column(s)</p></dd>
+
+
+<dt><code>k</code></dt>
+<dd><p>number of similar cases</p></dd>
+
+
+<dt><code>weighted</code></dt>
+<dd><p>If <code>TRUE</code>, cases are weighted with a
+tricube kernel of their distance to the query.</p></dd>
+
+
+<dt><code>...</code></dt>
+<dd><p>further arguments: <code>exclude_self</code> for class
+and numeric endpoints, <code>times</code> and <code>tau</code> for
+survival endpoints.</p></dd>
+
+
+</dl><p></p></div>
+</div>
+<div class="section">
+<h4 id="returns-1">Returns<a class="anchor" aria-label="anchor" href="#returns-1"></a></h4>
+<p>A named list of scores and the number of test cases
+  <code>n</code> (for survival endpoints the list of
+  <code>evaluate_survival()</code>).</p>
+</div>
+
 </div><p></p><hr><a id="method-CBRBase-predict_survival"></a><div class="section">
 <h3 id="method-predict-survival-">Method <code>predict_survival()</code><a class="anchor" aria-label="anchor" href="#method-predict-survival-"></a></h3>
 <p>Predict survival curves from the <code>k</code> most similar
 training cases: a Kaplan-Meier estimate over the retrieved
 cases of each query (Lowsky et al., 2013). Only for survival
 endpoints (<code>Surv(time, status)</code>).</p><div class="section">
-<h4 id="usage-4">Usage<a class="anchor" aria-label="anchor" href="#usage-4"></a></h4>
+<h4 id="usage-6">Usage<a class="anchor" aria-label="anchor" href="#usage-6"></a></h4>
 <p></p><div class="r"><div class="sourceCode"><pre><code><span><span class="va">CBRBase</span><span class="op">$</span><span class="fu">predict_survival</span><span class="op">(</span><span class="va">query</span>, k <span class="op">=</span> <span class="fl">10</span>, times <span class="op">=</span> <span class="cn">NULL</span>, weighted <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span></code></pre></div><p></p></div>
 </div>
 
 <div class="section">
-<h4 id="arguments-3">Arguments<a class="anchor" aria-label="anchor" href="#arguments-3"></a></h4>
+<h4 id="arguments-5">Arguments<a class="anchor" aria-label="anchor" href="#arguments-5"></a></h4>
 <p></p><div class="arguments"><dl><dt><code>query</code></dt>
 <dd><p>Query data of class data.frame</p></dd>
 
@@ -252,7 +340,7 @@ tricube kernel of their distance to the query.</p></dd>
 </dl><p></p></div>
 </div>
 <div class="section">
-<h4 id="returns">Returns<a class="anchor" aria-label="anchor" href="#returns"></a></h4>
+<h4 id="returns-2">Returns<a class="anchor" aria-label="anchor" href="#returns-2"></a></h4>
 <p>A matrix of survival probabilities with one row per
   query and one column per time point (attribute <code>times</code>).</p>
 </div>
@@ -263,7 +351,7 @@ tricube kernel of their distance to the query.</p></dd>
 data: Uno's concordance index and the IPCW (integrated)
 Brier score. Use it to choose <code>k</code> and the distance
 method on held-out data.</p><div class="section">
-<h4 id="usage-5">Usage<a class="anchor" aria-label="anchor" href="#usage-5"></a></h4>
+<h4 id="usage-7">Usage<a class="anchor" aria-label="anchor" href="#usage-7"></a></h4>
 <p></p><div class="r"><div class="sourceCode"><pre><code><span><span class="va">CBRBase</span><span class="op">$</span><span class="fu">evaluate_survival</span><span class="op">(</span></span>
 <span>  <span class="va">test</span>,</span>
 <span>  k <span class="op">=</span> <span class="fl">10</span>,</span>
@@ -274,7 +362,7 @@ method on held-out data.</p><div class="section">
 </div>
 
 <div class="section">
-<h4 id="arguments-4">Arguments<a class="anchor" aria-label="anchor" href="#arguments-4"></a></h4>
+<h4 id="arguments-6">Arguments<a class="anchor" aria-label="anchor" href="#arguments-6"></a></h4>
 <p></p><div class="arguments"><dl><dt><code>test</code></dt>
 <dd><p>Test data with the endpoint columns</p></dd>
 
@@ -301,7 +389,7 @@ event times</p></dd>
 </dl><p></p></div>
 </div>
 <div class="section">
-<h4 id="returns-1">Returns<a class="anchor" aria-label="anchor" href="#returns-1"></a></h4>
+<h4 id="returns-3">Returns<a class="anchor" aria-label="anchor" href="#returns-3"></a></h4>
 <p>A list with <code>c_index</code> (Uno's C), <code>ibs</code>
   (integrated Brier score) and <code>brier</code> (data.frame with
   the Brier score at each time).</p>
@@ -324,7 +412,7 @@ event status). A training case is a counterfactual if</p><ul><li><p>classificati
     followed beyond <code>horizon</code>; cases censored before
     <code>horizon</code> are not used).</p></li>
 </ul><div class="section">
-<h4 id="usage-6">Usage<a class="anchor" aria-label="anchor" href="#usage-6"></a></h4>
+<h4 id="usage-8">Usage<a class="anchor" aria-label="anchor" href="#usage-8"></a></h4>
 <p></p><div class="r"><div class="sourceCode"><pre><code><span><span class="va">CBRBase</span><span class="op">$</span><span class="fu">get_counterfactual_cases</span><span class="op">(</span></span>
 <span>  <span class="va">query</span>,</span>
 <span>  k <span class="op">=</span> <span class="fl">1</span>,</span>
@@ -335,7 +423,7 @@ event status). A training case is a counterfactual if</p><ul><li><p>classificati
 </div>
 
 <div class="section">
-<h4 id="arguments-5">Arguments<a class="anchor" aria-label="anchor" href="#arguments-5"></a></h4>
+<h4 id="arguments-7">Arguments<a class="anchor" aria-label="anchor" href="#arguments-7"></a></h4>
 <p></p><div class="arguments"><dl><dt><code>query</code></dt>
 <dd><p>Query data of class data.frame</p></dd>
 
@@ -362,7 +450,7 @@ query's outcome if it is not given</p></dd>
 </dl><p></p></div>
 </div>
 <div class="section">
-<h4 id="returns-2">Returns<a class="anchor" aria-label="anchor" href="#returns-2"></a></h4>
+<h4 id="returns-4">Returns<a class="anchor" aria-label="anchor" href="#returns-4"></a></h4>
 <p>A data.frame like <code>get_similar_cases()</code> with the
   additional column <code>queryOutcome</code>.</p>
 </div>
@@ -375,12 +463,12 @@ linear predictor of query and case, and its share of the
 distance. For random forests: in the trees where query and
 case end in different terminal nodes, the split variable at
 which their paths diverge.</p><div class="section">
-<h4 id="usage-7">Usage<a class="anchor" aria-label="anchor" href="#usage-7"></a></h4>
+<h4 id="usage-9">Usage<a class="anchor" aria-label="anchor" href="#usage-9"></a></h4>
 <p></p><div class="r"><div class="sourceCode"><pre><code><span><span class="va">CBRBase</span><span class="op">$</span><span class="fu">explain_match</span><span class="op">(</span><span class="va">query</span>, <span class="va">case</span><span class="op">)</span></span></code></pre></div><p></p></div>
 </div>
 
 <div class="section">
-<h4 id="arguments-6">Arguments<a class="anchor" aria-label="anchor" href="#arguments-6"></a></h4>
+<h4 id="arguments-8">Arguments<a class="anchor" aria-label="anchor" href="#arguments-8"></a></h4>
 <p></p><div class="arguments"><dl><dt><code>query</code></dt>
 <dd><p>One query case (data.frame with one row)</p></dd>
 
@@ -393,7 +481,7 @@ returned by <code>get_similar_cases()</code></p></dd>
 </dl><p></p></div>
 </div>
 <div class="section">
-<h4 id="returns-3">Returns<a class="anchor" aria-label="anchor" href="#returns-3"></a></h4>
+<h4 id="returns-5">Returns<a class="anchor" aria-label="anchor" href="#returns-5"></a></h4>
 <p>A data.frame with one row per term (regression) or
   variable (random forest).</p>
 </div>
@@ -401,12 +489,12 @@ returned by <code>get_similar_cases()</code></p></dd>
 </div><p></p><hr><a id="method-CBRBase-clone"></a><div class="section">
 <h3 id="method-clone-">Method <code>clone()</code><a class="anchor" aria-label="anchor" href="#method-clone-"></a></h3>
 <p>The objects of this class are cloneable with this method.</p><div class="section">
-<h4 id="usage-8">Usage<a class="anchor" aria-label="anchor" href="#usage-8"></a></h4>
+<h4 id="usage-10">Usage<a class="anchor" aria-label="anchor" href="#usage-10"></a></h4>
 <p></p><div class="r"><div class="sourceCode"><pre><code><span><span class="va">CBRBase</span><span class="op">$</span><span class="fu">clone</span><span class="op">(</span>deep <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span></code></pre></div><p></p></div>
 </div>
 
 <div class="section">
-<h4 id="arguments-7">Arguments<a class="anchor" aria-label="anchor" href="#arguments-7"></a></h4>
+<h4 id="arguments-9">Arguments<a class="anchor" aria-label="anchor" href="#arguments-9"></a></h4>
 <p></p><div class="arguments"><dl><dt><code>deep</code></dt>
 <dd><p>Whether to make a deep clone.</p></dd>
 

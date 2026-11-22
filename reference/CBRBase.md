@@ -88,6 +88,10 @@ Explainable AI. ICCBR 2020, LNCS 12311, 163–178.
 
 - [`CBRBase$get_similar_cases()`](#method-CBRBase-get_similar_cases)
 
+- [`CBRBase$predict_outcome()`](#method-CBRBase-predict_outcome)
+
+- [`CBRBase$evaluate()`](#method-CBRBase-evaluate)
+
 - [`CBRBase$predict_survival()`](#method-CBRBase-predict_survival)
 
 - [`CBRBase$evaluate_survival()`](#method-CBRBase-evaluate_survival)
@@ -183,6 +187,87 @@ Extracts similar cases
   Exclude training cases whose row name equals the query's row name. Use
   this when the query rows are taken from the training data, so that a
   case is not returned as its own nearest neighbour.
+
+------------------------------------------------------------------------
+
+### Method `predict_outcome()`
+
+Predict the outcome of class and numeric endpoints from the `k` most
+similar training cases (the Reuse step of the CBR cycle): a (weighted)
+majority vote with class probabilities, or a (weighted) mean. For
+survival endpoints use `predict_survival()`.
+
+Class endpoints are factors, characters, logicals or 0/1 variables; all
+other endpoints are numeric.
+
+#### Usage
+
+    CBRBase$predict_outcome(query, k = 10, weighted = FALSE, exclude_self = FALSE)
+
+#### Arguments
+
+- `query`:
+
+  Query data of class data.frame
+
+- `k`:
+
+  number of similar cases
+
+- `weighted`:
+
+  If `TRUE`, cases are weighted with a tricube kernel of their distance
+  to the query.
+
+- `exclude_self`:
+
+  Exclude training cases whose row name equals the query's row name
+  (leave-one-out predictions for in-sample queries).
+
+#### Returns
+
+A data.frame with one row per query and the column `prediction`. For
+class endpoints `prediction` is a factor, and there is one column
+`prob_<level>` with the share of (weighted) cases per class.
+
+------------------------------------------------------------------------
+
+### Method `evaluate()`
+
+Evaluate predictions from retrieved cases on test data. Class endpoints:
+accuracy, Brier score and log loss; numeric endpoints: root mean squared
+error (RMSE) and mean absolute error (MAE); survival endpoints: see
+`evaluate_survival()`. Use it to choose `k` and the distance method on
+held-out data.
+
+#### Usage
+
+    CBRBase$evaluate(test, k = 10, weighted = FALSE, ...)
+
+#### Arguments
+
+- `test`:
+
+  Test data with the endpoint column(s)
+
+- `k`:
+
+  number of similar cases
+
+- `weighted`:
+
+  If `TRUE`, cases are weighted with a tricube kernel of their distance
+  to the query.
+
+- `...`:
+
+  further arguments: `exclude_self` for class and numeric endpoints,
+  `times` and `tau` for survival endpoints.
+
+#### Returns
+
+A named list of scores and the number of test cases `n` (for survival
+endpoints the list of `evaluate_survival()`).
 
 ------------------------------------------------------------------------
 

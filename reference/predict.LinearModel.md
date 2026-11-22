@@ -6,7 +6,13 @@ Predict method for LinearModel
 
 ``` r
 # S3 method for class 'LinearModel'
-predict(object, newdata, k = 1, ...)
+predict(
+  object,
+  newdata,
+  k = NULL,
+  type = c("cases", "outcome", "survival"),
+  ...
+)
 ```
 
 ## Arguments
@@ -21,12 +27,21 @@ predict(object, newdata, k = 1, ...)
 
 - k:
 
-  Number of similar cases to return
+  Number of similar cases. Default: 1 for `type = "cases"`, 10
+  otherwise.
+
+- type:
+
+  `"cases"` (default): the similar cases (`$get_similar_cases()`);
+  `"outcome"`: predicted class or numeric outcome
+  (`$predict_outcome()`); `"survival"`: predicted survival probabilities
+  (`$predict_survival()`).
 
 - ...:
 
-  Additional arguments (currently unused)
+  Further arguments passed to the method selected by `type`
 
 ## Value
 
-A data.frame of similar cases
+A data.frame of similar cases, a data.frame of predictions, or a matrix
+of survival probabilities
