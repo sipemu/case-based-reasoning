@@ -8,6 +8,20 @@ Root class for common functionality of this package
 
 Root class for common functionality of this package
 }
+\references{
+Lowsky, D. J. et al. (2013). A K-nearest neighbors survival
+probability prediction method. Statistics in Medicine, 32(12),
+2062--2069. \doi{10.1002/sim.5673}
+
+Uno, H. et al. (2011). On the C-statistics for evaluating
+overall adequacy of risk prediction procedures with censored
+survival data. Statistics in Medicine, 30(10), 1105--1117.
+\doi{10.1002/sim.4154}
+
+Graf, E. et al. (1999). Assessment and comparison of
+prognostic classification schemes for survival data.
+Statistics in Medicine, 18(17-18), 2529--2545.
+}
 \keyword{datapreparation}
 \section{Public fields}{
 \if{html}{\out{<div class="r6-fields">}}
@@ -50,6 +64,8 @@ Root class for common functionality of this package
 \item \href{#method-CBRBase-fit}{\code{CBRBase$fit()}}
 \item \href{#method-CBRBase-calc_distance_matrix}{\code{CBRBase$calc_distance_matrix()}}
 \item \href{#method-CBRBase-get_similar_cases}{\code{CBRBase$get_similar_cases()}}
+\item \href{#method-CBRBase-predict_survival}{\code{CBRBase$predict_survival()}}
+\item \href{#method-CBRBase-evaluate_survival}{\code{CBRBase$evaluate_survival()}}
 \item \href{#method-CBRBase-clone}{\code{CBRBase$clone()}}
 }
 }
@@ -131,6 +147,80 @@ from the training data, so that a case is not returned as its
 own nearest neighbour.}
 }
 \if{html}{\out{</div>}}
+}
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-CBRBase-predict_survival"></a>}}
+\if{latex}{\out{\hypertarget{method-CBRBase-predict_survival}{}}}
+\subsection{Method \code{predict_survival()}}{
+Predict survival curves from the \code{k} most similar
+training cases: a Kaplan-Meier estimate over the retrieved
+cases of each query (Lowsky et al., 2013). Only for survival
+endpoints (\code{Surv(time, status)}).
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{CBRBase$predict_survival(query, k = 10, times = NULL, weighted = FALSE)}\if{html}{\out{</div>}}
+}
+
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{query}}{Query data of class data.frame}
+
+\item{\code{k}}{number of similar cases}
+
+\item{\code{times}}{time points; default: the event times of the
+training data}
+
+\item{\code{weighted}}{If \code{TRUE}, cases are weighted with a
+tricube kernel of their distance to the query.}
+}
+\if{html}{\out{</div>}}
+}
+\subsection{Returns}{
+A matrix of survival probabilities with one row per
+  query and one column per time point (attribute \code{times}).
+}
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-CBRBase-evaluate_survival"></a>}}
+\if{latex}{\out{\hypertarget{method-CBRBase-evaluate_survival}{}}}
+\subsection{Method \code{evaluate_survival()}}{
+Evaluate survival predictions from retrieved cases on test
+data: Uno's concordance index and the IPCW (integrated)
+Brier score. Use it to choose \code{k} and the distance
+method on held-out data.
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{CBRBase$evaluate_survival(
+  test,
+  k = 10,
+  times = NULL,
+  tau = NULL,
+  weighted = FALSE
+)}\if{html}{\out{</div>}}
+}
+
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{test}}{Test data with the endpoint columns}
+
+\item{\code{k}}{number of similar cases}
+
+\item{\code{times}}{time points for the Brier score; default: 20
+points between the 10\% and 90\% quantile of the training
+event times}
+
+\item{\code{tau}}{time horizon for the concordance index (risk score
+\eqn{1 - S(\tau)}); default: the largest of \code{times}}
+
+\item{\code{weighted}}{passed to \code{predict_survival()}}
+}
+\if{html}{\out{</div>}}
+}
+\subsection{Returns}{
+A list with \code{c_index} (Uno's C), \code{ibs}
+  (integrated Brier score) and \code{brier} (data.frame with
+  the Brier score at each time).
 }
 }
 \if{html}{\out{<hr>}}
