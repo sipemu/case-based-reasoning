@@ -19,6 +19,11 @@ Graf, E. et al. (1999). Assessment and comparison of prognostic
 classification schemes for survival data. Statistics in Medicine,
 18(17-18), 2529–2545.
 
+Keane, M. T. and Smyth, B. (2020). Good Counterfactuals and Where to
+Find Them: A Case-Based Technique for Generating Counterfactuals for
+Explainable AI. ICCBR 2020, LNCS 12311, 163–178.
+[doi:10.1007/978-3-030-58342-2_11](https://doi.org/10.1007/978-3-030-58342-2_11)
+
 ## Public fields
 
 - `model`:
@@ -86,6 +91,10 @@ classification schemes for survival data. Statistics in Medicine,
 - [`CBRBase$predict_survival()`](#method-CBRBase-predict_survival)
 
 - [`CBRBase$evaluate_survival()`](#method-CBRBase-evaluate_survival)
+
+- [`CBRBase$get_counterfactual_cases()`](#method-CBRBase-get_counterfactual_cases)
+
+- [`CBRBase$explain_match()`](#method-CBRBase-explain_match)
 
 - [`CBRBase$clone()`](#method-CBRBase-clone)
 
@@ -257,6 +266,97 @@ choose `k` and the distance method on held-out data.
 
 A list with `c_index` (Uno's C), `ibs` (integrated Brier score) and
 `brier` (data.frame with the Brier score at each time).
+
+------------------------------------------------------------------------
+
+### Method `get_counterfactual_cases()`
+
+Counterfactual cases: the nearest training cases whose outcome differs
+from the query's outcome ("native counterfactuals", Keane & Smyth,
+2020).
+
+The query's outcome is taken from its endpoint columns if present,
+otherwise it is predicted from its `k_outcome` most similar cases
+(majority class, mean, or majority event status). A training case is a
+counterfactual if
+
+- classification endpoint: its class differs;
+
+- numeric endpoint: its outcome differs by at least `min_diff` (default:
+  standard deviation of the training outcome);
+
+- survival endpoint: its event status at `horizon` differs (event before
+  `horizon` vs. followed beyond `horizon`; cases censored before
+  `horizon` are not used).
+
+#### Usage
+
+    CBRBase$get_counterfactual_cases(
+      query,
+      k = 1,
+      horizon = NULL,
+      min_diff = NULL,
+      k_outcome = 10
+    )
+
+#### Arguments
+
+- `query`:
+
+  Query data of class data.frame
+
+- `k`:
+
+  number of counterfactual cases per query
+
+- `horizon`:
+
+  time horizon for survival endpoints (default: median training event
+  time)
+
+- `min_diff`:
+
+  minimum outcome difference for numeric endpoints
+
+- `k_outcome`:
+
+  number of similar cases used to predict the query's outcome if it is
+  not given
+
+#### Returns
+
+A data.frame like `get_similar_cases()` with the additional column
+`queryOutcome`.
+
+------------------------------------------------------------------------
+
+### Method `explain_match()`
+
+Explain why a training case is similar to a query. For regression
+models: the contribution of each term to the linear predictor of query
+and case, and its share of the distance. For random forests: in the
+trees where query and case end in different terminal nodes, the split
+variable at which their paths diverge.
+
+#### Usage
+
+    CBRBase$explain_match(query, case)
+
+#### Arguments
+
+- `query`:
+
+  One query case (data.frame with one row)
+
+- `case`:
+
+  One case (data.frame with one row), e.g. a row returned by
+  `get_similar_cases()`
+
+#### Returns
+
+A data.frame with one row per term (regression) or variable (random
+forest).
 
 ------------------------------------------------------------------------
 

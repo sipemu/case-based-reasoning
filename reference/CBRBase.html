@@ -58,6 +58,10 @@ survival data. Statistics in Medicine, 30(10), 1105–1117.
 <p>Graf, E. et al. (1999). Assessment and comparison of
 prognostic classification schemes for survival data.
 Statistics in Medicine, 18(17-18), 2529–2545.</p>
+<p>Keane, M. T. and Smyth, B. (2020). Good Counterfactuals and
+Where to Find Them: A Case-Based Technique for Generating
+Counterfactuals for Explainable AI. ICCBR 2020, LNCS 12311,
+163–178. <a href="https://doi.org/10.1007/978-3-030-58342-2_11" class="external-link">doi:10.1007/978-3-030-58342-2_11</a></p>
     </div>
     <div class="section level2">
     <h2 id="public-fields">Public fields<a class="anchor" aria-label="anchor" href="#public-fields"></a></h2>
@@ -127,6 +131,8 @@ Statistics in Medicine, 18(17-18), 2529–2545.</p>
 <li><p><a href="#method-CBRBase-get_similar_cases"><code>CBRBase$get_similar_cases()</code></a></p></li>
 <li><p><a href="#method-CBRBase-predict_survival"><code>CBRBase$predict_survival()</code></a></p></li>
 <li><p><a href="#method-CBRBase-evaluate_survival"><code>CBRBase$evaluate_survival()</code></a></p></li>
+<li><p><a href="#method-CBRBase-get_counterfactual_cases"><code>CBRBase$get_counterfactual_cases()</code></a></p></li>
+<li><p><a href="#method-CBRBase-explain_match"><code>CBRBase$explain_match()</code></a></p></li>
 <li><p><a href="#method-CBRBase-clone"><code>CBRBase$clone()</code></a></p></li>
 </ul></div><p></p><hr><a id="method-CBRBase-new"></a><div class="section">
 <h3 id="method-new-">Method <code>new()</code><a class="anchor" aria-label="anchor" href="#method-new-"></a></h3>
@@ -301,15 +307,106 @@ event times</p></dd>
   the Brier score at each time).</p>
 </div>
 
-</div><p></p><hr><a id="method-CBRBase-clone"></a><div class="section">
-<h3 id="method-clone-">Method <code>clone()</code><a class="anchor" aria-label="anchor" href="#method-clone-"></a></h3>
-<p>The objects of this class are cloneable with this method.</p><div class="section">
+</div><p></p><hr><a id="method-CBRBase-get_counterfactual_cases"></a><div class="section">
+<h3 id="method-get-counterfactual-cases-">Method <code>get_counterfactual_cases()</code><a class="anchor" aria-label="anchor" href="#method-get-counterfactual-cases-"></a></h3>
+<p>Counterfactual cases: the nearest training cases whose
+outcome differs from the query's outcome ("native
+counterfactuals", Keane &amp; Smyth, 2020).</p>
+<p>The query's outcome is taken from its endpoint columns if
+present, otherwise it is predicted from its <code>k_outcome</code>
+most similar cases (majority class, mean, or majority
+event status). A training case is a counterfactual if</p><ul><li><p>classification endpoint: its class differs;</p></li>
+<li><p>numeric endpoint: its outcome differs by at least
+    <code>min_diff</code> (default: standard deviation of the
+    training outcome);</p></li>
+<li><p>survival endpoint: its event status at
+    <code>horizon</code> differs (event before <code>horizon</code> vs.
+    followed beyond <code>horizon</code>; cases censored before
+    <code>horizon</code> are not used).</p></li>
+</ul><div class="section">
 <h4 id="usage-6">Usage<a class="anchor" aria-label="anchor" href="#usage-6"></a></h4>
-<p></p><div class="r"><div class="sourceCode"><pre><code><span><span class="va">CBRBase</span><span class="op">$</span><span class="fu">clone</span><span class="op">(</span>deep <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span></code></pre></div><p></p></div>
+<p></p><div class="r"><div class="sourceCode"><pre><code><span><span class="va">CBRBase</span><span class="op">$</span><span class="fu">get_counterfactual_cases</span><span class="op">(</span></span>
+<span>  <span class="va">query</span>,</span>
+<span>  k <span class="op">=</span> <span class="fl">1</span>,</span>
+<span>  horizon <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  min_diff <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  k_outcome <span class="op">=</span> <span class="fl">10</span></span>
+<span><span class="op">)</span></span></code></pre></div><p></p></div>
 </div>
 
 <div class="section">
 <h4 id="arguments-5">Arguments<a class="anchor" aria-label="anchor" href="#arguments-5"></a></h4>
+<p></p><div class="arguments"><dl><dt><code>query</code></dt>
+<dd><p>Query data of class data.frame</p></dd>
+
+
+<dt><code>k</code></dt>
+<dd><p>number of counterfactual cases per query</p></dd>
+
+
+<dt><code>horizon</code></dt>
+<dd><p>time horizon for survival endpoints
+(default: median training event time)</p></dd>
+
+
+<dt><code>min_diff</code></dt>
+<dd><p>minimum outcome difference for numeric
+endpoints</p></dd>
+
+
+<dt><code>k_outcome</code></dt>
+<dd><p>number of similar cases used to predict the
+query's outcome if it is not given</p></dd>
+
+
+</dl><p></p></div>
+</div>
+<div class="section">
+<h4 id="returns-2">Returns<a class="anchor" aria-label="anchor" href="#returns-2"></a></h4>
+<p>A data.frame like <code>get_similar_cases()</code> with the
+  additional column <code>queryOutcome</code>.</p>
+</div>
+
+</div><p></p><hr><a id="method-CBRBase-explain_match"></a><div class="section">
+<h3 id="method-explain-match-">Method <code>explain_match()</code><a class="anchor" aria-label="anchor" href="#method-explain-match-"></a></h3>
+<p>Explain why a training case is similar to a query.
+For regression models: the contribution of each term to the
+linear predictor of query and case, and its share of the
+distance. For random forests: in the trees where query and
+case end in different terminal nodes, the split variable at
+which their paths diverge.</p><div class="section">
+<h4 id="usage-7">Usage<a class="anchor" aria-label="anchor" href="#usage-7"></a></h4>
+<p></p><div class="r"><div class="sourceCode"><pre><code><span><span class="va">CBRBase</span><span class="op">$</span><span class="fu">explain_match</span><span class="op">(</span><span class="va">query</span>, <span class="va">case</span><span class="op">)</span></span></code></pre></div><p></p></div>
+</div>
+
+<div class="section">
+<h4 id="arguments-6">Arguments<a class="anchor" aria-label="anchor" href="#arguments-6"></a></h4>
+<p></p><div class="arguments"><dl><dt><code>query</code></dt>
+<dd><p>One query case (data.frame with one row)</p></dd>
+
+
+<dt><code>case</code></dt>
+<dd><p>One case (data.frame with one row), e.g. a row
+returned by <code>get_similar_cases()</code></p></dd>
+
+
+</dl><p></p></div>
+</div>
+<div class="section">
+<h4 id="returns-3">Returns<a class="anchor" aria-label="anchor" href="#returns-3"></a></h4>
+<p>A data.frame with one row per term (regression) or
+  variable (random forest).</p>
+</div>
+
+</div><p></p><hr><a id="method-CBRBase-clone"></a><div class="section">
+<h3 id="method-clone-">Method <code>clone()</code><a class="anchor" aria-label="anchor" href="#method-clone-"></a></h3>
+<p>The objects of this class are cloneable with this method.</p><div class="section">
+<h4 id="usage-8">Usage<a class="anchor" aria-label="anchor" href="#usage-8"></a></h4>
+<p></p><div class="r"><div class="sourceCode"><pre><code><span><span class="va">CBRBase</span><span class="op">$</span><span class="fu">clone</span><span class="op">(</span>deep <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span></code></pre></div><p></p></div>
+</div>
+
+<div class="section">
+<h4 id="arguments-7">Arguments<a class="anchor" aria-label="anchor" href="#arguments-7"></a></h4>
 <p></p><div class="arguments"><dl><dt><code>deep</code></dt>
 <dd><p>Whether to make a deep clone.</p></dd>
 
