@@ -4,19 +4,32 @@
 \alias{predict.LogisticModel}
 \title{Predict method for LogisticModel}
 \usage{
-\method{predict}{LogisticModel}(object, newdata, k = 1, ...)
+\method{predict}{LogisticModel}(
+  object,
+  newdata,
+  k = NULL,
+  type = c("cases", "outcome", "survival"),
+  ...
+)
 }
 \arguments{
 \item{object}{A \code{LogisticModel} R6 object}
 
 \item{newdata}{Query data of class data.frame}
 
-\item{k}{Number of similar cases to return}
+\item{k}{Number of similar cases. Default: 1 for \code{type = "cases"},
+10 otherwise.}
 
-\item{...}{Additional arguments (currently unused)}
+\item{type}{\code{"cases"} (default): the similar cases
+(\code{$get_similar_cases()}); \code{"outcome"}: predicted class or
+numeric outcome (\code{$predict_outcome()}); \code{"survival"}: predicted
+survival probabilities (\code{$predict_survival()}).}
+
+\item{...}{Further arguments passed to the method selected by \code{type}}
 }
 \value{
-A data.frame of similar cases
+A data.frame of similar cases, a data.frame of predictions, or a
+  matrix of survival probabilities
 }
 \description{
 Predict method for LogisticModel

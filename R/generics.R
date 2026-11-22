@@ -1,52 +1,86 @@
 # S3 methods for R6 model classes ----------------------------------------------
 # These provide the standard R interface: predict(model, newdata, k = 5)
 
+#' @noRd
+cbr_predict <- function(object, newdata, k = NULL, type = c("cases", "outcome", "survival"), ...) {
+  type <- match.arg(type)
+  if (is.null(k)) k <- if (type == "cases") 1 else 10
+  switch(type,
+         cases    = object$get_similar_cases(query = newdata, k = k, ...),
+         outcome  = object$predict_outcome(query = newdata, k = k, ...),
+         survival = object$predict_survival(query = newdata, k = k, ...))
+}
+
 #' Predict method for CoxModel
 #'
 #' @param object A \code{CoxModel} R6 object
 #' @param newdata Query data of class data.frame
-#' @param k Number of similar cases to return
-#' @param ... Additional arguments (currently unused)
-#' @return A data.frame of similar cases
+#' @param k Number of similar cases. Default: 1 for \code{type = "cases"},
+#'   10 otherwise.
+#' @param type \code{"cases"} (default): the similar cases
+#'   (\code{$get_similar_cases()}); \code{"outcome"}: predicted class or
+#'   numeric outcome (\code{$predict_outcome()}); \code{"survival"}: predicted
+#'   survival probabilities (\code{$predict_survival()}).
+#' @param ... Further arguments passed to the method selected by \code{type}
+#' @return A data.frame of similar cases, a data.frame of predictions, or a
+#'   matrix of survival probabilities
 #' @export
-predict.CoxModel <- function(object, newdata, k = 1, ...) {
-  object$get_similar_cases(query = newdata, k = k, ...)
+predict.CoxModel <- function(object, newdata, k = NULL, type = c("cases", "outcome", "survival"), ...) {
+  cbr_predict(object, newdata, k, type, ...)
 }
 
 #' Predict method for LinearModel
 #'
 #' @param object A \code{LinearModel} R6 object
 #' @param newdata Query data of class data.frame
-#' @param k Number of similar cases to return
-#' @param ... Additional arguments (currently unused)
-#' @return A data.frame of similar cases
+#' @param k Number of similar cases. Default: 1 for \code{type = "cases"},
+#'   10 otherwise.
+#' @param type \code{"cases"} (default): the similar cases
+#'   (\code{$get_similar_cases()}); \code{"outcome"}: predicted class or
+#'   numeric outcome (\code{$predict_outcome()}); \code{"survival"}: predicted
+#'   survival probabilities (\code{$predict_survival()}).
+#' @param ... Further arguments passed to the method selected by \code{type}
+#' @return A data.frame of similar cases, a data.frame of predictions, or a
+#'   matrix of survival probabilities
 #' @export
-predict.LinearModel <- function(object, newdata, k = 1, ...) {
-  object$get_similar_cases(query = newdata, k = k, ...)
+predict.LinearModel <- function(object, newdata, k = NULL, type = c("cases", "outcome", "survival"), ...) {
+  cbr_predict(object, newdata, k, type, ...)
 }
 
 #' Predict method for LogisticModel
 #'
 #' @param object A \code{LogisticModel} R6 object
 #' @param newdata Query data of class data.frame
-#' @param k Number of similar cases to return
-#' @param ... Additional arguments (currently unused)
-#' @return A data.frame of similar cases
+#' @param k Number of similar cases. Default: 1 for \code{type = "cases"},
+#'   10 otherwise.
+#' @param type \code{"cases"} (default): the similar cases
+#'   (\code{$get_similar_cases()}); \code{"outcome"}: predicted class or
+#'   numeric outcome (\code{$predict_outcome()}); \code{"survival"}: predicted
+#'   survival probabilities (\code{$predict_survival()}).
+#' @param ... Further arguments passed to the method selected by \code{type}
+#' @return A data.frame of similar cases, a data.frame of predictions, or a
+#'   matrix of survival probabilities
 #' @export
-predict.LogisticModel <- function(object, newdata, k = 1, ...) {
-  object$get_similar_cases(query = newdata, k = k, ...)
+predict.LogisticModel <- function(object, newdata, k = NULL, type = c("cases", "outcome", "survival"), ...) {
+  cbr_predict(object, newdata, k, type, ...)
 }
 
 #' Predict method for RFModel
 #'
 #' @param object An \code{RFModel} R6 object
 #' @param newdata Query data of class data.frame
-#' @param k Number of similar cases to return
-#' @param ... Additional arguments (currently unused)
-#' @return A data.frame of similar cases
+#' @param k Number of similar cases. Default: 1 for \code{type = "cases"},
+#'   10 otherwise.
+#' @param type \code{"cases"} (default): the similar cases
+#'   (\code{$get_similar_cases()}); \code{"outcome"}: predicted class or
+#'   numeric outcome (\code{$predict_outcome()}); \code{"survival"}: predicted
+#'   survival probabilities (\code{$predict_survival()}).
+#' @param ... Further arguments passed to the method selected by \code{type}
+#' @return A data.frame of similar cases, a data.frame of predictions, or a
+#'   matrix of survival probabilities
 #' @export
-predict.RFModel <- function(object, newdata, k = 1, ...) {
-  object$get_similar_cases(query = newdata, k = k, ...)
+predict.RFModel <- function(object, newdata, k = NULL, type = c("cases", "outcome", "survival"), ...) {
+  cbr_predict(object, newdata, k, type, ...)
 }
 
 #' Print method for CoxModel
