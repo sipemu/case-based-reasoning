@@ -31,6 +31,10 @@
 - The `threads` argument of `distance_random_forest()` only applies to that
   call, and the previous RcppParallel setting is restored (#17).
 - Regression weights for numeric variables are no longer double-named (#18).
+- Depth distance no longer precomputes a table over all pairs of terminal
+  nodes. Edge counts are computed on demand from each tree's parent and depth
+  arrays: n = 1500 with 100 trees now takes seconds instead of not finishing,
+  and memory is linear in the number of nodes (#12).
 - `orderMatrix()` honours `sortDirection` in TBB builds and clamps `k` to the
   number of rows (#25).
 - Corrected the DOI of Englund & Verikas (2012) (#19).
@@ -45,6 +49,14 @@
   proximity-weighted average of the training outcomes reproduces the forest's
   (out-of-bag) prediction. `RFModel` now keeps the in-bag counts by default
   (#20).
+- Regression models (`CoxModel`, `LinearModel`, `LogisticModel`) support any
+  rms term: splines (`rcs()`, `pol()`, ...), interactions and so on (#11).
+  Distances are computed in *contribution space*: each term's contribution to
+  the linear predictor, `c_t(x) = X_t(x) %*% beta_t`, compared with a
+  weighted L1 distance. For main effects this is identical to the previous
+  weighted distance (Dippon et al., 2002) (#22).
+- New public field `variables` holds the data columns used by the formula;
+  `terms` holds the term labels.
 - `get_similar_cases(exclude_self = TRUE)` excludes training cases with the same
   row name as the query, so in-sample queries do not return themselves (#13).
 

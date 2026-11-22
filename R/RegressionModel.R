@@ -31,9 +31,11 @@ RegressionModel <- R6Class(
       train_tbl <- private$prepare_training()
       fit <- private$fit_model(train_tbl)
 
-      # Variable Selection
+      # Variable Selection; fastbw() reports rms term names (fit$Design$name),
+      # which are mapped to the term labels of the formula
       vars <- rms::fastbw(fit = fit, type = "i", ...)
-      selected_vars <- intersect(self$terms, vars$names.kept)
+      term_labels <- names(fit$assign)
+      selected_vars <- term_labels[fit$Design$name %in% vars$names.kept]
 
       if (isTRUE(update)) {
         if (length(selected_vars) == 0) {
@@ -43,6 +45,7 @@ RegressionModel <- R6Class(
         environment(formula) <- environment(self$formula)
         self$formula <- formula
         self$terms <- selected_vars
+        self$variables <- setdiff(all.vars(stats::delete.response(stats::terms(formula))), self$endpoint)
         self$model_fit <- NULL
         self$weights <- NULL
         private$train_idx <- NULL
@@ -59,13 +62,18 @@ RegressionModel <- R6Class(
       weights <- vector("list", length(self$terms))
       names(weights) <- self$terms
       for (v in self$terms) {
+        idx <- self$model_fit$assign[[v]]
         lev <- private$factor_levels[[v]]
-        if (!is.null(lev)) {
-          # reference level has weight 0; others: coefficient named "var=level"
+        if (!is.null(lev) && v %in% self$variables) {
+          # factor main effect: reference level 0, others coefficient "var=level"
           w <- c(0, unname(coefs[paste0(v, "=", lev[-1])]))
           names(w) <- lev
+        } else if (v %in% self$variables) {
+          # numeric main effect
+          w <- unname(coefs[idx])
         } else {
-          w <- unname(coefs[v])
+          # other terms (splines, interactions, ...): named coefficients
+          w <- coefs[idx]
         }
         weights[[v]] <- w
       }
@@ -90,23 +98,25 @@ RegressionModel <- R6Class(
       }
       return(FALSE)
     },
-    # transform prepared data to a numeric matrix: factor levels are replaced by
-    # their coefficient (weight 1 in the distance), numeric variables keep their
-    # value and get their coefficient as weight
-    transform_data = function(df) {
-      w <- numeric(length(self$terms))
-      for (j in seq_along(self$terms)) {
-        v <- self$terms[j]
-        if (is.factor(df[[v]])) {
-          df[[v]] <- unname(self$weights[[v]][as.character(df[[v]])])
-          w[j] <- 1
-        } else {
-          w[j] <- self$weights[[v]]
-        }
-      }
-      list(x = unname(as.matrix(df[, self$terms, drop = FALSE])), weights = w)
+    # contribution of each term to the linear predictor: for term t with
+    # design columns X_t and coefficients b_t, c_t(x) = X_t(x) %*% b_t.
+    # For main effects this gives b * x (numeric) and the level coefficient
+    # (factor), i.e. the weighted distance of Dippon et al. (2002).
+    contributions = function(df) {
+      fit <- self$model_fit
+      coefs <- stats::coef(fit)
+      X <- stats::predict(fit, newdata = df, type = "x")
+      X <- matrix(X, nrow = nrow(df))
+      # columns of X correspond to the non-intercept coefficients in order
+      coef_idx <- sort(unlist(fit$assign, use.names = FALSE))
+      contrib <- vapply(self$terms, function(v) {
+        idx <- fit$assign[[v]]
+        cols <- match(idx, coef_idx)
+        as.numeric(X[, cols, drop = FALSE] %*% coefs[idx])
+      }, numeric(nrow(df)))
+      matrix(contrib, nrow = nrow(df), dimnames = list(NULL, self$terms))
     },
-    # calculate weighted absolute distance
+    # calculate weighted absolute distance in contribution space
     get_distance_matrix = function(query = NULL) {
       if (!is.list(self$weights)) {
         stop("Model not trained: call $fit() first.")
@@ -115,19 +125,19 @@ RegressionModel <- R6Class(
         stop("NA values in regression beta coefficients!")
       }
 
-      train <- private$transform_data(
+      train <- private$contributions(
         private$prepare_newdata(private$training_rows(), "training data")
       )
       query_x <- NULL
       if (!is.null(query)) {
-        query_x <- private$transform_data(private$prepare_newdata(query))$x
+        query_x <- private$contributions(private$prepare_newdata(query))
       }
 
       # calculate distance matrix
       self$dist_matrix <- as.matrix(weighted_distance(
-        x       = train$x,
+        x       = train,
         y       = query_x,
-        weights = train$weights
+        weights = rep(1, ncol(train))
       ))
     }
   )

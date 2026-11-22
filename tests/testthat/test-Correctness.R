@@ -198,3 +198,55 @@ test_that("regression weights are not double-named (#18)", {
   expect_null(names(m$weights$Sepal.Width))
   expect_named(m$weights$Species, levels(iris$Species))
 })
+
+test_that("contribution-space distance equals the main-effects weighted distance (#22)", {
+  ov <- ovarian_factors()
+  m <- CoxModel$new(survival::Surv(futime, fustat) ~ age + rx + ecog.ps, ov)
+  m$fit()
+  b <- stats::coef(m$model_fit)
+  q <- ov[c(3, 10), ]
+  ref <- outer(seq_len(nrow(ov)), seq_len(nrow(q)), Vectorize(function(i, j) {
+    abs(b["age"] * (ov$age[i] - q$age[j])) +
+      abs(m$weights$rx[as.character(ov$rx[i])] - m$weights$rx[as.character(q$rx[j])]) +
+      abs(m$weights$ecog.ps[as.character(ov$ecog.ps[i])] - m$weights$ecog.ps[as.character(q$ecog.ps[j])])
+  }))
+  expect_equal(unname(m$calc_distance_matrix(q)), unname(ref))
+})
+
+test_that("splines and interactions are supported (#11)", {
+  ov <- ovarian_factors()
+  m <- CoxModel$new(survival::Surv(futime, fustat) ~ rcs(age, 3) + rx, ov)
+  expect_equal(m$terms, c("rcs(age, 3)", "rx"))
+  expect_equal(m$variables, c("age", "rx"))
+  expect_equal(m$endpoint, c("futime", "fustat"))
+  m$fit()
+  expect_named(m$weights$`rcs(age, 3)`, c("age", "age'"))
+  sc <- m$get_similar_cases(ov[1:2, ], k = 3)
+  expect_equal(nrow(sc), 6)
+
+  # contribution of the spline term = linear predictor part of that term
+  b <- stats::coef(m$model_fit)
+  X <- stats::predict(m$model_fit, ov, type = "x")
+  c_age <- as.numeric(X[, 1:2] %*% b[1:2])
+  c_rx <- as.numeric(X[, 3] * b[3])
+  ref <- abs(outer(c_age, c_age[1:2], "-")) + abs(outer(c_rx, c_rx[1:2], "-"))
+  expect_equal(unname(m$calc_distance_matrix(ov[1:2, ])), ref)
+
+  # interaction
+  m2 <- LinearModel$new(Sepal.Length ~ Sepal.Width * Species, iris)
+  m2$fit()
+  expect_equal(m2$terms, c("Sepal.Width", "Species", "Sepal.Width:Species"))
+  expect_equal(dim(m2$calc_distance_matrix(iris[1:4, ])), c(150, 4))
+  expect_equal(m2$calc_distance_matrix(iris[1:4, ])[1, 1], 0)
+})
+
+test_that("variable_selection() maps rms term names to formula labels", {
+  set.seed(7)
+  n <- 300
+  df <- data.frame(x1 = runif(n, 0, 10), noise = rnorm(n))
+  df$y <- sin(df$x1) + df$x1 + rnorm(n, sd = 0.3)
+  m <- LinearModel$new(y ~ rcs(x1, 4) + noise, df)
+  expect_equal(m$variable_selection(), "rcs(x1, 4)")
+  m$variable_selection(update = TRUE)
+  expect_equal(m$variables, "x1")
+})

@@ -4,7 +4,7 @@
 // [[Rcpp::depends(RcppArmadillo)]]
 #include<RcppArmadillo.h>
 
-#include "../containers/nodeDistContainer.h"
+#include "../ranger/forestTopology.h"
 
 class distance {
 public:
@@ -51,35 +51,28 @@ private:
   std::uint32_t nTrees_;
 };
 
-// random forest depth distance
+// random forest depth distance: sum over trees of the number of edges between
+// the terminal nodes of x and y
 class rfDepthDistance final : public distance {
 public:
   virtual double calc_distance(const arma::subview_row<double>& x, const arma::subview_row<double>& y) const {
     double sum = 0.0;
-    double d = 0.0;
-    for (std::size_t t=0; t<nTrees_;++t) {
-      if (x[t] < y[t]) {
-        d = nodeDists_.getValue(x[t], y[t], t);
-      } else if (x[t] > y[t]) {
-        d = nodeDists_.getValue(y[t], x[t], t);
-      } else {
-        d = 0.0;
-      }
-      // getValue() returns -1 for node pairs that do not exist
-      if (d > 0.0) {
-        sum += d;
+    const std::size_t nTrees = topology_.nTrees();
+    for (std::size_t t=0; t<nTrees; ++t) {
+      const int a = static_cast<int>(x[t]);
+      const int b = static_cast<int>(y[t]);
+      if (a != b) {
+        sum += topology_.edges(t, a, b);
       }
     }
     return sum;
   };
-  
-  void set_parameters(RfDistContainer nodeDist) {
-    nodeDists_ = nodeDist;
-    nTrees_ = nodeDist.getNTree();
+
+  void set_parameters(const ForestTopology& topology) {
+    topology_ = topology;
   };
 private:
-  RfDistContainer nodeDists_;
-  std::uint32_t nTrees_;
+  ForestTopology topology_;
 };
 
 #endif

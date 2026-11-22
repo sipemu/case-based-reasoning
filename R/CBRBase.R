@@ -11,8 +11,10 @@ CBRBase <- R6Class("CBRBase",
                      model_fit = NULL,
                      #' @field formula Object of class formula or character describing the model fit
                      formula   = NULL,
-                     #' @field terms terms of the formula
+                     #' @field terms terms of the formula (term labels, e.g. \code{"rcs(age, 3)"})
                      terms     = NULL,
+                     #' @field variables variables used by the terms of the formula
+                     variables = NULL,
                      #' @field endpoint Target variable
                      endpoint  = NULL,
                      #' @field dist_matrix A matrix with distances
@@ -30,11 +32,12 @@ CBRBase <- R6Class("CBRBase",
                          stop("Invalid formula: expected a formula object.")
                        }
                        self$formula <- formula
-                       self$terms <- labels(terms(formula, data = data))
-                       self$endpoint <- setdiff(all.vars(formula), '.')
-                       self$endpoint <- setdiff(self$endpoint, self$terms)
-                       # validate that formula terms exist in data
-                       missing_vars <- setdiff(c(self$endpoint, self$terms), names(data))
+                       tt <- terms(formula, data = data)
+                       self$terms <- labels(tt)
+                       self$endpoint <- if (length(formula) == 3) all.vars(formula[[2]]) else character(0)
+                       self$variables <- setdiff(all.vars(stats::delete.response(tt)), self$endpoint)
+                       # validate that the variables of the formula exist in data
+                       missing_vars <- setdiff(c(self$endpoint, self$variables), names(data))
                        if (length(missing_vars) > 0) {
                          stop("Variables not found in data: ", paste(missing_vars, collapse = ", "))
                        }
@@ -151,7 +154,7 @@ CBRBase <- R6Class("CBRBase",
                      # select model variables, drop incomplete cases, convert characters
                      # to factors and remember the factor levels for aligning queries
                      prepare_training = function() {
-                       x <- self$data[, c(self$endpoint, self$terms), drop = FALSE]
+                       x <- self$data[, c(self$endpoint, self$variables), drop = FALSE]
                        keep <- stats::complete.cases(x)
                        if (!any(keep)) {
                          stop("Learning data is empty after NA elimination.")
@@ -163,19 +166,19 @@ CBRBase <- R6Class("CBRBase",
                        x <- private$check_factor(x)
                        x <- droplevels(x)
                        private$train_idx <- which(keep)
-                       is_fct <- vapply(self$terms, function(v) is.factor(x[[v]]), logical(1))
-                       private$factor_levels <- lapply(x[self$terms[is_fct]], levels)
+                       is_fct <- vapply(self$variables, function(v) is.factor(x[[v]]), logical(1))
+                       private$factor_levels <- lapply(x[self$variables[is_fct]], levels)
                        x
                      },
                      # align new data (query or training rows) to the fitted training data:
                      # factor levels are matched by name, numeric variables must stay numeric
                      prepare_newdata = function(df, what = "query") {
-                       missing_vars <- setdiff(self$terms, names(df))
+                       missing_vars <- setdiff(self$variables, names(df))
                        if (length(missing_vars) > 0) {
                          stop("Variables not found in ", what, ": ", paste(missing_vars, collapse = ", "))
                        }
-                       df <- df[, self$terms, drop = FALSE]
-                       for (v in self$terms) {
+                       df <- df[, self$variables, drop = FALSE]
+                       for (v in self$variables) {
                          lev <- private$factor_levels[[v]]
                          if (!is.null(lev)) {
                            val <- as.character(df[[v]])
@@ -203,7 +206,7 @@ CBRBase <- R6Class("CBRBase",
                      # transform character variables to factor
                      check_factor = function(x) {
                        trf <- c()
-                       for (var in self$terms) {
+                       for (var in self$variables) {
                          if (is.character(x[[var]])) {
                            trf <- c(trf, var)
                            x[[var]] <- factor(x[[var]])

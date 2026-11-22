@@ -20,7 +20,9 @@ Root class for common functionality of this package
 
 \item{\code{formula}}{Object of class formula or character describing the model fit}
 
-\item{\code{terms}}{terms of the formula}
+\item{\code{terms}}{terms of the formula (term labels, e.g. \code{"rcs(age, 3)"})}
+
+\item{\code{variables}}{variables used by the terms of the formula}
 
 \item{\code{endpoint}}{Target variable}
 
