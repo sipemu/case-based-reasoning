@@ -41,6 +41,15 @@
 
 ### New features
 
+- `get_counterfactual_cases()` returns the nearest training cases whose
+  outcome differs from the query's: a different class, a numeric outcome
+  differing by at least `min_diff`, or a different event status at `horizon`
+  for survival endpoints (Keane & Smyth, 2020). If the query has no outcome,
+  it is predicted from its most similar cases (#23).
+- `explain_match(query, case)` explains a match. For regression models it
+  gives each term's contribution to the linear predictor and its share of the
+  distance; for random forests, the split variables at which the two cases'
+  tree paths diverge (#22, #23).
 - `predict_survival()` predicts survival curves for survival endpoints from
   the retrieved cases: a Kaplan-Meier estimate over each query's `k` nearest
   training cases, optionally weighted with a tricube kernel (Lowsky et al.,

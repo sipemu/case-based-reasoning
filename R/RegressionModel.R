@@ -116,6 +116,20 @@ RegressionModel <- R6Class(
       }, numeric(nrow(df)))
       matrix(contrib, nrow = nrow(df), dimnames = list(NULL, self$terms))
     },
+    explain_pair = function(query, case) {
+      cq <- private$contributions(query)
+      cc <- private$contributions(case)
+      d <- abs(as.numeric(cq) - as.numeric(cc))
+      res <- data.frame(term = self$terms,
+                        query_contribution = as.numeric(cq),
+                        case_contribution  = as.numeric(cc),
+                        distance = d,
+                        share = if (sum(d) > 0) d / sum(d) else 0,
+                        stringsAsFactors = FALSE)
+      res <- res[order(-res$distance), , drop = FALSE]
+      rownames(res) <- NULL
+      res
+    },
     # calculate weighted absolute distance in contribution space
     get_distance_matrix = function(query = NULL) {
       if (!is.list(self$weights)) {

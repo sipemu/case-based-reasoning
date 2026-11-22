@@ -21,6 +21,11 @@ survival data. Statistics in Medicine, 30(10), 1105--1117.
 Graf, E. et al. (1999). Assessment and comparison of
 prognostic classification schemes for survival data.
 Statistics in Medicine, 18(17-18), 2529--2545.
+
+Keane, M. T. and Smyth, B. (2020). Good Counterfactuals and
+Where to Find Them: A Case-Based Technique for Generating
+Counterfactuals for Explainable AI. ICCBR 2020, LNCS 12311,
+163--178. \doi{10.1007/978-3-030-58342-2_11}
 }
 \keyword{datapreparation}
 \section{Public fields}{
@@ -66,6 +71,8 @@ Statistics in Medicine, 18(17-18), 2529--2545.
 \item \href{#method-CBRBase-get_similar_cases}{\code{CBRBase$get_similar_cases()}}
 \item \href{#method-CBRBase-predict_survival}{\code{CBRBase$predict_survival()}}
 \item \href{#method-CBRBase-evaluate_survival}{\code{CBRBase$evaluate_survival()}}
+\item \href{#method-CBRBase-get_counterfactual_cases}{\code{CBRBase$get_counterfactual_cases()}}
+\item \href{#method-CBRBase-explain_match}{\code{CBRBase$explain_match()}}
 \item \href{#method-CBRBase-clone}{\code{CBRBase$clone()}}
 }
 }
@@ -221,6 +228,90 @@ event times}
 A list with \code{c_index} (Uno's C), \code{ibs}
   (integrated Brier score) and \code{brier} (data.frame with
   the Brier score at each time).
+}
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-CBRBase-get_counterfactual_cases"></a>}}
+\if{latex}{\out{\hypertarget{method-CBRBase-get_counterfactual_cases}{}}}
+\subsection{Method \code{get_counterfactual_cases()}}{
+Counterfactual cases: the nearest training cases whose
+outcome differs from the query's outcome ("native
+counterfactuals", Keane & Smyth, 2020).
+
+The query's outcome is taken from its endpoint columns if
+present, otherwise it is predicted from its \code{k_outcome}
+most similar cases (majority class, mean, or majority
+event status). A training case is a counterfactual if
+\itemize{
+  \item classification endpoint: its class differs;
+  \item numeric endpoint: its outcome differs by at least
+    \code{min_diff} (default: standard deviation of the
+    training outcome);
+  \item survival endpoint: its event status at
+    \code{horizon} differs (event before \code{horizon} vs.
+    followed beyond \code{horizon}; cases censored before
+    \code{horizon} are not used).
+}
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{CBRBase$get_counterfactual_cases(
+  query,
+  k = 1,
+  horizon = NULL,
+  min_diff = NULL,
+  k_outcome = 10
+)}\if{html}{\out{</div>}}
+}
+
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{query}}{Query data of class data.frame}
+
+\item{\code{k}}{number of counterfactual cases per query}
+
+\item{\code{horizon}}{time horizon for survival endpoints
+(default: median training event time)}
+
+\item{\code{min_diff}}{minimum outcome difference for numeric
+endpoints}
+
+\item{\code{k_outcome}}{number of similar cases used to predict the
+query's outcome if it is not given}
+}
+\if{html}{\out{</div>}}
+}
+\subsection{Returns}{
+A data.frame like \code{get_similar_cases()} with the
+  additional column \code{queryOutcome}.
+}
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-CBRBase-explain_match"></a>}}
+\if{latex}{\out{\hypertarget{method-CBRBase-explain_match}{}}}
+\subsection{Method \code{explain_match()}}{
+Explain why a training case is similar to a query.
+For regression models: the contribution of each term to the
+linear predictor of query and case, and its share of the
+distance. For random forests: in the trees where query and
+case end in different terminal nodes, the split variable at
+which their paths diverge.
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{CBRBase$explain_match(query, case)}\if{html}{\out{</div>}}
+}
+
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{query}}{One query case (data.frame with one row)}
+
+\item{\code{case}}{One case (data.frame with one row), e.g. a row
+returned by \code{get_similar_cases()}}
+}
+\if{html}{\out{</div>}}
+}
+\subsection{Returns}{
+A data.frame with one row per term (regression) or
+  variable (random forest).
 }
 }
 \if{html}{\out{<hr>}}

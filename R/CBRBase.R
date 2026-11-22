@@ -190,6 +190,112 @@ CBRBase <- R6Class("CBRBase",
                        list(c_index = unname(cc$concordance),
                             ibs     = integrate_mean(times, bs),
                             brier   = data.frame(time = times, brier = bs))
+                     },
+                     #' @description
+                     #' Counterfactual cases: the nearest training cases whose
+                     #' outcome differs from the query's outcome ("native
+                     #' counterfactuals", Keane & Smyth, 2020).
+                     #'
+                     #' The query's outcome is taken from its endpoint columns if
+                     #' present, otherwise it is predicted from its \code{k_outcome}
+                     #' most similar cases (majority class, mean, or majority
+                     #' event status). A training case is a counterfactual if
+                     #' \itemize{
+                     #'   \item classification endpoint: its class differs;
+                     #'   \item numeric endpoint: its outcome differs by at least
+                     #'     \code{min_diff} (default: standard deviation of the
+                     #'     training outcome);
+                     #'   \item survival endpoint: its event status at
+                     #'     \code{horizon} differs (event before \code{horizon} vs.
+                     #'     followed beyond \code{horizon}; cases censored before
+                     #'     \code{horizon} are not used).
+                     #' }
+                     #'
+                     #' @param query Query data of class data.frame
+                     #' @param k number of counterfactual cases per query
+                     #' @param horizon time horizon for survival endpoints
+                     #'   (default: median training event time)
+                     #' @param min_diff minimum outcome difference for numeric
+                     #'   endpoints
+                     #' @param k_outcome number of similar cases used to predict the
+                     #'   query's outcome if it is not given
+                     #' @return A data.frame like \code{get_similar_cases()} with the
+                     #'   additional column \code{queryOutcome}.
+                     #' @references
+                     #' Keane, M. T. and Smyth, B. (2020). Good Counterfactuals and
+                     #' Where to Find Them: A Case-Based Technique for Generating
+                     #' Counterfactuals for Explainable AI. ICCBR 2020, LNCS 12311,
+                     #' 163--178. \doi{10.1007/978-3-030-58342-2_11}
+                     get_counterfactual_cases = function(query, k = 1, horizon = NULL,
+                                                         min_diff = NULL, k_outcome = 10) {
+                       k <- private$check_k(k)
+                       k_outcome <- min(private$check_k(k_outcome), length(private$train_idx))
+                       train <- private$training_rows()
+                       if (length(self$endpoint) == 2 && is.null(horizon)) {
+                         ev <- train[[self$endpoint[1]]][as.numeric(train[[self$endpoint[2]]]) == 1]
+                         horizon <- stats::median(ev)
+                       }
+                       y_train <- outcome_values(train, self$endpoint, horizon)
+                       if (y_train$type == "numeric" && is.null(min_diff)) {
+                         min_diff <- stats::sd(y_train$value)
+                       }
+
+                       dist <- as.matrix(private$get_distance_matrix(query = query))
+
+                       # outcome of the query: observed or predicted from similar cases
+                       if (all(self$endpoint %in% names(query)) &&
+                           !anyNA(query[, self$endpoint, drop = FALSE])) {
+                         y_query <- outcome_values(query, self$endpoint, horizon)$value
+                       } else {
+                         nn <- cpp_orderMatrix(dist, sortDirection = 0, k = k_outcome)
+                         y_query <- vapply(seq_len(ncol(dist)), function(q) {
+                           v <- y_train$value[nn[, q]]
+                           if (y_train$type == "numeric") as.character(mean(v)) else majority(v)
+                         }, character(1))
+                         if (y_train$type == "numeric") y_query <- as.numeric(y_query)
+                       }
+
+                       # mask cases that are not counterfactuals
+                       for (q in seq_len(ncol(dist))) {
+                         is_cf <- if (y_train$type == "numeric") {
+                           abs(y_train$value - y_query[q]) >= min_diff
+                         } else {
+                           !is.na(y_train$value) & y_train$value != y_query[q]
+                         }
+                         is_cf[is.na(is_cf)] <- FALSE
+                         if (sum(is_cf) < k) {
+                           stop("Only ", sum(is_cf), " counterfactual case(s) available for query ", q,
+                                ", but k = ", k, ".")
+                         }
+                         dist[!is_cf, q] <- Inf
+                       }
+                       res <- private$extract_similar_cases(
+                         x = train, query = query, distanceMatrix = dist, k = k,
+                         add_distance = TRUE, merge = FALSE
+                       )
+                       res$queryOutcome <- rep(y_query, each = k)
+                       res
+                     },
+                     #' @description
+                     #' Explain why a training case is similar to a query.
+                     #' For regression models: the contribution of each term to the
+                     #' linear predictor of query and case, and its share of the
+                     #' distance. For random forests: in the trees where query and
+                     #' case end in different terminal nodes, the split variable at
+                     #' which their paths diverge.
+                     #'
+                     #' @param query One query case (data.frame with one row)
+                     #' @param case One case (data.frame with one row), e.g. a row
+                     #'   returned by \code{get_similar_cases()}
+                     #' @return A data.frame with one row per term (regression) or
+                     #'   variable (random forest).
+                     explain_match = function(query, case) {
+                       private$ensure_fitted()
+                       if (nrow(query) != 1 || nrow(case) != 1) {
+                         stop("'query' and 'case' must have exactly one row each.")
+                       }
+                       private$explain_pair(private$prepare_newdata(query),
+                                            private$prepare_newdata(case, "case"))
                      }
                    ),
                    active = list(
@@ -329,6 +435,9 @@ CBRBase <- R6Class("CBRBase",
                          warning(paste0("Following variables are transformed to class factor: ", paste(trf, collapse = ", ")))
                        }
                        return(x)
+                     },
+                     explain_pair = function(query, case) {
+                       stop("explain_match() is not implemented for this model.")
                      },
                      get_distance_matrix = function(query = NULL) {
                        # virtual function

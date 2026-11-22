@@ -87,6 +87,12 @@ RFModel <- R6Class(
     }
   ),
   private = list(
+    explain_pair = function(query, case) {
+      validate_ranger(self$model_fit)
+      q_nodes <- terminal_nodes(query, self$model_fit)[1, ]
+      c_nodes <- terminal_nodes(case, self$model_fit)[1, ]
+      explain_forest_match(self$model_fit, q_nodes, c_nodes)
+    },
     get_distance_matrix = function(query = NULL) {
       private$ensure_fitted()
       validate_ranger(self$model_fit)
