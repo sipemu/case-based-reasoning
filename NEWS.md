@@ -27,6 +27,14 @@
   cases whose coverage another case subsumes. Combine it with
   `remove_cases()` to edit the case base (#46).
 
+### Documentation
+
+- New article "Benchmark: Model-Derived Distances vs. Learned Metrics" on the
+  package website: the regression, random forest and Gower distances against a
+  learned metric (diagonal NCA) on four data sets, with irrelevant variables
+  and for survival (#42). README and the get-started vignette cover outcome
+  prediction, the Gower distance, retaining and maintaining cases.
+
 ### Bug fixes
 
 - Ordered factors in queries stay ordered. Queries were converted to

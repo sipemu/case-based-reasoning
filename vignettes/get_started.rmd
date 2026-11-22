@@ -58,6 +58,11 @@ The package provides four model classes for estimating case similarity:
 - Designed for time-to-event (survival) data with right-censoring.
 - Assumes constant hazard ratios over time.
 
+## **Gower Distance**
+
+- Model-free distance for mixed data (`GowerModel`), optionally weighted.
+- A baseline for the model-derived distances; all variables count equally unless weighted.
+
 ## **Random Forests**
 
 - Captures non-linear relationships and feature interactions.
@@ -194,3 +199,46 @@ For forests, `explain_match()` lists the split variables at which the two cases'
 ```{r rf_explain}
 knitr::kable(rf_model$explain_match(iris[51, ], iris[60, ]), digits = 3)
 ```
+
+# Predicting Outcomes {#predicting-outcomes}
+
+For class and numeric endpoints, `predict_outcome()` predicts from the `k` most similar cases: a majority vote with class probabilities, or a mean (optionally tricube-weighted with `weighted = TRUE`). `evaluate()` scores the predictions on test data.
+
+```{r outcome}
+set.seed(1)
+idx <- sample(nrow(iris), 100)
+rf_iris <- RFModel$new(Species ~ ., data = iris[idx, ], num.trees = 200)
+rf_iris$fit()
+knitr::kable(head(rf_iris$predict_outcome(iris[-idx, ], k = 10)), digits = 2)
+str(rf_iris$evaluate(iris[-idx, ], k = 10))
+```
+
+# A Model-Free Baseline: the Gower Distance {#gower}
+
+`GowerModel` compares cases with the Gower distance: numeric variables by their range-normalised difference, ordered factors by their rank, other factors by equality. It supports the same methods as the other models and shows what a model-derived distance adds. The [benchmark article](https://sipemu.github.io/case-based-reasoning/articles/benchmark.html) compares the distances on several data sets.
+
+```{r gower, warning=FALSE}
+gower_model <- GowerModel$new(Surv(time, status) ~ age + sex + ph.ecog + wt.loss, lung_train)
+gower_model$fit()
+str(gower_model$evaluate(lung_test, k = 30)[c("c_index", "ibs")])
+knitr::kable(gower_model$explain_match(lung_test[1, ], lung_train[1, ]), digits = 3)
+```
+
+# Retaining and Maintaining Cases {#retain}
+
+The last steps of the CBR cycle keep the case base up to date. `add_cases()` adds solved cases without refitting the model (`refit = TRUE` refits), and `remove_cases()` removes cases.
+
+```{r retain, warning=FALSE}
+lung_model$add_cases(lung_test[1:10, ])
+nrow(lung_model$get_case_base())
+```
+
+`assess_cases()` retrieves each case against the others. A case is *noisy* if most of its neighbours have a different outcome (Wilson editing), *pivotal* if no other case solves it, and *auxiliary* (redundant) if another case that solves it also solves all the cases it solves (Smyth & Keane, 1995). For survival endpoints the outcome is the event status at `horizon`.
+
+```{r assess, warning=FALSE}
+assessment <- lung_model$assess_cases(k = 10, horizon = 365)
+knitr::kable(head(assessment), digits = 2)
+table(assessment$category, assessment$noisy, useNA = "ifany")
+```
+
+Noisy cases can then be removed, e.g. `lung_model$remove_cases(rownames(assessment)[which(assessment$noisy)])`.

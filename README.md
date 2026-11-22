@@ -67,12 +67,14 @@ Both approaches produce an (n x m) distance matrix, where n is the number of tra
 
 ## Features
 
--   **Models**: linear, logistic and Cox regression (with splines and interactions), and random forests ([ranger](https://github.com/imbs-hl/ranger)) for numeric, binary, multi-class and survival endpoints.
--   **Distances**: regression-weighted (contribution-space) distance; random forest proximity (original, OOB, RF-GAP) and depth distance; all implemented in parallel C++.
+-   **Models**: linear, logistic and Cox regression (with splines and interactions), and random forests ([ranger](https://github.com/imbs-hl/ranger)) for numeric, binary, multi-class and survival endpoints; `GowerModel` as a model-free baseline.
+-   **Distances**: regression-weighted (contribution-space) distance; random forest proximity (original, OOB, RF-GAP) and depth distance, implemented in parallel C++; the Gower distance for mixed data.
+-   **Outcome prediction**: `predict_outcome()` predicts classes (with probabilities) and numeric outcomes from the nearest cases; `evaluate()` scores them (accuracy, Brier score, log loss; RMSE, MAE).
 -   **Retrieval**: `get_similar_cases()` / `predict()` return the k nearest training cases per query, optionally merged with the query and excluding the query itself (`exclude_self = TRUE`).
 -   **Survival prediction**: `predict_survival()` estimates a Kaplan–Meier curve from each query's nearest cases; `evaluate_survival()` scores it with Uno's C-index and the integrated Brier score.
 -   **Counterfactuals**: `get_counterfactual_cases()` returns the most similar cases with a *different* outcome.
 -   **Explanations**: `explain_match()` shows which variables make two cases similar or different.
+-   **Retain and maintenance**: `add_cases()` and `remove_cases()` change the case base without refitting; `assess_cases()` finds noisy, pivotal and redundant cases (Wilson editing; Smyth & Keane, 1995).
 -   **Checks**: query data are validated against the training data (factor levels are matched by name, unknown levels and missing values are errors), and `check_ph()` checks the proportional hazards assumption of the Cox model.
 
 ## Missing Values
@@ -188,6 +190,37 @@ match <- cph_model$get_similar_cases(query, k = 1)
 cph_model$explain_match(query, match)
 ```
 
+### Outcome prediction
+
+For class and numeric endpoints, `predict_outcome()` predicts from the k nearest cases: a majority vote with class probabilities, or a mean. `evaluate()` scores the predictions on test data, and `predict(model, newdata, type = "outcome")` is the S3 shortcut.
+
+```r
+rf_model <- RFModel$new(Species ~ ., data = iris[-(1:5), ])
+rf_model$fit()
+rf_model$predict_outcome(iris[1:5, ], k = 10)
+rf_model$evaluate(iris[1:5, ], k = 10)
+```
+
+### Retaining and maintaining cases
+
+New solved cases can be added to the case base without refitting the model, and `assess_cases()` retrieves each case against the others to find noisy cases (most neighbours have a different outcome), pivotal cases (no other case solves them) and redundant cases:
+
+```r
+cph_model$add_cases(ovarian[testID, ])
+assessment <- cph_model$assess_cases(k = 3, horizon = 365)
+cph_model$remove_cases(rownames(assessment)[which(assessment$noisy)])
+```
+
+### Model-free baseline
+
+`GowerModel` uses the Gower distance for mixed data with optional weights and supports the same methods. It is a baseline for the model-derived distances; the [benchmark article](https://sipemu.github.io/case-based-reasoning/articles/benchmark.html) compares the distances with each other and with a learned metric (NCA).
+
+```r
+gower_model <- GowerModel$new(Surv(futime, fustat) ~ age + resid.ds + rx + ecog.ps, ovarian[trainID, ])
+gower_model$fit()
+gower_model$get_similar_cases(ovarian[testID, ], k = 3)
+```
+
 ## Example: Random Forest
 
 ```r
@@ -241,6 +274,10 @@ The Robert Bosch Foundation funded this work. Special thanks go to Professor Dr.
 -   Lowsky et al. [A K-nearest neighbors survival probability prediction method](https://doi.org/10.1002/sim.5673) (2013)
 
 -   Keane and Smyth [Good Counterfactuals and Where to Find Them: A Case-Based Technique for Generating Counterfactuals for Explainable AI](https://doi.org/10.1007/978-3-030-58342-2_11) (2020)
+
+-   Gower [A general coefficient of similarity and some of its properties](https://doi.org/10.2307/2528823) (1971)
+
+-   Smyth and Keane, Remembering to forget: A competence-preserving case deletion policy for case-based reasoning systems, IJCAI-95 (1995)
 
 -   Englund and Verikas [A novel approach to estimate proximity in a random forest: An exploratory study](https://doi.org/10.1016/j.eswa.2012.05.094)
 
