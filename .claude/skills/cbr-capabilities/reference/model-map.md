@@ -88,8 +88,9 @@ Notes:
 - The SHAP values are step functions of each feature: a small difference across a split
   counts fully.
 - On small data the distance overfits, giving weight to noise and producing unstable
-  neighbours. Regularise with `eta`, `nrounds`, `max_depth`, `min_child_weight` and
-  `lambda`.
+  neighbours. Choose `nrounds` and `max_depth` by cross-validation
+  (`xgboost::xgb.cv()` with early stopping; see the *Methods* vignette), and regularise
+  with `eta`, `min_child_weight` and `lambda`.
 
 ## `RFModel`
 

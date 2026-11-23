@@ -288,10 +288,13 @@ knitr::kable(noise_tbl, digits = 2, row.names = FALSE)
     noise features: with 160 cases, chance associations remain. About
     a quarter of its distance is noise.
 -   The **SHAP distance** gives the noise about 40% of its weight, and
-    its neighbourhoods change the most. With 160 cases, the boosted trees
-    find splits in the noise; the SHAP values reflect the fitted model,
-    including its overfitting. Its C-index did not drop, but on 53 test
-    patients this may be chance.
+    its neighbourhoods change the most. With 160 cases and 100 fixed
+    rounds, the boosted trees find splits in the noise; the SHAP values
+    reflect the fitted model, including its overfitting. Its C-index did
+    not drop, but on 53 test patients this may be chance. Choose the
+    number of rounds and the depth by cross-validation (see
+    [Methods](distance_measures.html)); on data this small, the weights
+    of the noise features remain unstable even then.
 -   The **Gower distance** weights the noise like the real features: it
     gets the share that five of ten features get by their scale.
 -   The **forest** gives the noise the most weight: on a small data

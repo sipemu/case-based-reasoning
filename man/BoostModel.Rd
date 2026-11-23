@@ -31,6 +31,11 @@ transformations or interactions: the trees find non-linear effects and
 interactions themselves. Unordered factors are one-hot encoded and their
 SHAP values summed per variable; ordered factors are used as their ranks.
 
+Every split of the model is part of the distance: choose \code{nrounds}
+and \code{max_depth} by cross-validation (\code{xgboost::xgb.cv()} with
+early stopping) rather than by default, otherwise splits in irrelevant
+features become distance. The \emph{Methods} vignette shows how.
+
 Without row or column subsampling (the default), the model and the
 distance are deterministic. New cases (\code{add_cases()}) need no refit:
 their SHAP values are computed with the fitted model.

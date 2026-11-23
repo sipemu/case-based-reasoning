@@ -95,7 +95,11 @@ Cons:
   about 40% of its weight went to noise, and it had the least stable neighbourhoods
   under 90% subsampling (Jaccard overlap 0.45, against 0.72 for Cox and 0.98 for
   Gower).
-- It needs tuning and regularisation, and the suggested package xgboost.
+- It needs tuning: choose `nrounds` and `max_depth` (1-3) by cross-validation with
+  `xgboost::xgb.cv()` and early stopping (code in the *Methods* vignette). With many
+  fixed rounds, the splits in noise features become distance. The 40% above came from
+  100 fixed rounds; on very small data (lung) tuning does not make it stable.
+- It needs the suggested package xgboost.
 
 ### Random forest distances
 

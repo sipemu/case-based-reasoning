@@ -504,6 +504,33 @@ the prediction, and the distance keeps them apart.
     must be tuned and regularised.
 -   Needs the suggested package **xgboost**.
 
+**Tuning.** Every split of the model is part of the distance, so
+choose the number of rounds and the depth by cross-validation, not by
+default. A model with many rounds fits splits in irrelevant features,
+and those splits become distance. `xgboost::xgb.cv()` with early
+stopping does this on a design matrix with the same features:
+
+```{r boost-tune, eval = requireNamespace("xgboost", quietly = TRUE)}
+X <- model.matrix(~ age + sex + ph.ecog - 1, lung2)
+label <- ifelse(lung2$status == 1, lung2$time, -lung2$time)  # Cox: censored < 0
+set.seed(1)
+cv <- xgboost::xgb.cv(params = list(objective = "survival:cox", eta = 0.05,
+                                    max_depth = 2, nthread = 1),
+                      data = xgboost::xgb.DMatrix(X, label = label),
+                      nrounds = 1000, nfold = 5, early_stopping_rounds = 20,
+                      verbose = 0)
+nrounds <- which.min(cv$evaluation_log$test_cox_nloglik_mean)
+nrounds
+boost_tuned <- BoostModel$new(Surv(time, status) ~ age + sex + ph.ecog, lung2,
+                              nrounds = nrounds,
+                              params = list(eta = 0.05, max_depth = 2))
+boost_tuned$fit()
+```
+
+Repeat this for `max_depth` from 1 to 3 and keep the best. On small data
+sets like this one, cross-validation itself is noisy; the distance then
+stays unstable even when tuned.
+
 # The Gower distance: a model-free baseline {#gower}
 
 The Gower (1971) distance of two cases is a weighted mean of
