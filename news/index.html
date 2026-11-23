@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">CaseBasedReasoning</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.5.0.9000</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.5.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -18,9 +18,7 @@
       <ul class="navbar-nav me-auto"><li class="nav-item"><a class="nav-link" href="../reference/index.html">Reference</a></li>
 <li class="nav-item dropdown">
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-articles" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Articles</button>
-  <ul class="dropdown-menu" aria-labelledby="dropdown-articles"><li><a class="dropdown-item" href="../articles/benchmark.html">Benchmark: Model-Derived Distances vs. Learned Metrics</a></li>
-    <li><a class="dropdown-item" href="../articles/comparing_approaches.html">Comparing the Approaches</a></li>
-    <li><a class="dropdown-item" href="../articles/distance_measures.html">Methods: Case-Based Reasoning with Statistical Models</a></li>
+  <ul class="dropdown-menu" aria-labelledby="dropdown-articles"><li><a class="dropdown-item" href="../articles/distance_measures.html">Motivation</a></li>
     <li><a class="dropdown-item" href="../articles/get_started.html">Get Started</a></li>
   </ul></li>
 <li class="active nav-item"><a class="nav-link" href="../news/index.html">Changelog</a></li>
@@ -36,32 +34,9 @@
   <main id="main" class="col-md-9"><div class="page-header">
 
       <h1>Changelog</h1>
-      <small>Source: <a href="https://github.com/sipemu/case-based-reasoning/blob/main/NEWS.md" class="external-link"><code>NEWS.md</code></a></small>
+      <small>Source: <a href="https://github.com/sipemu/case-based-reasoning/blob/v0.5.0/NEWS.md" class="external-link"><code>NEWS.md</code></a></small>
     </div>
 
-    <div class="section level2">
-<h2 class="pkg-version" data-toc-text="development version" id="casebasedreasoning-development-version">CaseBasedReasoning (development version)<a class="anchor" aria-label="anchor" href="#casebasedreasoning-development-version"></a></h2>
-<div class="section level3">
-<h3 id="new-features-development-version">New features<a class="anchor" aria-label="anchor" href="#new-features-development-version"></a></h3>
-<ul><li>
-<code>predict_outcome()</code> predicts class and numeric outcomes from the <code>k</code> most similar training cases: a (tricube-weighted) majority vote with class probabilities, or a (weighted) mean. <code>evaluate()</code> scores the predictions on test data (accuracy, Brier score and log loss; RMSE and MAE) and delegates to <code>evaluate_survival()</code> for survival endpoints. <code><a href="https://rdrr.io/r/stats/predict.html" class="external-link">predict()</a></code> gains <code>type = c("cases", "outcome", "survival")</code>; the default still returns the similar cases (<a href="https://github.com/sipemu/case-based-reasoning/issues/43" class="external-link">#43</a>).</li>
-<li>
-<code>GowerModel</code> and <code><a href="../reference/gower_distance.html">gower_distance()</a></code>: the model-free Gower (1971) distance for mixed data (numeric, nominal, ordinal and logical variables, optional weights) as a baseline for the model-derived distances. Ranges come from the training cases, so query distances do not depend on the batch. All CBR methods (retrieval, outcome and survival prediction, counterfactuals, <code>explain_match()</code>) work with it (<a href="https://github.com/sipemu/case-based-reasoning/issues/44" class="external-link">#44</a>).</li>
-<li>Retain: <code>add_cases()</code> adds solved cases to the case base without refitting the model (or with <code>refit = TRUE</code>), <code>remove_cases()</code> removes cases by row name or position, and <code>get_case_base()</code> returns the current case base. New cases are validated like queries. OOB and RF-GAP proximities of <code>RFModel</code> need a refit after the case base was changed (<a href="https://github.com/sipemu/case-based-reasoning/issues/45" class="external-link">#45</a>).</li>
-<li>Case-base maintenance: <code>assess_cases()</code> retrieves each case against the others (leave-one-out) and reports the agreement with its neighbours, noisy cases (Wilson editing, 1972) and the competence categories of Smyth &amp; Keane (1995): pivotal cases that no other case solves and redundant (auxiliary) cases whose coverage another case subsumes. Combine it with <code>remove_cases()</code> to edit the case base (<a href="https://github.com/sipemu/case-based-reasoning/issues/46" class="external-link">#46</a>).</li>
-</ul></div>
-<div class="section level3">
-<h3 id="documentation-development-version">Documentation<a class="anchor" aria-label="anchor" href="#documentation-development-version"></a></h3>
-<ul><li>New article “Benchmark: Model-Derived Distances vs. Learned Metrics” on the package website: the regression, random forest and Gower distances against a learned metric (diagonal NCA) on four data sets, with irrelevant variables and for survival (<a href="https://github.com/sipemu/case-based-reasoning/issues/42" class="external-link">#42</a>). README and the get-started vignette cover outcome prediction, the Gower distance, retaining and maintaining cases.</li>
-<li>The “Motivation” vignette is rewritten as “Methods: Case-Based Reasoning with Statistical Models”. It covers the mathematics of every distance and every step of the CBR cycle, with worked examples that recompute the package’s results by hand, and lists the advantages and disadvantages of each approach.</li>
-<li>New vignette “Comparing the Approaches”: all distances on the same data. It compares the retrieved cases, the feature weights, the predictions, the effect of irrelevant features and the stability under resampling.</li>
-<li>Agent Skills for Claude Code (<code>.claude/skills/</code>): <code>cbr-capabilities</code> for API discovery and <code>cbr-advisor</code> for running, comparing and interpreting a CBR analysis. They install as a plugin from <code>.claude-plugin/</code>.</li>
-</ul></div>
-<div class="section level3">
-<h3 id="bug-fixes-development-version">Bug fixes<a class="anchor" aria-label="anchor" href="#bug-fixes-development-version"></a></h3>
-<ul><li>Ordered factors in queries stay ordered. Queries were converted to unordered factors when aligned to the training data, which changed the design matrix of regression models fitted with ordered factors.</li>
-</ul></div>
-</div>
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="0.5.0" id="casebasedreasoning-050">CaseBasedReasoning 0.5.0<a class="anchor" aria-label="anchor" href="#casebasedreasoning-050"></a></h2><p class="text-muted">CRAN release: 2026-11-22</p>
 <div class="section level3">

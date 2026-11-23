@@ -10,15 +10,11 @@
   : Logistic Regression Model for Case-Based-Reasoning
 - [`RFModel`](https://sipemu.github.io/case-based-reasoning/reference/RFModel.md)
   : RandomForest Model for Searching Similar Cases
-- [`GowerModel`](https://sipemu.github.io/case-based-reasoning/reference/GowerModel.md)
-  : Gower Distance Model for Case-Based-Reasoning
 
 ## S3 methods
 
 - [`predict(`*`<CoxModel>`*`)`](https://sipemu.github.io/case-based-reasoning/reference/predict.CoxModel.md)
   : Predict method for CoxModel
-- [`predict(`*`<GowerModel>`*`)`](https://sipemu.github.io/case-based-reasoning/reference/predict.GowerModel.md)
-  : Predict method for GowerModel
 - [`predict(`*`<LinearModel>`*`)`](https://sipemu.github.io/case-based-reasoning/reference/predict.LinearModel.md)
   : Predict method for LinearModel
 - [`predict(`*`<LogisticModel>`*`)`](https://sipemu.github.io/case-based-reasoning/reference/predict.LogisticModel.md)
@@ -27,8 +23,6 @@
   : Predict method for RFModel
 - [`print(`*`<CoxModel>`*`)`](https://sipemu.github.io/case-based-reasoning/reference/print.CoxModel.md)
   : Print method for CoxModel
-- [`print(`*`<GowerModel>`*`)`](https://sipemu.github.io/case-based-reasoning/reference/print.GowerModel.md)
-  : Print method for GowerModel
 - [`print(`*`<LinearModel>`*`)`](https://sipemu.github.io/case-based-reasoning/reference/print.LinearModel.md)
   : Print method for LinearModel
 - [`print(`*`<LogisticModel>`*`)`](https://sipemu.github.io/case-based-reasoning/reference/print.LogisticModel.md)
@@ -56,8 +50,6 @@
 - [`weightedDistance()`](https://sipemu.github.io/case-based-reasoning/reference/weighted_distance.md)
   [`weighted_distance()`](https://sipemu.github.io/case-based-reasoning/reference/weighted_distance.md)
   : Weighted Distance calculation
-- [`gower_distance()`](https://sipemu.github.io/case-based-reasoning/reference/gower_distance.md)
-  : Gower distance for mixed data
 
 ## Random forest internals
 

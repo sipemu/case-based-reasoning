@@ -21,7 +21,7 @@
 
     <a class="navbar-brand me-2" href="index.html">CaseBasedReasoning</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.5.0.9000</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.5.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -34,9 +34,7 @@
 <li class="nav-item dropdown">
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-articles" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Articles</button>
   <ul class="dropdown-menu" aria-labelledby="dropdown-articles">
-<li><a class="dropdown-item" href="articles/benchmark.html">Benchmark: Model-Derived Distances vs. Learned Metrics</a></li>
-    <li><a class="dropdown-item" href="articles/comparing_approaches.html">Comparing the Approaches</a></li>
-    <li><a class="dropdown-item" href="articles/distance_measures.html">Methods: Case-Based Reasoning with Statistical Models</a></li>
+<li><a class="dropdown-item" href="articles/distance_measures.html">Motivation</a></li>
     <li><a class="dropdown-item" href="articles/get_started.html">Get Started</a></li>
   </ul>
 </li>
@@ -106,20 +104,6 @@
 </div>
 </div>
 <div class="section level2">
-<h2 id="documentation">Documentation<a class="anchor" aria-label="anchor" href="#documentation"></a>
-</h2>
-<ul>
-<li>
-<a href="https://sipemu.github.io/case-based-reasoning/articles/get_started.html">Get Started</a>: a hands-on tour through the CBR cycle.</li>
-<li>
-<a href="https://sipemu.github.io/case-based-reasoning/articles/distance_measures.html">Methods</a>: the mathematics of each distance and step, with worked examples and advantages and disadvantages.</li>
-<li>
-<a href="https://sipemu.github.io/case-based-reasoning/articles/comparing_approaches.html">Comparing the Approaches</a>: all distances applied to the same data: retrieved cases, feature weights, predictions, irrelevant features and stability.</li>
-<li>
-<a href="https://sipemu.github.io/case-based-reasoning/articles/benchmark.html">Benchmark</a>: predictive performance against the Gower distance and a learned metric (NCA).</li>
-</ul>
-</div>
-<div class="section level2">
 <h2 id="installation">Installation<a class="anchor" aria-label="anchor" href="#installation"></a>
 </h2>
 <div class="section level4">
@@ -139,11 +123,9 @@
 </h2>
 <ul>
 <li>
-<strong>Models</strong>: linear, logistic and Cox regression (with splines and interactions), and random forests (<a href="https://github.com/imbs-hl/ranger" class="external-link">ranger</a>) for numeric, binary, multi-class and survival endpoints; <code>GowerModel</code> as a model-free baseline.</li>
+<strong>Models</strong>: linear, logistic and Cox regression (with splines and interactions), and random forests (<a href="https://github.com/imbs-hl/ranger" class="external-link">ranger</a>) for numeric, binary, multi-class and survival endpoints.</li>
 <li>
-<strong>Distances</strong>: regression-weighted (contribution-space) distance; random forest proximity (original, OOB, RF-GAP) and depth distance, implemented in parallel C++; the Gower distance for mixed data.</li>
-<li>
-<strong>Outcome prediction</strong>: <code>predict_outcome()</code> predicts classes (with probabilities) and numeric outcomes from the nearest cases; <code>evaluate()</code> scores them (accuracy, Brier score, log loss; RMSE, MAE).</li>
+<strong>Distances</strong>: regression-weighted (contribution-space) distance; random forest proximity (original, OOB, RF-GAP) and depth distance; all implemented in parallel C++.</li>
 <li>
 <strong>Retrieval</strong>: <code>get_similar_cases()</code> / <code><a href="https://rdrr.io/r/stats/predict.html" class="external-link">predict()</a></code> return the k nearest training cases per query, optionally merged with the query and excluding the query itself (<code>exclude_self = TRUE</code>).</li>
 <li>
@@ -152,8 +134,6 @@
 <strong>Counterfactuals</strong>: <code>get_counterfactual_cases()</code> returns the most similar cases with a <em>different</em> outcome.</li>
 <li>
 <strong>Explanations</strong>: <code>explain_match()</code> shows which variables make two cases similar or different.</li>
-<li>
-<strong>Retain and maintenance</strong>: <code>add_cases()</code> and <code>remove_cases()</code> change the case base without refitting; <code>assess_cases()</code> finds noisy, pivotal and redundant cases (Wilson editing; Smyth &amp; Keane, 1995).</li>
 <li>
 <strong>Checks</strong>: query data are validated against the training data (factor levels are matched by name, unknown levels and missing values are errors), and <code>check_ph()</code> checks the proportional hazards assumption of the Cox model.</li>
 </ul>
@@ -265,39 +245,11 @@
 <span><span class="va">match</span> <span class="op">&lt;-</span> <span class="va">cph_model</span><span class="op">$</span><span class="fu">get_similar_cases</span><span class="op">(</span><span class="va">query</span>, k <span class="op">=</span> <span class="fl">1</span><span class="op">)</span></span>
 <span><span class="va">cph_model</span><span class="op">$</span><span class="fu">explain_match</span><span class="op">(</span><span class="va">query</span>, <span class="va">match</span><span class="op">)</span></span></code></pre></div>
 </div>
-<div class="section level3">
-<h3 id="outcome-prediction">Outcome prediction<a class="anchor" aria-label="anchor" href="#outcome-prediction"></a>
-</h3>
-<p>For class and numeric endpoints, <code>predict_outcome()</code> predicts from the k nearest cases: a majority vote with class probabilities, or a mean. <code>evaluate()</code> scores the predictions on test data, and <code>predict(model, newdata, type = "outcome")</code> is the S3 shortcut.</p>
-<div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">rf_model</span> <span class="op">&lt;-</span> <span class="va"><a href="reference/RFModel.html">RFModel</a></span><span class="op">$</span><span class="fu">new</span><span class="op">(</span><span class="va">Species</span> <span class="op">~</span> <span class="va">.</span>, data <span class="op">=</span> <span class="va">iris</span><span class="op">[</span><span class="op">-</span><span class="op">(</span><span class="fl">1</span><span class="op">:</span><span class="fl">5</span><span class="op">)</span>, <span class="op">]</span><span class="op">)</span></span>
-<span><span class="va">rf_model</span><span class="op">$</span><span class="fu">fit</span><span class="op">(</span><span class="op">)</span></span>
-<span><span class="va">rf_model</span><span class="op">$</span><span class="fu">predict_outcome</span><span class="op">(</span><span class="va">iris</span><span class="op">[</span><span class="fl">1</span><span class="op">:</span><span class="fl">5</span>, <span class="op">]</span>, k <span class="op">=</span> <span class="fl">10</span><span class="op">)</span></span>
-<span><span class="va">rf_model</span><span class="op">$</span><span class="fu">evaluate</span><span class="op">(</span><span class="va">iris</span><span class="op">[</span><span class="fl">1</span><span class="op">:</span><span class="fl">5</span>, <span class="op">]</span>, k <span class="op">=</span> <span class="fl">10</span><span class="op">)</span></span></code></pre></div>
-</div>
-<div class="section level3">
-<h3 id="retaining-and-maintaining-cases">Retaining and maintaining cases<a class="anchor" aria-label="anchor" href="#retaining-and-maintaining-cases"></a>
-</h3>
-<p>New solved cases can be added to the case base without refitting the model, and <code>assess_cases()</code> retrieves each case against the others to find noisy cases (most neighbours have a different outcome), pivotal cases (no other case solves them) and redundant cases:</p>
-<div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">cph_model</span><span class="op">$</span><span class="fu">add_cases</span><span class="op">(</span><span class="va">ovarian</span><span class="op">[</span><span class="va">testID</span>, <span class="op">]</span><span class="op">)</span></span>
-<span><span class="va">assessment</span> <span class="op">&lt;-</span> <span class="va">cph_model</span><span class="op">$</span><span class="fu">assess_cases</span><span class="op">(</span>k <span class="op">=</span> <span class="fl">3</span>, horizon <span class="op">=</span> <span class="fl">365</span><span class="op">)</span></span>
-<span><span class="va">cph_model</span><span class="op">$</span><span class="fu">remove_cases</span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/colnames.html" class="external-link">rownames</a></span><span class="op">(</span><span class="va">assessment</span><span class="op">)</span><span class="op">[</span><span class="fu"><a href="https://rdrr.io/r/base/which.html" class="external-link">which</a></span><span class="op">(</span><span class="va">assessment</span><span class="op">$</span><span class="va">noisy</span><span class="op">)</span><span class="op">]</span><span class="op">)</span></span></code></pre></div>
-</div>
-<div class="section level3">
-<h3 id="model-free-baseline">Model-free baseline<a class="anchor" aria-label="anchor" href="#model-free-baseline"></a>
-</h3>
-<p><code>GowerModel</code> uses the Gower distance for mixed data with optional weights and supports the same methods. It is a baseline for the model-derived distances; the <a href="https://sipemu.github.io/case-based-reasoning/articles/benchmark.html">benchmark article</a> compares the distances with each other and with a learned metric (NCA).</p>
-<div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">gower_model</span> <span class="op">&lt;-</span> <span class="va"><a href="reference/GowerModel.html">GowerModel</a></span><span class="op">$</span><span class="fu">new</span><span class="op">(</span><span class="fu">Surv</span><span class="op">(</span><span class="va">futime</span>, <span class="va">fustat</span><span class="op">)</span> <span class="op">~</span> <span class="va">age</span> <span class="op">+</span> <span class="va">resid.ds</span> <span class="op">+</span> <span class="va">rx</span> <span class="op">+</span> <span class="va">ecog.ps</span>, <span class="va">ovarian</span><span class="op">[</span><span class="va">trainID</span>, <span class="op">]</span><span class="op">)</span></span>
-<span><span class="va">gower_model</span><span class="op">$</span><span class="fu">fit</span><span class="op">(</span><span class="op">)</span></span>
-<span><span class="va">gower_model</span><span class="op">$</span><span class="fu">get_similar_cases</span><span class="op">(</span><span class="va">ovarian</span><span class="op">[</span><span class="va">testID</span>, <span class="op">]</span>, k <span class="op">=</span> <span class="fl">3</span><span class="op">)</span></span></code></pre></div>
-</div>
 </div>
 <div class="section level2">
 <h2 id="example-random-forest">Example: Random Forest<a class="anchor" aria-label="anchor" href="#example-random-forest"></a>
 </h2>
-<div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">rf_model</span> <span class="op">&lt;-</span> <span class="va"><a href="reference/RFModel.html">RFModel</a></span><span class="op">$</span><span class="fu">new</span><span class="op">(</span><span class="va">Species</span> <span class="op">~</span> <span class="va">.</span>, data <span class="op">=</span> <span class="va">iris</span>, num.trees <span class="op">=</span> <span class="fl">500</span><span class="op">)</span></span>
 <span><span class="va">rf_model</span><span class="op">$</span><span class="fu">fit</span><span class="op">(</span><span class="op">)</span></span>
 <span></span>
@@ -355,8 +307,6 @@
 <li><p>Rhodes, Cutler and Moon <a href="https://doi.org/10.1109/TPAMI.2023.3263774" class="external-link">Geometry- and Accuracy-Preserving Random Forest Proximities</a> (2023)</p></li>
 <li><p>Lowsky et al. <a href="https://doi.org/10.1002/sim.5673" class="external-link">A K-nearest neighbors survival probability prediction method</a> (2013)</p></li>
 <li><p>Keane and Smyth <a href="https://doi.org/10.1007/978-3-030-58342-2_11" class="external-link">Good Counterfactuals and Where to Find Them: A Case-Based Technique for Generating Counterfactuals for Explainable AI</a> (2020)</p></li>
-<li><p>Gower <a href="https://doi.org/10.2307/2528823" class="external-link">A general coefficient of similarity and some of its properties</a> (1971)</p></li>
-<li><p>Smyth and Keane, Remembering to forget: A competence-preserving case deletion policy for case-based reasoning systems, IJCAI-95 (1995)</p></li>
 <li><p>Englund and Verikas <a href="https://doi.org/10.1016/j.eswa.2012.05.094" class="external-link">A novel approach to estimate proximity in a random forest: An exploratory study</a></p></li>
 <li><p>Stuart, E. et al. <a href="https://doi.org/10.4135/9781412995627.d14" class="external-link">Matching methods for causal inference: Designing observational studies</a></p></li>
 <li><p>Defossez et al. <a href="https://doi.org/10.1186/1472-6947-14-24" class="external-link">Temporal representation of care trajectories of cancer patients using data from a regional information system: an application in breast cancer</a></p></li>

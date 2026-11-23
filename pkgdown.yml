@@ -2,11 +2,9 @@ pandoc: 3.8.3
 pkgdown: 2.2.1
 pkgdown_sha: ~
 articles:
-  articles/benchmark: benchmark.html
-  comparing_approaches: comparing_approaches.html
   distance_measures: distance_measures.html
   get_started: get_started.html
-last_built: 2026-11-23T11:48Z
+last_built: 2026-11-23T11:52Z
 urls:
   reference: https://sipemu.github.io/case-based-reasoning/reference
   article: https://sipemu.github.io/case-based-reasoning/articles

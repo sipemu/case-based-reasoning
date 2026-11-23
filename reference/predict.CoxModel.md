@@ -6,13 +6,7 @@ Predict method for CoxModel
 
 ``` r
 # S3 method for class 'CoxModel'
-predict(
-  object,
-  newdata,
-  k = NULL,
-  type = c("cases", "outcome", "survival"),
-  ...
-)
+predict(object, newdata, k = 1, ...)
 ```
 
 ## Arguments
@@ -27,21 +21,12 @@ predict(
 
 - k:
 
-  Number of similar cases. Default: 1 for `type = "cases"`, 10
-  otherwise.
-
-- type:
-
-  `"cases"` (default): the similar cases (`$get_similar_cases()`);
-  `"outcome"`: predicted class or numeric outcome
-  (`$predict_outcome()`); `"survival"`: predicted survival probabilities
-  (`$predict_survival()`).
+  Number of similar cases to return
 
 - ...:
 
-  Further arguments passed to the method selected by `type`
+  Additional arguments (currently unused)
 
 ## Value
 
-A data.frame of similar cases, a data.frame of predictions, or a matrix
-of survival probabilities
+A data.frame of similar cases

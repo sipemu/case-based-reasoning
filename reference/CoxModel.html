@@ -9,7 +9,7 @@ Cox-Beta Model for Case-Based-Reasoning"></head><body>
 
     <a class="navbar-brand me-2" href="../index.html">CaseBasedReasoning</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.5.0.9000</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.5.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -20,9 +20,7 @@ Cox-Beta Model for Case-Based-Reasoning"></head><body>
       <ul class="navbar-nav me-auto"><li class="active nav-item"><a class="nav-link" href="../reference/index.html">Reference</a></li>
 <li class="nav-item dropdown">
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-articles" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Articles</button>
-  <ul class="dropdown-menu" aria-labelledby="dropdown-articles"><li><a class="dropdown-item" href="../articles/benchmark.html">Benchmark: Model-Derived Distances vs. Learned Metrics</a></li>
-    <li><a class="dropdown-item" href="../articles/comparing_approaches.html">Comparing the Approaches</a></li>
-    <li><a class="dropdown-item" href="../articles/distance_measures.html">Methods: Case-Based Reasoning with Statistical Models</a></li>
+  <ul class="dropdown-menu" aria-labelledby="dropdown-articles"><li><a class="dropdown-item" href="../articles/distance_measures.html">Motivation</a></li>
     <li><a class="dropdown-item" href="../articles/get_started.html">Get Started</a></li>
   </ul></li>
 <li class="nav-item"><a class="nav-link" href="../news/index.html">Changelog</a></li>
@@ -38,7 +36,7 @@ Cox-Beta Model for Case-Based-Reasoning"></head><body>
   <main id="main" class="col-md-9"><div class="page-header">
 
       <h1>Cox-Beta Model for Case-Based-Reasoning</h1>
-      <small class="dont-index">Source: <a href="https://github.com/sipemu/case-based-reasoning/blob/main/R/RegressionModel.R" class="external-link"><code>R/RegressionModel.R</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/sipemu/case-based-reasoning/blob/v0.5.0/R/RegressionModel.R" class="external-link"><code>R/RegressionModel.R</code></a></small>
       <div class="d-none name"><code>CoxModel.Rd</code></div>
     </div>
 
@@ -84,19 +82,13 @@ If the user omits the test data, this functions returns a n x n-distance matrix.
 
 <ul><li><p><a href="#method-CoxModel-check_ph"><code>CoxModel$check_ph()</code></a></p></li>
 <li><p><a href="#method-CoxModel-clone"><code>CoxModel$clone()</code></a></p></li>
-</ul></div><p><details><summary>Inherited methods</summary><ul><li><span class="pkg-link" data-pkg="CaseBasedReasoning" data-topic="CBRBase" data-id="add_cases"><a href="CBRBase.html#method-add_cases"><code>CaseBasedReasoning::CBRBase$add_cases()</code></a></span></li>
-<li><span class="pkg-link" data-pkg="CaseBasedReasoning" data-topic="CBRBase" data-id="assess_cases"><a href="CBRBase.html#method-assess_cases"><code>CaseBasedReasoning::CBRBase$assess_cases()</code></a></span></li>
-<li><span class="pkg-link" data-pkg="CaseBasedReasoning" data-topic="CBRBase" data-id="calc_distance_matrix"><a href="CBRBase.html#method-calc_distance_matrix"><code>CaseBasedReasoning::CBRBase$calc_distance_matrix()</code></a></span></li>
-<li><span class="pkg-link" data-pkg="CaseBasedReasoning" data-topic="CBRBase" data-id="evaluate"><a href="CBRBase.html#method-evaluate"><code>CaseBasedReasoning::CBRBase$evaluate()</code></a></span></li>
+</ul></div><p><details><summary>Inherited methods</summary><ul><li><span class="pkg-link" data-pkg="CaseBasedReasoning" data-topic="CBRBase" data-id="calc_distance_matrix"><a href="CBRBase.html#method-calc_distance_matrix"><code>CaseBasedReasoning::CBRBase$calc_distance_matrix()</code></a></span></li>
 <li><span class="pkg-link" data-pkg="CaseBasedReasoning" data-topic="CBRBase" data-id="evaluate_survival"><a href="CBRBase.html#method-evaluate_survival"><code>CaseBasedReasoning::CBRBase$evaluate_survival()</code></a></span></li>
 <li><span class="pkg-link" data-pkg="CaseBasedReasoning" data-topic="CBRBase" data-id="explain_match"><a href="CBRBase.html#method-explain_match"><code>CaseBasedReasoning::CBRBase$explain_match()</code></a></span></li>
-<li><span class="pkg-link" data-pkg="CaseBasedReasoning" data-topic="CBRBase" data-id="get_case_base"><a href="CBRBase.html#method-get_case_base"><code>CaseBasedReasoning::CBRBase$get_case_base()</code></a></span></li>
 <li><span class="pkg-link" data-pkg="CaseBasedReasoning" data-topic="CBRBase" data-id="get_counterfactual_cases"><a href="CBRBase.html#method-get_counterfactual_cases"><code>CaseBasedReasoning::CBRBase$get_counterfactual_cases()</code></a></span></li>
 <li><span class="pkg-link" data-pkg="CaseBasedReasoning" data-topic="CBRBase" data-id="get_similar_cases"><a href="CBRBase.html#method-get_similar_cases"><code>CaseBasedReasoning::CBRBase$get_similar_cases()</code></a></span></li>
 <li><span class="pkg-link" data-pkg="CaseBasedReasoning" data-topic="CBRBase" data-id="initialize"><a href="CBRBase.html#method-initialize"><code>CaseBasedReasoning::CBRBase$initialize()</code></a></span></li>
-<li><span class="pkg-link" data-pkg="CaseBasedReasoning" data-topic="CBRBase" data-id="predict_outcome"><a href="CBRBase.html#method-predict_outcome"><code>CaseBasedReasoning::CBRBase$predict_outcome()</code></a></span></li>
 <li><span class="pkg-link" data-pkg="CaseBasedReasoning" data-topic="CBRBase" data-id="predict_survival"><a href="CBRBase.html#method-predict_survival"><code>CaseBasedReasoning::CBRBase$predict_survival()</code></a></span></li>
-<li><span class="pkg-link" data-pkg="CaseBasedReasoning" data-topic="CBRBase" data-id="remove_cases"><a href="CBRBase.html#method-remove_cases"><code>CaseBasedReasoning::CBRBase$remove_cases()</code></a></span></li>
 <li><span class="pkg-link" data-pkg="CaseBasedReasoning" data-topic="RegressionModel" data-id="fit"><a href="RegressionModel.html#method-fit"><code>CaseBasedReasoning::RegressionModel$fit()</code></a></span></li>
 <li><span class="pkg-link" data-pkg="CaseBasedReasoning" data-topic="RegressionModel" data-id="print"><a href="RegressionModel.html#method-print"><code>CaseBasedReasoning::RegressionModel$print()</code></a></span></li>
 <li><span class="pkg-link" data-pkg="CaseBasedReasoning" data-topic="RegressionModel" data-id="variable_selection"><a href="RegressionModel.html#method-variable_selection"><code>CaseBasedReasoning::RegressionModel$variable_selection()</code></a></span></li>
