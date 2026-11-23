@@ -10,6 +10,7 @@ reference:
       - LogisticModel
       - RFModel
       - GowerModel
+      - BoostModel
   - title: S3 methods
     contents:
       - starts_with("predict.")

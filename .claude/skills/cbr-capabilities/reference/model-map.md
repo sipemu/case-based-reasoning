@@ -12,6 +12,7 @@ CBRBase                  retrieval, reuse, revise, retain (all shared methods)
 │   ├── LinearModel      rms::ols
 │   ├── LogisticModel    rms::lrm
 │   └── CoxModel         rms::cph, check_ph()
+├── BoostModel           xgboost, SHAP distance, shap_values()
 ├── RFModel              ranger forest, set_distance_method()
 └── GowerModel           Gower distance
 ```
@@ -42,6 +43,53 @@ Fitted objects:
 |--------|---------|
 | `$variable_selection(update = FALSE, ...)` | `rms::fastbw` backward selection; with `update = TRUE` the formula is restricted to the selected terms (refit afterwards) |
 | `$check_ph()` | Cox only: Schoenfeld-residual check of proportional hazards (`survival::cox.zph`) with plots |
+
+## `BoostModel`
+
+Constructor: `BoostModel$new(formula, data, nrounds = 100, params = list(eta = 0.1, max_depth = 3))`.
+
+- It needs the suggested package **xgboost**.
+- The endpoint sets the objective:
+
+  | Endpoint | Objective |
+  |----------|-----------|
+  | `Surv(time, status)` | `survival:cox` |
+  | two classes (factor, character, logical or 0/1) | `binary:logistic` |
+  | more than two classes | `multi:softprob` |
+  | numeric | `reg:squarederror` |
+
+- `params` is passed to `xgboost::xgb.train`. A `params$objective` you set overrides
+  the default; `nthread` defaults to 1.
+- Only the variables of the formula are used. Transformations and interactions are
+  ignored, because the trees learn them themselves.
+- Unordered factors are one-hot encoded and their SHAP values summed per variable.
+  Ordered factors are used as their ranks.
+
+Distance: `d(x_i, x_j) = sum_k |phi_k(x_i) - phi_k(x_j)|`, where `phi_k` are the exact
+TreeSHAP values (`predict(..., predcontrib = TRUE)`).
+
+- The SHAP values are on the model's margin scale: the outcome, the log odds, or the log
+  relative hazard.
+- `|f(x_i) - f(x_j)| <= d`. With the Cox objective, `exp(d)` bounds the hazard ratio.
+- For a linear model, `phi_k = beta_k (x_k - mean)`, so the distance equals the
+  regression distance. With `params = list(booster = "gblinear", ...)` it reproduces
+  `LinearModel`.
+- For multi-class models, the SHAP values of all classes are used; terms are named
+  `"var [class]"`.
+
+| Method | Purpose |
+|--------|---------|
+| `$shap_values(data)` | SHAP matrix (cases x variables) with attribute `bias`; `rowSums + bias` equals the margin |
+
+Notes:
+
+- The model is deterministic without row or column subsampling.
+- `add_cases()` needs no refit.
+- The SHAP values are step functions of each feature: a small difference across a split
+  counts fully.
+- On small data the distance overfits, giving weight to noise and producing unstable
+  neighbours. Regularise with `eta`, `nrounds`, `max_depth`, `min_child_weight` and
+  `lambda`.
 
 ## `RFModel`
 
@@ -95,6 +143,7 @@ Variables that are missing in either case are skipped for that pair.
 | Need | Model |
 |------|-------|
 | Distance that is interpretable on the outcome scale | regression model for the endpoint type |
+| Unknown non-linearities and interactions, explained per feature on the outcome scale | `BoostModel` |
 | Unknown non-linearities and interactions | `RFModel` |
 | Retrieval that matches the forest's predictions | `RFModel` with `proximity_type = "rfgap"` |
 | No outcome model, or a baseline | `GowerModel` |

@@ -50,7 +50,7 @@ new problem $x_q$ by the *similar* cases of the case base, in four steps
 
 Everything depends on the distance $d$. The package's idea (Dippon et
 al., 2002) is to **learn $d$ from a statistical model of the outcome**:
-a regression model or a random forest is fitted to the case base, and
+a regression model, a boosted model or a random forest is fitted to the case base, and
 two cases are close if *the model* considers them alike. The Gower
 distance is included as a model-free baseline.
 
@@ -387,6 +387,123 @@ knitr::kable(rf$explain_match(iris[51, ], iris[78, ]), digits = 3)
     grown on: after `add_cases()` or `remove_cases()`, the forest must
     be refitted.
 
+# Gradient boosting: distances in SHAP space {#boosting}
+
+## Why the forest approach does not carry over {#boosting-why}
+
+A boosted model (`BoostModel`, fitted with **xgboost**) is also an
+ensemble of trees, but a different one. The trees are fitted one after
+another, each to the errors of the previous ones, and added up:
+$$
+f(x) = f_0 + \nu \sum_{m=1}^M h_m(x),
+$$
+where $h_m(x)$ is the value of the leaf of $x$ in tree $m$ and $\nu$ the
+learning rate. The trees are small, and they are not exchangeable: the
+first trees capture the main effects, the last ones small corrections or
+noise. Counting shared leaves, as the proximity does, would weight every
+tree equally and ignore the leaf values.
+
+## SHAP values as contributions {#shap}
+
+Instead, `BoostModel` uses the additive structure of the prediction.
+SHAP values (Lundberg et al., 2020) split the prediction of a case into
+one contribution per feature,
+$$
+f(x) = \phi_0 + \sum_{k=1}^p \phi_k(x),
+$$
+where $\phi_0$ is the average prediction and $\phi_k(x)$ is the
+contribution of feature $k$, computed exactly for trees (TreeSHAP). The
+contributions are on the margin scale of the model: the outcome for
+regression, the log odds for classification, the log relative hazard for
+the Cox objective. The distance is the $L_1$ distance of the SHAP
+vectors:
+$$
+\boxed{\; d(x_i, x_j) = \sum_{k=1}^p \left| \phi_k(x_i) - \phi_k(x_j) \right| \;}
+$$
+This is the contribution-space distance of the regression models, with
+the features as terms. It has the same interpretation:
+$|f(x_i) - f(x_j)| \le d(x_i, x_j)$, so for the Cox objective $e^{d}$
+bounds the hazard ratio of the two cases. For a factor, the SHAP values
+of its dummy columns are summed; for a multi-class model, the SHAP values
+of all classes are used.
+
+## The link to the regression distance {#shap-linear}
+
+For a linear model $f(x) = \beta_0 + \sum_k \beta_k x_k$ with independent
+features, the SHAP values are $\phi_k(x) = \beta_k (x_k - \bar x_k)$,
+and
+$$
+\left|\phi_k(x_i) - \phi_k(x_j)\right| = |\beta_k|\,|x_{ik} - x_{jk}| ,
+$$
+which is exactly the weighted distance of Dippon et al. (2002). The SHAP
+distance therefore generalises the regression distance to models that
+learn non-linear effects and interactions by themselves. With a linear
+booster, `BoostModel` reproduces `LinearModel`:
+
+```{r shap-linear, eval = requireNamespace("xgboost", quietly = TRUE)}
+fml_iris <- Sepal.Length ~ Sepal.Width + Petal.Length + Petal.Width
+lin <- LinearModel$new(fml_iris, iris)
+lin$fit()
+lin_boost <- BoostModel$new(fml_iris, iris, nrounds = 2000,
+                            params = list(booster = "gblinear", eta = 1, lambda = 0, alpha = 0,
+                                          updater = "shotgun", feature_selector = "cyclic"))
+lin_boost$fit()
+max(abs(lin$calc_distance_matrix(iris[1:5, ]) - lin_boost$calc_distance_matrix(iris[1:5, ])))
+```
+
+With trees (the default), the SHAP values of a feature are step
+functions of the feature and may depend on the other features. For the
+two patients from above:
+
+```{r shap-cox, eval = requireNamespace("xgboost", quietly = TRUE)}
+boost <- BoostModel$new(Surv(time, status) ~ age + sex + ph.ecog, lung2,
+                        nrounds = 100, params = list(eta = 0.05, max_depth = 2))
+boost$fit()
+phi <- boost$shap_values(pair)
+phi
+# the SHAP values add up to the model's log relative hazard
+rowSums(phi) + attr(phi, "bias")
+knitr::kable(boost$explain_match(pair[1, ], pair[2, ]), digits = 3)
+```
+
+```{r shap-cox-gap, eval = requireNamespace("xgboost", quietly = TRUE)}
+c(distance = sum(abs(phi[1, ] - phi[2, ])),
+  difference_of_log_hazards = abs(diff(rowSums(phi))))
+```
+
+The distance is much larger than the difference of the predicted log
+hazards: as in the Cox model, the patients' differences partly cancel in
+the prediction, and the distance keeps them apart.
+
+## Advantages and disadvantages {#boost-proscons}
+
+**Advantages**
+
+-   Non-linear effects and interactions are learned, as with a forest,
+    but the distance keeps the meaning of the regression distance: it
+    bounds the difference of the predictions on the outcome, log-odds or
+    log-hazard scale.
+-   Explanations per feature, in the same form as for the regression
+    models; for a linear model, the regression distance is a special
+    case.
+-   Retrieval is cheap: the SHAP values are computed once per case, and
+    the distance costs $O(n\,m\,p)$. New cases need no refit.
+-   Deterministic without row or column subsampling.
+
+**Disadvantages**
+
+-   The SHAP values are step functions: a small difference that crosses
+    a split counts fully, a large one within a leaf not at all.
+-   SHAP values share interaction effects between the features involved,
+    so two cases can have similar SHAP values from different feature
+    values.
+-   The distance inherits the boosted model's overfitting: on small data
+    sets, irrelevant features get weight, and the neighbourhoods are
+    less stable under resampling than for the other distances (see
+    [Comparing the Approaches](comparing_approaches.html)). The model
+    must be tuned and regularised.
+-   Needs the suggested package **xgboost**.
+
 # The Gower distance: a model-free baseline {#gower}
 
 The Gower (1971) distance of two cases is a weighted mean of
@@ -525,18 +642,18 @@ that of similar patients.
 
 # Choosing an approach {#comparison}
 
-| | Regression (Cox, linear, logistic) | Random forest (depth, proximity, RF-GAP) | Gower |
-|------------------|------------------|-------------------|------------------|
-| Weights the features by | estimated effect on the outcome | number of splits (favours continuous features) | scale (equal or user weights) |
-| Irrelevant features | small weight, shrinking with more cases | substantial weight on small data | full weight |
-| Needs an outcome | yes | yes | no |
-| Non-linear effects, interactions | if specified (splines, `*`) | automatic | no |
-| Distance unit | outcome scale (log HR, log OR, $y$) | none | share of features |
-| Explanation | contribution per term | split variables where paths diverge | per-feature difference |
-| Assumptions | model correctly specified (e.g. PH) | few | none |
-| Deterministic | yes | no (seed) | yes |
-| Cost per pair | number of terms | number of trees | number of features |
-| Retain without refitting | yes | depth and original proximity: yes; OOB, RF-GAP: no | yes |
+| | Regression (Cox, linear, logistic) | Boosting (SHAP) | Random forest (depth, proximity, RF-GAP) | Gower |
+|------------------|------------------|------------------|-------------------|------------------|
+| Weights the features by | estimated effect on the outcome | learned effect on the outcome | number of splits (favours continuous features) | scale (equal or user weights) |
+| Irrelevant features | small weight, shrinking with more cases | substantial weight on small data | substantial weight on small data | full weight |
+| Needs an outcome | yes | yes | yes | no |
+| Non-linear effects, interactions | if specified (splines, `*`) | automatic | automatic | no |
+| Distance unit | outcome scale (log HR, log OR, $y$) | outcome scale (margin) | none | share of features |
+| Explanation | contribution per term | SHAP value per feature | split variables where paths diverge | per-feature difference |
+| Assumptions | model correctly specified (e.g. PH) | objective (e.g. PH); tuning | few | none |
+| Deterministic | yes | yes (no subsampling) | no (seed) | yes |
+| Cost per pair | number of terms | number of features | number of trees | number of features |
+| Retain without refitting | yes | yes | depth and original proximity: yes; OOB, RF-GAP: no | yes |
 
 Some rules of thumb:
 
@@ -544,6 +661,10 @@ Some rules of thumb:
     described by a regression model, or when the distance must be
     explained and defended (e.g. to clinicians). Check the model first;
     the distance inherits its assumptions.
+-   **Use gradient boosting with the SHAP distance** when the
+    relationships are complex but the distance should keep a meaning on
+    the outcome scale and be explained per feature. Regularise the model
+    and check the stability of the neighbours.
 -   **Use a random forest** when the relationships are complex or
     unknown, when there are many features, or when the regression model
     does not fit well. Prefer RF-GAP when the retrieved cases should
@@ -581,6 +702,10 @@ Some rules of thumb:
 -   Keane, M. T. and Smyth, B. (2020). [Good counterfactuals and where
     to find them](https://doi.org/10.1007/978-3-030-58342-2_11). ICCBR
     2020, LNCS 12311, 163–178.
+-   Lundberg, S. M. et al. (2020). [From local explanations to global
+    understanding with explainable AI for
+    trees](https://doi.org/10.1038/s42256-019-0138-9). *Nature Machine
+    Intelligence*, 2, 56–67.
 -   Lowsky, D. J. et al. (2013). [A K-nearest neighbors survival
     probability prediction method](https://doi.org/10.1002/sim.5673).
     *Statistics in Medicine*, 32(12), 2062–2069.
