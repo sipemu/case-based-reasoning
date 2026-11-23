@@ -33,7 +33,8 @@
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-articles" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Articles</button>
   <ul class="dropdown-menu" aria-labelledby="dropdown-articles">
 <li><a class="dropdown-item" href="../articles/benchmark.html">Benchmark: Model-Derived Distances vs. Learned Metrics</a></li>
-    <li><a class="dropdown-item" href="../articles/distance_measures.html">Motivation</a></li>
+    <li><a class="dropdown-item" href="../articles/comparing_approaches.html">Comparing the Approaches</a></li>
+    <li><a class="dropdown-item" href="../articles/distance_measures.html">Methods: Case-Based Reasoning with Statistical Models</a></li>
     <li><a class="dropdown-item" href="../articles/get_started.html">Get Started</a></li>
   </ul>
 </li>
@@ -61,7 +62,7 @@
                         <h4 data-toc-skip class="author">Dr. Simon
 Müller</h4>
             
-            <h4 data-toc-skip class="date">2026-11-22</h4>
+            <h4 data-toc-skip class="date">2026-11-23</h4>
       
       <small class="dont-index">Source: <a href="https://github.com/sipemu/case-based-reasoning/blob/main/vignettes/get_started.rmd" class="external-link"><code>vignettes/get_started.rmd</code></a></small>
       <div class="d-none name"><code>get_started.rmd</code></div>
@@ -75,9 +76,63 @@ Müller</h4>
 <p>Case-Based Reasoning (CBR) solves new problems by finding similar
 past cases. This package uses regression models—Cox Proportional Hazards
 (CPH), linear, and logistic—and random forests to define a principled
-distance between cases. The workflow is: prepare data, fit a model, then
+distance between cases: two cases are close if the fitted model
+considers them alike. The workflow is: prepare data, fit a model, then
 query for similar cases. The retrieved cases can then be used to predict
-survival, to find counterfactual cases and to explain matches.</p>
+outcomes and survival, to find counterfactual cases and to explain
+matches.</p>
+<p>This vignette is a hands-on tour, following the steps of the CBR
+cycle:</p>
+<table class="table">
+<colgroup>
+<col width="19%">
+<col width="45%">
+<col width="35%">
+</colgroup>
+<thead><tr class="header">
+<th>Step</th>
+<th>What it does</th>
+<th>Functions</th>
+</tr></thead>
+<tbody>
+<tr class="odd">
+<td>Retrieve</td>
+<td>find the most similar cases</td>
+<td>
+<code>get_similar_cases()</code>,
+<code>calc_distance_matrix()</code>, <code>explain_match()</code>
+</td>
+</tr>
+<tr class="even">
+<td>Reuse</td>
+<td>predict from the retrieved cases</td>
+<td>
+<code>predict_outcome()</code>, <code>predict_survival()</code>,
+<code>get_counterfactual_cases()</code>
+</td>
+</tr>
+<tr class="odd">
+<td>Revise</td>
+<td>evaluate the predictions</td>
+<td>
+<code>evaluate()</code>, <code>evaluate_survival()</code>,
+<code>check_ph()</code>
+</td>
+</tr>
+<tr class="even">
+<td>Retain</td>
+<td>maintain the case base</td>
+<td>
+<code>add_cases()</code>, <code>remove_cases()</code>,
+<code>assess_cases()</code>
+</td>
+</tr>
+</tbody>
+</table>
+<p>The <a href="distance_measures.html">Methods</a> vignette explains
+the mathematics behind each step, with worked examples and the
+advantages and disadvantages of each distance. <a href="comparing_approaches.html">Comparing the Approaches</a> applies
+all distances to the same data.</p>
 </div>
 <div class="section level2">
 <h2 id="cox-proportional-hazard-model">Cox Proportional Hazard Model<a class="anchor" aria-label="anchor" href="#cox-proportional-hazard-model"></a>
@@ -147,9 +202,10 @@ equally unless weighted.</li>
 <strong>Random Forests</strong><a class="anchor" aria-label="anchor" href="#random-forests"></a>
 </h3>
 <ul>
-<li>Captures non-linear relationships and feature interactions.</li>
+<li>Captures non-linear relationships and feature interactions without
+specifying them.</li>
 <li>More computationally expensive and less interpretable than
-regression models.</li>
+regression models; the distance depends on the random seed.</li>
 </ul>
 </div>
 </div>

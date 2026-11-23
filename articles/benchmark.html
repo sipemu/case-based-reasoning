@@ -33,7 +33,8 @@
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-articles" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Articles</button>
   <ul class="dropdown-menu" aria-labelledby="dropdown-articles">
 <li><a class="dropdown-item" href="../articles/benchmark.html">Benchmark: Model-Derived Distances vs. Learned Metrics</a></li>
-    <li><a class="dropdown-item" href="../articles/distance_measures.html">Motivation</a></li>
+    <li><a class="dropdown-item" href="../articles/comparing_approaches.html">Comparing the Approaches</a></li>
+    <li><a class="dropdown-item" href="../articles/distance_measures.html">Methods: Case-Based Reasoning with Statistical Models</a></li>
     <li><a class="dropdown-item" href="../articles/get_started.html">Get Started</a></li>
   </ul>
 </li>
@@ -486,10 +487,13 @@ model-derived distances are as good as the metric that is learned
 specifically for nearest-neighbour classification (NCA).</li>
 <li>
 <strong>With irrelevant variables, the model-free Gower distance
-gets worse</strong>, while the model-derived distances and NCA are
-hardly affected: the model gives irrelevant variables (almost) no
-weight. This is the main argument for deriving the distance from a model
-when not all variables are known to be relevant.</li>
+gets worse</strong>, while the accuracy of the model-derived distances
+and NCA hardly changes: the regression model gives irrelevant variables
+small weights. This is the main argument for deriving the distance from
+a model when not all variables are known to be relevant. (On small data
+sets, random forests can still give irrelevant continuous variables much
+weight in the distance; see the vignette <em>Comparing the
+Approaches</em>.)</li>
 <li>
 <strong>The gain of the model-derived distances lies in
 interpretability</strong>: the distance follows the fitted model, so

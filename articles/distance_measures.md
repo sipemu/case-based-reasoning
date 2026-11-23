@@ -1,215 +1,700 @@
-# Motivation
+# Methods: Case-Based Reasoning with Statistical Models
 
-## Objective
+This vignette explains what the package computes and why. Each method is
+described mathematically, illustrated with a small example that
+recomputes the package’s result by hand, and assessed with its
+advantages and disadvantages. The [Get
+Started](https://sipemu.github.io/case-based-reasoning/articles/get_started.md)
+vignette shows the workflow, [Comparing the
+Approaches](https://sipemu.github.io/case-based-reasoning/articles/comparing_approaches.md)
+applies all distances to the same data, and the [benchmark
+article](https://sipemu.github.io/case-based-reasoning/articles/benchmark.html)
+compares their predictive performance.
 
-#### Define a Distance Measure for Numerical and Categorical Features
+## What the package does
 
-Let $`x_i = \left(x_i^1,\cdots,x_i^p\right)^T`$ and
-$`x_j = \left(x_j^1,\cdots,x_j^p\right)^T`$ be the feature vectors of
-two distinct patients $`i`$ and $`j`$. A first rough idea may be to
-calculate the $`L_1-`$norm of this two feature vectors:
+A *case base* is a set of solved cases
+$`\mathcal{C} = \{(x_j, y_j)\}_{j=1}^n`$: covariates $`x_j`$ (e.g. age,
+sex, tumour stage) and an outcome $`y_j`$ (a class, a number, or a
+censored survival time $`(t_j, \delta_j)`$). Case-based reasoning (CBR)
+answers a new problem $`x_q`$ by the *similar* cases of the case base,
+in four steps (Aamodt & Plaza, 1994):
+
+| Step | Mathematical task | Functions |
+|----|----|----|
+| **Retrieve** | find $`N_k(x_q)`$, the $`k`$ cases with the smallest $`d(x_q, x_j)`$ | `get_similar_cases()`, `calc_distance_matrix()`, `explain_match()` |
+| **Reuse** | predict $`y_q`$ from $`\{y_j : j \in N_k(x_q)\}`$ | `predict_outcome()`, `predict_survival()`, `get_counterfactual_cases()` |
+| **Revise** | measure how good the predictions are on test cases | `evaluate()`, `evaluate_survival()`, `check_ph()` |
+| **Retain** | add and remove cases, find noisy and redundant cases | `add_cases()`, `remove_cases()`, `assess_cases()` |
+
+Everything depends on the distance $`d`$. The package’s idea (Dippon et
+al., 2002) is to **learn $`d`$ from a statistical model of the
+outcome**: a regression model or a random forest is fitted to the case
+base, and two cases are close if *the model* considers them alike. The
+Gower distance is included as a model-free baseline.
+
+## Why the distance must be learned
+
+Take the naive distance, the mean absolute difference of the features,
 ``` math
-\|x_i - x_j\|_{L_1}=\frac{1}{p}\sum\limits_{k=1}^p|x_i^k - x_j^k|
+d_{L_1}(x_i, x_j) = \frac{1}{p}\sum_{k=1}^p |x_{ik} - x_{jk}|.
+```
+It has three problems:
+
+1.  **Categorical features.** $`|x_{ik} - x_{jk}|`$ is not defined for
+    sex or tumour type.
+2.  **Scale.** Measuring age in months instead of years multiplies its
+    contribution by 12. Features with large numbers dominate.
+3.  **Relevance.** Every feature counts equally. For lung cancer
+    survival, the performance status matters more than the patient’s
+    city, but $`d_{L_1}`$ cannot know that.
+
+Standardising the features solves the second problem, but not the third.
+Only knowledge of the outcome can tell which features matter, and how
+much. A statistical model of the outcome contains exactly this
+knowledge.
+
+## Regression models: distances in contribution space
+
+### Definition
+
+`LinearModel`, `LogisticModel` and `CoxModel` fit a regression model
+with the **rms** package. Its linear predictor is a sum over model terms
+$`t`$ (a variable, a spline of a variable, an interaction, …):
+``` math
+\eta(x) = \sum_t c_t(x), \qquad c_t(x) = X_t(x)\,\hat\beta_t ,
+```
+where $`X_t(x)`$ are the columns of the design matrix that belong to
+term $`t`$ and $`\hat\beta_t`$ their estimated coefficients. We call
+$`c_t(x)`$ the *contribution* of term $`t`$. The distance of two cases
+is the $`L_1`$ distance of their contributions:
+``` math
+\boxed{\; d(x_i, x_j) = \sum_t \left| c_t(x_i) - c_t(x_j) \right| \;}
+```
+For main effects this is the weighted distance of Dippon et al. (2002):
+
+- numeric feature $`k`$: $`c_k(x) = \hat\beta_k x_k`$, so the term adds
+  $`|\hat\beta_k|\,|x_{ik} - x_{jk}|`$;
+- categorical feature $`k`$ with level coefficients
+  $`\hat\beta_k^{(l)}`$ (zero for the reference level): the term adds
+  $`|\hat\beta_k^{(x_{ik})} - \hat\beta_k^{(x_{jk})}|`$, which is zero
+  for equal levels.
+
+All three problems of the naive distance are solved: categorical
+features enter through their coefficients, the coefficient scales
+inversely with the unit of the feature, and features without effect get
+a coefficient near zero.
+
+### What a distance means
+
+By the triangle inequality, the distance bounds the difference of the
+linear predictors:
+``` math
+\lvert \eta(x_i) - \eta(x_j) \rvert \le d(x_i, x_j).
+```
+The linear predictor has a meaning on the scale of the model, so the
+distance has one too:
+
+| Model | $`\eta(x)`$ | $`d(x_i, x_j) \le \delta`$ means |
+|----|----|----|
+| `LinearModel` | expected outcome $`E[y \mid x]`$ | expected outcomes differ by at most $`\delta`$ (in units of $`y`$) |
+| `LogisticModel` | log-odds $`\log \frac{P(y=1 \mid x)}{P(y=0 \mid x)}`$ | odds ratio between the cases in $`[e^{-\delta}, e^{\delta}]`$ |
+| `CoxModel` | log relative hazard | hazard ratio between the cases in $`[e^{-\delta}, e^{\delta}]`$ |
+
+For example, two patients at Cox distance $`0.1`$ have hazards that
+differ by at most $`e^{0.1} - 1 \approx 10\%`$.
+
+### A worked example
+
+We fit a Cox model for the survival of lung cancer patients.
+
+``` r
+
+lung2 <- na.omit(lung[, c("time", "status", "age", "sex", "ph.ecog", "ph.karno", "wt.loss")])
+lung2$status <- lung2$status - 1
+lung2$sex <- factor(lung2$sex, labels = c("male", "female"))
+
+cox <- CoxModel$new(Surv(time, status) ~ age + sex + ph.ecog, lung2)
+cox$fit()
+beta <- coef(cox$model_fit)
+beta
 ```
 
-However, this naive approach arises from some problems:
+    ##         age  sex=female     ph.ecog 
+    ##  0.01347899 -0.57204879  0.45638532
 
-1.  This measure is well-defined for numerical features but not for
-    categorical features, such as gender (male/female). We need a method
-    to define the distance for categorical variables.
+Older age and a worse performance status (`ph.ecog`, 0 = fully active to
+3 = bedridden half the day) increase the hazard; women have a lower
+hazard. Now take two patients:
 
-2.  $`|x_i^k - x_j^k|`$ is not scale-invariant, meaning that if one
-    changes the unit of measurement (e.g., from meters to centimeters),
-    the contribution of this feature would increase by a factor of 100.
-    Features with large values will dominate the distance.
+``` r
 
-3.  All features are treated equally, which may not reflect their actual
-    importance. For example, in the case of lung cancer, the patient’s
-    smoking status (no/yes) seems more relevant than the city they live
-    in.
-
-This package addresses these issues by deriving a weighted distance from
-regression model coefficients, which naturally handles mixed feature
-types and reflects each feature’s importance.
-
-### Weighted Distance Measure
-
-To address the challenges discussed earlier, we need to perform two
-steps:
-
-1.  Generalize the L1-distance to handle different variable types,
-    including numerical and categorical features.
-
-2.  Assign appropriate weights to each feature to:
-
-    a\. eliminate the dependency on the scale of the variables,
-
-    2.  account for varying importance across features, and
-    3.  consider the impact size of each feature.
-
-By incorporating these modifications, we arrive at the following
-weighted distance measure:
-
-``` math
-d(x_i, x_j) = \sum\limits_{k=1}^p |\alpha(x_i^k, x_j^k) d(x_i^k, x_j^k)|
+pair <- lung2[c("19", "149"), ]
+pair
 ```
 
-The weighted distance measure now includes weights
-$`\alpha(x_i^k, x_j^k)`$, which are determined based on the training
-data. In the next section, we will discuss how to obtain these weights
-and effectively compute the weighted distance measure for mixed data
-types and varying feature importance.
+    ##     time status age    sex ph.ecog ph.karno wt.loss
+    ## 19    61      1  56 female       2       60      10
+    ## 149   31      1  82   male       0      100      27
 
-## Statistical Model
+By hand, the distance is the sum of three terms:
 
-Let $`\alpha(x_i^k, x_j^k)`$ the weights and $`d(x_i^k, x_j^k)`$ the
-distance for feature $`k`$ and observation $`i`$ and $`j`$. We will
-define them as:
+``` r
 
-If feature $`k`$ is numerical, then
-
-``` math
-d(x_i^k, x_j^k) = x_i^k - x_j^k
-```
-and
-
-``` math
-\alpha(x_i^k, x_j^k) = \hat{\beta}_k
+by_hand <- c(age     = abs(beta[["age"]] * (pair$age[1] - pair$age[2])),
+             sex     = abs(beta[["sex=female"]] * ((pair$sex[1] == "female") - (pair$sex[2] == "female"))),
+             ph.ecog = abs(beta[["ph.ecog"]] * (pair$ph.ecog[1] - pair$ph.ecog[2])))
+by_hand
 ```
 
-If feature $`k`$ is categorical, then
+    ##       age       sex   ph.ecog 
+    ## 0.3504537 0.5720488 0.9127706
 
-``` math
-d(x_i^k, x_j^k) = 1 \text{ when } x_i^k \neq x_j^k \text{ else } 0
-```
-and
-``` math
-\alpha(x_i^k, x_j^k) = \hat{\beta}_k^{(x_i^k)} - \hat{\beta}_k^{(x_j^k)},
+``` r
+
+sum(by_hand)
 ```
 
-where $`\hat{\beta}_k^{(l)}`$ is the coefficient of level $`l`$ (zero
-for the reference level) in a regression model (linear, logistic, or CPH
-model). The regression coefficients thus serve as weights that reflect
-each feature’s importance and scale.
+    ## [1] 1.835273
 
-### Contribution Space
+`explain_match()` reports the same terms, sorted by their share of the
+distance, and `calc_distance_matrix()` the same total:
 
-Both cases are special cases of one definition. Let
-$`c_t(x) = X_t(x)\hat{\beta}_t`$ be the contribution of model term $`t`$
-to the linear predictor, where $`X_t(x)`$ are the columns of the design
-matrix that belong to term $`t`$ and $`\hat{\beta}_t`$ their
-coefficients. The package computes
+``` r
 
-``` math
-d(x_i, x_j) = \sum\limits_{t} |c_t(x_i) - c_t(x_j)|.
+knitr::kable(cox$explain_match(pair[1, ], pair[2, ]), digits = 3)
 ```
 
-For a numerical main effect, $`c_t(x) = \hat{\beta}_k x^k`$; for a
-categorical one, $`c_t(x) = \hat{\beta}_k^{(x^k)}`$, so the distance is
-exactly the weighted distance above. The definition also covers any
-other term of an **rms** model: splines such as `rcs(age, 4)`,
-polynomials and interactions. Two cases are then close if the model
-assigns them similar contributions, even if a non-linear effect makes
-equal differences in a variable count differently in different ranges.
+| term    | query_contribution | case_contribution | distance | share |
+|:--------|-------------------:|------------------:|---------:|------:|
+| ph.ecog |              0.913 |             0.000 |    0.913 | 0.497 |
+| sex     |             -0.572 |             0.000 |    0.572 | 0.312 |
+| age     |              0.755 |             1.105 |    0.350 | 0.191 |
 
-`explain_match()` reports the terms $`|c_t(x_i) - c_t(x_j)|`$ and their
-share of the distance, which shows why two cases match.
+``` r
 
-## Random Forests
-
-### Proximity Measure
-
-Two observations $`i`$ and $`j`$ are considered more similar when the
-fraction of trees in which they share the same terminal node is close to
-one (Breiman, 2002). With proximity
-
-``` math
-p(x_i, x_j) = \frac{1}{T}\sum\limits_{t=1}^T 1_{[x_i \text{ and } x_j \text{ share the same terminal node in tree } t]},
+cox$calc_distance_matrix(pair[1, ])[rownames(lung2) == "149", ]
 ```
 
-where $`T`$ is the number of trees, the distance is
+    ## [1] 1.835273
 
-``` math
-d(x_i, x_j) = \sqrt{1 - p(x_i, x_j)}.
+### Why not just compare risk scores?
+
+The two patients have almost the same linear predictor, i.e. the same
+predicted risk:
+
+``` r
+
+eta <- predict(cox$model_fit, newdata = pair, type = "lp")
+eta
 ```
 
-A drawback of this measure is that the decision is binary, meaning that
-potentially similar observations might be counted as dissimilar. For
-example, suppose a final cut-off is consistently made around age 58, and
-observation 1 has an age of 56 while observation 2 has an age of 60. In
-this case, the distance between observation 1 and observation 2 would be
-the same as the distance between observation 1 and an observation with
-an age of 80. This limitation makes the proximity measure less sensitive
-to small differences between observations, potentially affecting the
-overall analysis of similarity.
+    ##         19        149 
+    ## 0.05765668 0.06738851
 
-### Out-of-Bag and RF-GAP Proximities
+``` r
 
-The original proximity is biased for training cases: a tree is grown
-until its leaves are small, so cases in a tree’s bootstrap sample tend
-to share leaves with each other. Two variants avoid this
-(`proximity_type` in
-[`proximity_distance()`](https://sipemu.github.io/case-based-reasoning/reference/proximity_distance.md),
-[`distance_random_forest()`](https://sipemu.github.io/case-based-reasoning/reference/distance_random_forest.md)
-and `RFModel$set_distance_method()`):
+abs(diff(eta))
+```
 
-- **OOB**: only the trees in which both observations are out-of-bag are
-  counted, and $`T`$ is replaced by the number of these trees.
+    ##        149 
+    ## 0.00973183
 
+The 56-year-old woman with a poor performance status and the 82-year-old
+man who is fully active have the same risk *for different reasons*. A
+distance based only on $`|\eta(x_i) - \eta(x_j)|`$ would treat them as
+identical cases; in contribution space they are far apart, because each
+term is compared on its own. Cases retrieved in contribution space are
+similar in risk **and** in the reasons for the risk, which is what makes
+them useful as precedents.
+
+### Scale invariance
+
+Measuring age in months changes the coefficient by a factor of 1/12, and
+the distance not at all:
+
+``` r
+
+lung_months <- transform(lung2, age = age * 12)
+cox_months <- CoxModel$new(Surv(time, status) ~ age + sex + ph.ecog, lung_months)
+cox_months$fit()
+max(abs(cox_months$calc_distance_matrix() - cox$calc_distance_matrix()))
+```
+
+    ## [1] 4.440892e-16
+
+### Non-linear effects and interactions
+
+Any **rms** term is allowed, e.g. a restricted cubic spline
+`rcs(age, 4)` or an interaction `sex * ph.ecog`. The contribution
+$`c_t(x)`$ is then a non-linear function, and equal differences in a
+variable count differently in different ranges: below, the eight years
+between 50 and 58 and between 72 and 80 give different distances. All
+columns of an interaction belong to one term, so the term is compared as
+a whole.
+
+``` r
+
+cox_rcs <- CoxModel$new(Surv(time, status) ~ rcs(age, 3) + sex + ph.ecog, lung2)
+cox_rcs$fit()
+ages <- data.frame(age = c(50, 58, 72, 80), sex = factor("male", levels(lung2$sex)), ph.ecog = 1)
+age_distance <- function(a, b) sum(cox_rcs$explain_match(ages[a, ], ages[b, ])$distance)
+c("50 vs 58" = age_distance(1, 2), "72 vs 80" = age_distance(3, 4))
+```
+
+    ##   50 vs 58   72 vs 80 
+    ## 0.01245924 0.23738336
+
+### Advantages and disadvantages
+
+**Advantages**
+
+- Each feature is weighted by its estimated effect on the outcome;
+  irrelevant features get (almost) no weight.
+- Independent of the units of the features; categorical features need no
+  ad-hoc coding.
+- The distance has a meaning on the outcome scale (difference of
+  expected outcome, log odds ratio, log hazard ratio).
+- Fully explainable: `explain_match()` decomposes each distance into
+  model terms.
+- The model can be checked with the usual tools (`check_ph()`,
+  residuals,
+  [`rms::validate()`](https://rdrr.io/pkg/rms/man/validate.html)), and
+  variables can be selected before the distance is used.
+- Fast and deterministic: computing all distances costs $`O(n\,m\,T)`$
+  for $`n`$ cases, $`m`$ queries and $`T`$ terms.
+
+**Disadvantages**
+
+- The distance is only as good as the model. A misspecified model (wrong
+  functional form, missing interactions, violated proportional hazards)
+  gives a misleading distance.
+- Non-linear effects and interactions must be specified by the user.
+- A feature that acts only through an interaction that is not in the
+  model gets no weight.
+- With few cases or correlated features, the coefficients, and hence the
+  weights, are unstable.
+- Two levels of a factor with similar coefficients are treated as nearly
+  identical, even if they are different in substance.
+- `LogisticModel` supports binary outcomes only.
+
+## Random forests: distances from the trees
+
+`RFModel` fits a random forest with **ranger** (classification,
+regression or survival). A forest of $`T`$ trees partitions the feature
+space $`T`$ times; each tree sends a case down to one terminal node
+(*leaf*). Let $`\ell_t(x)`$ be the leaf of case $`x`$ in tree $`t`$. The
+partitions are chosen to separate the outcomes, so cases in the same
+leaf have similar outcomes, and the forest finds non-linear effects and
+interactions by itself.
+
+### Proximity distance
+
+The proximity (Breiman, 2002) is the share of trees in which two cases
+share a leaf, and the distance is derived from it:
+``` math
+p(x_i, x_j) = \frac{1}{T}\sum_{t=1}^T 1\left[\ell_t(x_i) = \ell_t(x_j)\right],
+\qquad d(x_i, x_j) = \sqrt{1 - p(x_i, x_j)}.
+```
+A tiny forest of three trees shows the computation:
+
+``` r
+
+rf3 <- ranger::ranger(Species ~ ., iris, num.trees = 3, write.forest = TRUE, seed = 1)
+cases <- iris[c(51, 53, 78, 101), -5]
+leaves <- terminal_nodes(cases, rf3)
+dimnames(leaves) <- list(rownames(cases), paste("tree", 1:3))
+leaves
+```
+
+    ##     tree 1 tree 2 tree 3
+    ## 51      19      3     15
+    ## 53      26      9     15
+    ## 78      26      9     14
+    ## 101      8     10     10
+
+``` r
+
+# proximity of case 51 and case 53: share of trees with the same leaf
+mean(leaves["51", ] == leaves["53", ])
+```
+
+    ## [1] 0.3333333
+
+``` r
+
+round(as.matrix(proximity_distance(cases, rfObject = rf3)), 3)
+```
+
+    ##       1     2     3 4
+    ## 1 0.000 0.816 1.000 1
+    ## 2 0.816 0.000 0.577 1
+    ## 3 1.000 0.577 0.000 1
+    ## 4 1.000 1.000 1.000 0
+
+### Out-of-bag and RF-GAP proximities
+
+A tree is grown on a bootstrap sample until its leaves are small, so
+cases that were used to grow the tree (*in-bag*) tend to share leaves
+with each other. For training cases, the original proximity is therefore
+too optimistic. Two variants avoid this
+(`set_distance_method("Proximity", proximity_type = ...)`):
+
+- **OOB**: only trees in which both cases are out-of-bag are counted.
 - **RF-GAP** (Rhodes, Cutler & Moon, 2023): for a query $`q`$ and a
   training case $`j`$,
   ``` math
-  p(q, j) = \frac{1}{|S_q|}\sum\limits_{t \in S_q} \frac{c_j(t)\, 1_{[j \in v_q(t)]}}{|M_q(t)|},
+  p(q, j) = \frac{1}{|S_q|}\sum_{t \in S_q} \frac{c_j(t)\, 1\left[\ell_t(x_j) = \ell_t(x_q)\right]}{|M_q(t)|},
   ```
   where $`S_q`$ are the trees in which $`q`$ is out-of-bag (all trees
-  for new data), $`v_q(t)`$ is the terminal node of $`q`$ in tree $`t`$,
-  $`c_j(t)`$ is the in-bag count of $`j`$ in tree $`t`$, and
-  $`|M_q(t)|`$ is the total in-bag count in $`v_q(t)`$.
+  for new data), $`c_j(t)`$ is the in-bag count of $`j`$ in tree $`t`$,
+  and $`|M_q(t)|`$ is the total in-bag count of the leaf of $`q`$.
 
 The RF-GAP proximities of a query sum to one over the training cases,
-and the proximity-weighted average of the training outcomes equals the
-forest’s (out-of-bag) prediction. Retrieval with RF-GAP therefore uses
-the same notion of similarity as the forest’s predictions. Because the
+and the proximity-weighted mean of the training outcomes *is* the
+forest’s prediction. Retrieval with RF-GAP therefore uses exactly the
+notion of similarity of the forest’s predictions. Because the
 proximities are small, RF-GAP distances lie close to 1; only their order
-matters. Both variants need the in-bag counts, which `RFModel` keeps by
-default (`keep.inbag = TRUE`).
+matters.
 
-### Depth Measure: A modified proximity measure
+### Depth distance
 
-In contrast to the proximity measure, the depth measure takes into
-account the number of edges between the terminal nodes of two
-observations, not only whether they coincide. It is summed over all
-trees:
-
+The proximity is all-or-nothing: two cases in neighbouring leaves count
+as far apart as two cases at opposite ends of the tree. The depth
+distance (Englund & Verikas, 2012) counts the edges $`g_t(x_i, x_j)`$
+between the leaves of the two cases, i.e. the sum of their distances to
+their deepest common ancestor, averaged over the trees:
 ``` math
-d(x_i, x_j) = \sum\limits_{t=1}^T g_{ij}(t),
+d(x_i, x_j) = \frac{1}{T}\sum_{t=1}^T g_t(x_i, x_j).
+```
+In this tree, $`g(A, B) = 2`$, $`g(A, C) = 3`$ and $`g(A, D) = 5`$,
+while the proximity only knows that $`A`$ shares a leaf with none of
+them:
+
+                  root
+                /      \
+              n1        n2
+             /  \      /  \
+           n3    C    D    E
+          /  \
+         A    B
+
+The finer resolution matters for retrieval. For a query, many training
+cases share no leaf with it at all: they are tied at proximity distance
+1, and their order is arbitrary. The depth distance still ranks them:
+
+``` r
+
+set.seed(1)
+rf <- RFModel$new(Species ~ ., iris[-51, ], num.trees = 100)
+rf$fit()
+d_depth <- rf$calc_distance_matrix(iris[51, ])[, 1]
+rf$set_distance_method("Proximity")
+d_prox <- rf$calc_distance_matrix(iris[51, ])[, 1]
+c(cases_at_maximal_proximity_distance = sum(d_prox == 1),
+  distinct_proximity_distances = length(unique(d_prox)),
+  distinct_depth_distances = length(unique(d_depth)))
 ```
 
-where $`g_{ij}(t)`$ is the number of edges on the path between the
-terminal nodes of observation $`i`$ and $`j`$ in tree $`t`$, i.e. the
-sum of their distances to the deepest common ancestor. Observations that
-end up in neighbouring leaves are close, observations in distant parts
-of the tree are far apart. This is the default distance of `RFModel`.
+    ## cases_at_maximal_proximity_distance        distinct_proximity_distances 
+    ##                                  73                                  36 
+    ##            distinct_depth_distances 
+    ##                                  71
 
-The edge counts are computed on demand from each tree’s structure, so
-the cost grows with the number of pairs and the tree depth, not with the
-number of nodes.
+The depth distance is the default of `RFModel`.
 
-For more details and a thorough explanation of the depth measure, refer
-to the publication by Englund and Verikas: “[A novel approach to
-estimate proximity in a random forest: An exploratory
-study.](https://doi.org/10.1016/j.eswa.2012.05.094)”
+### Explaining a forest match
+
+There are no coefficients, but the paths of two cases through a tree
+diverge at one split. `explain_match()` counts the split variables at
+which the paths diverge over the trees; attribute `same_leaf` is the
+proximity.
+
+``` r
+
+rf$set_distance_method("Depth")
+knitr::kable(rf$explain_match(iris[51, ], iris[78, ]), digits = 3)
+```
+
+| variable     | n_trees | share |
+|:-------------|--------:|------:|
+| Petal.Length |      52 | 0.642 |
+| Petal.Width  |      25 | 0.309 |
+| Sepal.Length |       2 | 0.025 |
+| Sepal.Width  |       2 | 0.025 |
+
+### Advantages and disadvantages
+
+**Advantages**
+
+- No model specification: non-linear effects and interactions are found
+  automatically.
+- Mixed feature types, any monotone transformation of a feature gives
+  the same forest.
+- RF-GAP retrieves exactly the cases the forest’s prediction is based
+  on.
+
+**Disadvantages**
+
+- The distance has no unit and no interpretation on the outcome scale;
+  explanations are counts of split variables, not effects.
+- Trees split more often on features with many possible split points
+  (Strobl et al., 2007), so continuous features, including irrelevant
+  ones, get much weight in the distance, especially on small data sets
+  (see [Comparing the
+  Approaches](https://sipemu.github.io/case-based-reasoning/articles/comparing_approaches.md)).
+- It depends on the random seed and on tuning parameters (`num.trees`,
+  `mtry`, `min.node.size`).
+- The original proximity is biased for training cases (OOB and RF-GAP
+  fix this) and coarse (many ties); RF-GAP distances are all close to 1.
+- More expensive: $`O(n\,m\,T)`$ for $`T`$ trees (typically hundreds),
+  and the in-bag counts take $`O(n\,T)`$ memory.
+- OOB and RF-GAP proximities are tied to the cases the forest was grown
+  on: after `add_cases()` or `remove_cases()`, the forest must be
+  refitted.
+
+## The Gower distance: a model-free baseline
+
+The Gower (1971) distance of two cases is a weighted mean of
+per-variable distances in $`[0, 1]`$:
+``` math
+d(x_i, x_j) = \frac{\sum_k w_k\, \delta_{ijk}\, s_{ijk}}{\sum_k w_k\, \delta_{ijk}},
+\qquad
+s_{ijk} = \begin{cases}
+\lvert x_{ik} - x_{jk} \rvert / R_k & \text{numeric, } R_k \text{ the range of feature } k\\
+\lvert r_{ik} - r_{jk} \rvert / (L_k - 1) & \text{ordered factor with ranks } r \text{ and } L_k \text{ levels}\\
+1[x_{ik} \ne x_{jk}] & \text{unordered factor,}
+\end{cases}
+```
+where $`\delta_{ijk} = 0`$ if feature $`k`$ is missing in one of the
+cases and 1 otherwise, and $`w_k`$ are user-given weights (default 1).
+By hand, for the two patients from above:
+
+``` r
+
+gower <- GowerModel$new(Surv(time, status) ~ age + sex + ph.ecog, lung2)
+gower$fit()
+R_age <- diff(range(lung2$age)); R_ecog <- diff(range(lung2$ph.ecog))
+by_hand <- c(age     = abs(pair$age[1] - pair$age[2]) / R_age,
+             sex     = as.numeric(pair$sex[1] != pair$sex[2]),
+             ph.ecog = abs(pair$ph.ecog[1] - pair$ph.ecog[2]) / R_ecog)
+mean(by_hand)
+```
+
+    ## [1] 0.7571059
+
+``` r
+
+gower_distance(pair[, c("age", "sex", "ph.ecog")], ranges = gower$model_fit$ranges)
+```
+
+    ##           1
+    ## 2 0.7571059
+
+``` r
+
+knitr::kable(gower$explain_match(pair[1, ], pair[2, ]), digits = 3)
+```
+
+| variable | query_value | case_value | weight | distance | share |
+|:---------|:------------|:-----------|-------:|---------:|------:|
+| sex      | female      | male       |      1 |    0.333 | 0.440 |
+| ph.ecog  | 2           | 0          |      1 |    0.222 | 0.294 |
+| age      | 56          | 82         |      1 |    0.202 | 0.266 |
+
+The two patients that the Cox model found to be equally at risk are far
+apart for both distances; but the Gower distance weights the sex
+difference (1) as much as a difference over the full age range, without
+knowing that sex has a smaller effect on survival than ECOG.
+
+**Advantages**
+
+- No model and no outcome needed: works for exploratory retrieval and as
+  a sanity check of the model-derived distances.
+- Transparent, deterministic, handles missing values pair by pair.
+- Weights can encode expert knowledge.
+
+**Disadvantages**
+
+- All features count equally unless weighted by hand. Irrelevant or
+  noise features dilute the distance (see the benchmark).
+- Numeric differences are scaled by the range, so a single outlier
+  compresses all other differences.
+- No interpretation on the outcome scale.
+
+## Reuse: predictions from the retrieved cases
+
+Let $`N_k(q)`$ be the $`k`$ nearest cases of query $`q`$ and $`d_{qj}`$
+their distances. With `weighted = TRUE`, case $`j`$ gets the tricube
+weight
+``` math
+w_{qj} = \left(1 - \left(d_{qj}/h_q\right)^3\right)^3, \qquad h_q = 1.0001 \cdot \max_{j \in N_k(q)} d_{qj},
+```
+so that close cases count more and the farthest of the $`k`$ cases still
+counts a little; otherwise $`w_{qj} = 1`$. `predict_outcome()` predicts
+
+- classes:
+  $`\hat p_l(q) = \sum_{j \in N_k(q)} w_{qj}\, 1[y_j = l] \big/ \sum_{j \in N_k(q)} w_{qj}`$,
+  and the class with the largest $`\hat p_l(q)`$;
+- numeric outcomes: the weighted mean
+  $`\hat y(q) = \sum_j w_{qj}\, y_j \big/ \sum_j w_{qj}`$.
+
+For survival endpoints, `predict_survival()` computes the (weighted)
+Kaplan–Meier estimate of the $`k`$ nearest cases (Lowsky et al., 2013):
+``` math
+\hat S(t \mid q) = \prod_{s \le t} \left(1 - \frac{\sum_{j \in N_k(q)} w_{qj}\, 1[t_j = s,\ \delta_j = 1]}{\sum_{j \in N_k(q)} w_{qj}\, 1[t_j \ge s]}\right).
+```
+
+The number of cases $`k`$ trades bias against variance: few cases give
+noisy predictions, many cases include cases that are not similar. It
+should be chosen on held-out data with `evaluate()` /
+`evaluate_survival()`.
+
+`get_counterfactual_cases()` reuses the case base in a different way: it
+returns the nearest cases with a *different* outcome (Keane & Smyth,
+2020). Together with `explain_match()`, they show what distinguishes the
+query from cases that turned out differently.
+
+## Revise: evaluating the predictions
+
+`evaluate()` and `evaluate_survival()` score the predictions for $`m`$
+test cases:
+
+| Endpoint | Measure | Definition | Better |
+|----|----|----|----|
+| class | accuracy | $`\frac{1}{m}\sum_q 1[\hat y(q) = y_q]`$ | higher |
+| class | Brier score | $`\frac{1}{m}\sum_q \sum_l (\hat p_l(q) - 1[y_q = l])^2`$ | lower |
+| class | log loss | $`-\frac{1}{m}\sum_q \log \hat p_{y_q}(q)`$ | lower |
+| numeric | RMSE, MAE | $`\sqrt{\frac{1}{m}\sum_q (\hat y(q) - y_q)^2}`$, $`\frac{1}{m}\sum_q \lvert\hat y(q) - y_q\rvert`$ | lower |
+| survival | Uno’s C | concordance of the risk $`1 - \hat S(\tau \mid q)`$ with the observed times, weighted for censoring (Uno et al., 2011) | higher |
+| survival | IBS | $`\frac{1}{t_{\max} - t_{\min}}\int \mathrm{BS}(t)\,dt`$ | lower |
+
+with the censoring-weighted Brier score (Graf et al., 1999)
+``` math
+\mathrm{BS}(t) = \frac{1}{m}\sum_q \left[\frac{\hat S(t \mid q)^2\, 1[t_q \le t,\ \delta_q = 1]}{\hat G(t_q-)} + \frac{(1 - \hat S(t \mid q))^2\, 1[t_q > t]}{\hat G(t)}\right],
+```
+where $`\hat G`$ is the Kaplan–Meier estimate of the censoring
+distribution of the training data. A Brier score of 0.25 is what an
+uninformative prediction of 50% achieves.
+
+## Retain: maintaining the case base
+
+`add_cases()` and `remove_cases()` change the case base. Regression
+models and the Gower distance do not need to be refitted: the distance
+of new cases is computed with the fitted coefficients (ranges); refit
+with `refit = TRUE` when the case base has changed a lot.
+
+`assess_cases()` judges each case $`i`$ by its $`k`$ nearest *other*
+cases $`N_k(i)`$ (leave one out). Case $`j`$**solves** case $`i`$ if
+$`j \in N_k(i)`$ and both have the same outcome (same class; for numeric
+outcomes $`|y_i - y_j| \le`$`tolerance`; for survival outcomes the same
+event status at `horizon`). With the *reachability set*
+$`R(i) = \{j : j \text{ solves } i\}`$ and the *coverage set*
+$`C(i) = \{i' : i \text{ solves } i'\}`$:
+
+- **noisy** (Wilson, 1972): the majority of $`N_k(i)`$ (the mean, for
+  numeric outcomes) disagrees with $`y_i`$. Noisy cases are mislabelled
+  or exceptional; removing them usually improves predictions.
+- **pivotal** (Smyth & Keane, 1995): $`R(i) = \emptyset`$. No other case
+  solves $`i`$; removing it loses competence.
+- **auxiliary**: some $`j \in R(i)`$ covers everything $`i`$ covers,
+  $`C(i) \cup \{i\} \subseteq C(j) \cup \{j\}`$. The case is redundant
+  and can be removed to keep the case base small.
+
+``` r
+
+assessment <- cox$assess_cases(k = 10, horizon = 365)
+table(category = assessment$category, noisy = assessment$noisy, useNA = "ifany")
+```
+
+    ##            noisy
+    ## category    FALSE TRUE <NA>
+    ##   pivotal       0    1    0
+    ##   auxiliary    95   57    0
+    ##   other         7   12    0
+    ##   <NA>          0    0   41
+
+Cases censored before the horizon have no known outcome and are not
+assessed (`NA`). Most cases are auxiliary: the case base is redundant,
+as is typical. Noisy cases are the patients whose survival differs from
+that of similar patients.
+
+## Choosing an approach
+
+|  | Regression (Cox, linear, logistic) | Random forest (depth, proximity, RF-GAP) | Gower |
+|----|----|----|----|
+| Weights the features by | estimated effect on the outcome | number of splits (favours continuous features) | scale (equal or user weights) |
+| Irrelevant features | small weight, shrinking with more cases | substantial weight on small data | full weight |
+| Needs an outcome | yes | yes | no |
+| Non-linear effects, interactions | if specified (splines, `*`) | automatic | no |
+| Distance unit | outcome scale (log HR, log OR, $`y`$) | none | share of features |
+| Explanation | contribution per term | split variables where paths diverge | per-feature difference |
+| Assumptions | model correctly specified (e.g. PH) | few | none |
+| Deterministic | yes | no (seed) | yes |
+| Cost per pair | number of terms | number of trees | number of features |
+| Retain without refitting | yes | depth and original proximity: yes; OOB, RF-GAP: no | yes |
+
+Some rules of thumb:
+
+- **Start with the regression model** when the outcome is well described
+  by a regression model, or when the distance must be explained and
+  defended (e.g. to clinicians). Check the model first; the distance
+  inherits its assumptions.
+- **Use a random forest** when the relationships are complex or unknown,
+  when there are many features, or when the regression model does not
+  fit well. Prefer RF-GAP when the retrieved cases should explain the
+  forest’s prediction, the depth distance for a finer ranking of the
+  neighbours.
+- **Use the Gower distance** as a baseline, when there is no outcome, or
+  when the features were chosen by experts and are all relevant.
+- **Compare them on held-out data** with `evaluate()` /
+  `evaluate_survival()`. In the benchmark article, the predictive
+  performance of the distances is similar; with irrelevant features, the
+  Gower distance loses the most accuracy.
 
 ## References
 
+- Aamodt, A. and Plaza, E. (1994). [Case-based reasoning: Foundational
+  issues, methodological variations, and system
+  approaches](https://doi.org/10.3233/AIC-1994-7104). *AI
+  Communications*, 7(1), 39–59.
 - Breiman, L. (2002). Manual on setting up, using, and understanding
   random forests V3.1.
 - Dippon, J. et al. (2002). [A statistical approach to case based
   reasoning, with application to breast cancer
-  data](https://doi.org/10.1016/S0167-9473(02)00058-0).
+  data](https://doi.org/10.1016/S0167-9473(02)00058-0). *Computational
+  Statistics & Data Analysis*, 40(3), 579–602.
 - Englund, C. and Verikas, A. (2012). [A novel approach to estimate
   proximity in a random forest: An exploratory
-  study](https://doi.org/10.1016/j.eswa.2012.05.094).
+  study](https://doi.org/10.1016/j.eswa.2012.05.094). *Expert Systems
+  with Applications*, 39(17), 13046–13050.
+- Gower, J. C. (1971). [A general coefficient of similarity and some of
+  its properties](https://doi.org/10.2307/2528823). *Biometrics*, 27(4),
+  857–871.
+- Graf, E. et al. (1999). Assessment and comparison of prognostic
+  classification schemes for survival data. *Statistics in Medicine*,
+  18(17–18), 2529–2545.
+- Keane, M. T. and Smyth, B. (2020). [Good counterfactuals and where to
+  find them](https://doi.org/10.1007/978-3-030-58342-2_11). ICCBR 2020,
+  LNCS 12311, 163–178.
+- Lowsky, D. J. et al. (2013). [A K-nearest neighbors survival
+  probability prediction method](https://doi.org/10.1002/sim.5673).
+  *Statistics in Medicine*, 32(12), 2062–2069.
 - Rhodes, J. S., Cutler, A. and Moon, K. R. (2023). [Geometry- and
-  Accuracy-Preserving Random Forest
-  Proximities](https://doi.org/10.1109/TPAMI.2023.3263774).
+  accuracy-preserving random forest
+  proximities](https://doi.org/10.1109/TPAMI.2023.3263774). *IEEE
+  TPAMI*, 45(9), 10947–10959.
+- Strobl, C., Boulesteix, A.-L., Zeileis, A. and Hothorn, T. (2007).
+  [Bias in random forest variable importance
+  measures](https://doi.org/10.1186/1471-2105-8-25). *BMC
+  Bioinformatics*, 8, 25.
+- Smyth, B. and Keane, M. T. (1995). Remembering to forget: A
+  competence-preserving case deletion policy for case-based reasoning
+  systems. *Proceedings of IJCAI-95*, 377–382.
+- Uno, H. et al. (2011). [On the C-statistics for evaluating overall
+  adequacy of risk prediction procedures with censored survival
+  data](https://doi.org/10.1002/sim.4154). *Statistics in Medicine*,
+  30(10), 1105–1117.
+- Wilson, D. L. (1972). [Asymptotic properties of nearest neighbor rules
+  using edited data](https://doi.org/10.1109/TSMC.1972.4309137). *IEEE
+  Transactions on Systems, Man, and Cybernetics*, 2(3), 408–421.

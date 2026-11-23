@@ -4,12 +4,12 @@
 <meta charset="UTF-8">
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-<title>Motivation • CaseBasedReasoning</title>
+<title>Methods: Case-Based Reasoning with Statistical Models • CaseBasedReasoning</title>
 <script src="../deps/jquery-3.6.0/jquery-3.6.0.min.js"></script><meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 <link href="../deps/bootstrap-5.3.8/bootstrap.min.css" rel="stylesheet">
 <script src="../deps/bootstrap-5.3.8/bootstrap.bundle.min.js"></script><link href="../deps/font-awesome-6.5.2/css/all.min.css" rel="stylesheet">
 <link href="../deps/font-awesome-6.5.2/css/v4-shims.min.css" rel="stylesheet">
-<script src="../deps/headroom-0.11.0/headroom.min.js"></script><script src="../deps/headroom-0.11.0/jQuery.headroom.min.js"></script><script src="../deps/bootstrap-toc-1.0.1/bootstrap-toc.min.js"></script><script src="../deps/clipboard.js-2.0.11/clipboard.min.js"></script><script src="../deps/search-1.0.0/autocomplete.jquery.min.js"></script><script src="../deps/search-1.0.0/fuse.min.js"></script><script src="../deps/search-1.0.0/mark.min.js"></script><!-- pkgdown --><script src="../pkgdown.js"></script><meta property="og:title" content="Motivation">
+<script src="../deps/headroom-0.11.0/headroom.min.js"></script><script src="../deps/headroom-0.11.0/jQuery.headroom.min.js"></script><script src="../deps/bootstrap-toc-1.0.1/bootstrap-toc.min.js"></script><script src="../deps/clipboard.js-2.0.11/clipboard.min.js"></script><script src="../deps/search-1.0.0/autocomplete.jquery.min.js"></script><script src="../deps/search-1.0.0/fuse.min.js"></script><script src="../deps/search-1.0.0/mark.min.js"></script><!-- pkgdown --><script src="../pkgdown.js"></script><meta property="og:title" content="Methods: Case-Based Reasoning with Statistical Models">
 </head>
 <body>
     <a href="#main" class="visually-hidden-focusable">Skip to contents</a>
@@ -33,7 +33,8 @@
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-articles" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Articles</button>
   <ul class="dropdown-menu" aria-labelledby="dropdown-articles">
 <li><a class="dropdown-item" href="../articles/benchmark.html">Benchmark: Model-Derived Distances vs. Learned Metrics</a></li>
-    <li><a class="dropdown-item" href="../articles/distance_measures.html">Motivation</a></li>
+    <li><a class="dropdown-item" href="../articles/comparing_approaches.html">Comparing the Approaches</a></li>
+    <li><a class="dropdown-item" href="../articles/distance_measures.html">Methods: Case-Based Reasoning with Statistical Models</a></li>
     <li><a class="dropdown-item" href="../articles/get_started.html">Get Started</a></li>
   </ul>
 </li>
@@ -57,11 +58,11 @@
 <div class="row">
   <main id="main" class="col-md-9"><div class="page-header">
 
-      <h1>Motivation</h1>
+      <h1>Methods: Case-Based Reasoning with Statistical Models</h1>
                         <h4 data-toc-skip class="author">Dr. Simon
 Müller</h4>
             
-            <h4 data-toc-skip class="date">2026-11-22</h4>
+            <h4 data-toc-skip class="date">2026-11-23</h4>
       
       <small class="dont-index">Source: <a href="https://github.com/sipemu/case-based-reasoning/blob/main/vignettes/distance_measures.rmd" class="external-link"><code>vignettes/distance_measures.rmd</code></a></small>
       <div class="d-none name"><code>distance_measures.rmd</code></div>
@@ -69,204 +70,480 @@ Müller</h4>
 
     
     
+<p>This vignette explains what the package computes and why. Each method
+is described mathematically, illustrated with a small example that
+recomputes the package’s result by hand, and assessed with its
+advantages and disadvantages. The <a href="get_started.html">Get
+Started</a> vignette shows the workflow, <a href="comparing_approaches.html">Comparing the Approaches</a> applies
+all distances to the same data, and the <a href="https://sipemu.github.io/case-based-reasoning/articles/benchmark.html">benchmark
+article</a> compares their predictive performance.</p>
 <div class="section level2">
-<h2 id="objective">Objective<a class="anchor" aria-label="anchor" href="#objective"></a>
+<h2 id="overview">What the package does<a class="anchor" aria-label="anchor" href="#overview"></a>
 </h2>
-<div class="section level4">
-<h4 id="define-a-distance-measure-for-numerical-and-categorical-features">Define a Distance Measure for Numerical and Categorical
-Features<a class="anchor" aria-label="anchor" href="#define-a-distance-measure-for-numerical-and-categorical-features"></a>
-</h4>
-<p>Let
-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>x</mi><mi>i</mi></msub><mo>=</mo><msup><mrow><mo stretchy="true" form="prefix">(</mo><msubsup><mi>x</mi><mi>i</mi><mn>1</mn></msubsup><mo>,</mo><mi>⋯</mi><mo>,</mo><msubsup><mi>x</mi><mi>i</mi><mi>p</mi></msubsup><mo stretchy="true" form="postfix">)</mo></mrow><mi>T</mi></msup></mrow><annotation encoding="application/x-tex">x_i = \left(x_i^1,\cdots,x_i^p\right)^T</annotation></semantics></math>
-and
-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>x</mi><mi>j</mi></msub><mo>=</mo><msup><mrow><mo stretchy="true" form="prefix">(</mo><msubsup><mi>x</mi><mi>j</mi><mn>1</mn></msubsup><mo>,</mo><mi>⋯</mi><mo>,</mo><msubsup><mi>x</mi><mi>j</mi><mi>p</mi></msubsup><mo stretchy="true" form="postfix">)</mo></mrow><mi>T</mi></msup></mrow><annotation encoding="application/x-tex">x_j = \left(x_j^1,\cdots,x_j^p\right)^T</annotation></semantics></math>
-be the feature vectors of two distinct patients
-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>i</mi><annotation encoding="application/x-tex">i</annotation></semantics></math>
-and
-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>j</mi><annotation encoding="application/x-tex">j</annotation></semantics></math>.
-A first rough idea may be to calculate the
-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>L</mi><mn>1</mn></msub><mo>−</mo></mrow><annotation encoding="application/x-tex">L_1-</annotation></semantics></math>norm
-of this two feature vectors:
-<math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo stretchy="false" form="postfix">∥</mo><msub><mi>x</mi><mi>i</mi></msub><mo>−</mo><msub><mi>x</mi><mi>j</mi></msub><msub><mo stretchy="false" form="postfix">∥</mo><msub><mi>L</mi><mn>1</mn></msub></msub><mo>=</mo><mfrac><mn>1</mn><mi>p</mi></mfrac><munderover><mo>∑</mo><mrow><mi>k</mi><mo>=</mo><mn>1</mn></mrow><mi>p</mi></munderover><mo stretchy="false" form="prefix">|</mo><msubsup><mi>x</mi><mi>i</mi><mi>k</mi></msubsup><mo>−</mo><msubsup><mi>x</mi><mi>j</mi><mi>k</mi></msubsup><mo stretchy="false" form="prefix">|</mo></mrow><annotation encoding="application/x-tex">
-\|x_i - x_j\|_{L_1}=\frac{1}{p}\sum\limits_{k=1}^p|x_i^k - x_j^k|
-</annotation></semantics></math></p>
-<p>However, this naive approach arises from some problems:</p>
-<ol style="list-style-type: decimal">
-<li><p>This measure is well-defined for numerical features but not for
-categorical features, such as gender (male/female). We need a method to
-define the distance for categorical variables.</p></li>
-<li><p><math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo stretchy="false" form="prefix">|</mo><msubsup><mi>x</mi><mi>i</mi><mi>k</mi></msubsup><mo>−</mo><msubsup><mi>x</mi><mi>j</mi><mi>k</mi></msubsup><mo stretchy="false" form="prefix">|</mo></mrow><annotation encoding="application/x-tex">|x_i^k - x_j^k|</annotation></semantics></math>
-is not scale-invariant, meaning that if one changes the unit of
-measurement (e.g., from meters to centimeters), the contribution of this
-feature would increase by a factor of 100. Features with large values
-will dominate the distance.</p></li>
-<li><p>All features are treated equally, which may not reflect their
-actual importance. For example, in the case of lung cancer, the
-patient’s smoking status (no/yes) seems more relevant than the city they
-live in.</p></li>
-</ol>
-<p>This package addresses these issues by deriving a weighted distance
-from regression model coefficients, which naturally handles mixed
-feature types and reflects each feature’s importance.</p>
+<p>A <em>case base</em> is a set of solved cases
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>𝒞</mi><mo>=</mo><mo stretchy="false" form="prefix">{</mo><mo stretchy="false" form="prefix">(</mo><msub><mi>x</mi><mi>j</mi></msub><mo>,</mo><msub><mi>y</mi><mi>j</mi></msub><mo stretchy="false" form="postfix">)</mo><msubsup><mo stretchy="false" form="postfix">}</mo><mrow><mi>j</mi><mo>=</mo><mn>1</mn></mrow><mi>n</mi></msubsup></mrow><annotation encoding="application/x-tex">\mathcal{C} = \{(x_j, y_j)\}_{j=1}^n</annotation></semantics></math>:
+covariates
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>x</mi><mi>j</mi></msub><annotation encoding="application/x-tex">x_j</annotation></semantics></math>
+(e.g. age, sex, tumour stage) and an outcome
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>y</mi><mi>j</mi></msub><annotation encoding="application/x-tex">y_j</annotation></semantics></math>
+(a class, a number, or a censored survival time
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo stretchy="false" form="prefix">(</mo><msub><mi>t</mi><mi>j</mi></msub><mo>,</mo><msub><mi>δ</mi><mi>j</mi></msub><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">(t_j, \delta_j)</annotation></semantics></math>).
+Case-based reasoning (CBR) answers a new problem
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>x</mi><mi>q</mi></msub><annotation encoding="application/x-tex">x_q</annotation></semantics></math>
+by the <em>similar</em> cases of the case base, in four steps (Aamodt
+&amp; Plaza, 1994):</p>
+<table class="table">
+<colgroup>
+<col width="33%">
+<col width="33%">
+<col width="33%">
+</colgroup>
+<thead><tr class="header">
+<th>Step</th>
+<th>Mathematical task</th>
+<th>Functions</th>
+</tr></thead>
+<tbody>
+<tr class="odd">
+<td><strong>Retrieve</strong></td>
+<td>find
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>N</mi><mi>k</mi></msub><mo stretchy="false" form="prefix">(</mo><msub><mi>x</mi><mi>q</mi></msub><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">N_k(x_q)</annotation></semantics></math>,
+the
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>k</mi><annotation encoding="application/x-tex">k</annotation></semantics></math>
+cases with the smallest
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>d</mi><mo stretchy="false" form="prefix">(</mo><msub><mi>x</mi><mi>q</mi></msub><mo>,</mo><msub><mi>x</mi><mi>j</mi></msub><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">d(x_q, x_j)</annotation></semantics></math>
+</td>
+<td>
+<code>get_similar_cases()</code>,
+<code>calc_distance_matrix()</code>, <code>explain_match()</code>
+</td>
+</tr>
+<tr class="even">
+<td><strong>Reuse</strong></td>
+<td>predict
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>y</mi><mi>q</mi></msub><annotation encoding="application/x-tex">y_q</annotation></semantics></math>
+from
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo stretchy="false" form="prefix">{</mo><msub><mi>y</mi><mi>j</mi></msub><mo>:</mo><mi>j</mi><mo>∈</mo><msub><mi>N</mi><mi>k</mi></msub><mo stretchy="false" form="prefix">(</mo><msub><mi>x</mi><mi>q</mi></msub><mo stretchy="false" form="postfix">)</mo><mo stretchy="false" form="postfix">}</mo></mrow><annotation encoding="application/x-tex">\{y_j : j \in N_k(x_q)\}</annotation></semantics></math>
+</td>
+<td>
+<code>predict_outcome()</code>, <code>predict_survival()</code>,
+<code>get_counterfactual_cases()</code>
+</td>
+</tr>
+<tr class="odd">
+<td><strong>Revise</strong></td>
+<td>measure how good the predictions are on test cases</td>
+<td>
+<code>evaluate()</code>, <code>evaluate_survival()</code>,
+<code>check_ph()</code>
+</td>
+</tr>
+<tr class="even">
+<td><strong>Retain</strong></td>
+<td>add and remove cases, find noisy and redundant cases</td>
+<td>
+<code>add_cases()</code>, <code>remove_cases()</code>,
+<code>assess_cases()</code>
+</td>
+</tr>
+</tbody>
+</table>
+<p>Everything depends on the distance
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>d</mi><annotation encoding="application/x-tex">d</annotation></semantics></math>.
+The package’s idea (Dippon et al., 2002) is to <strong>learn
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>d</mi><annotation encoding="application/x-tex">d</annotation></semantics></math>
+from a statistical model of the outcome</strong>: a regression model or
+a random forest is fitted to the case base, and two cases are close if
+<em>the model</em> considers them alike. The Gower distance is included
+as a model-free baseline.</p>
 </div>
-<div class="section level3">
-<h3 id="weighted-distance-measure">Weighted Distance Measure<a class="anchor" aria-label="anchor" href="#weighted-distance-measure"></a>
-</h3>
-<p>To address the challenges discussed earlier, we need to perform two
-steps:</p>
+<div class="section level2">
+<h2 id="why">Why the distance must be learned<a class="anchor" aria-label="anchor" href="#why"></a>
+</h2>
+<p>Take the naive distance, the mean absolute difference of the
+features,
+<math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>d</mi><msub><mi>L</mi><mn>1</mn></msub></msub><mo stretchy="false" form="prefix">(</mo><msub><mi>x</mi><mi>i</mi></msub><mo>,</mo><msub><mi>x</mi><mi>j</mi></msub><mo stretchy="false" form="postfix">)</mo><mo>=</mo><mfrac><mn>1</mn><mi>p</mi></mfrac><munderover><mo>∑</mo><mrow><mi>k</mi><mo>=</mo><mn>1</mn></mrow><mi>p</mi></munderover><mo stretchy="false" form="prefix">|</mo><msub><mi>x</mi><mrow><mi>i</mi><mi>k</mi></mrow></msub><mo>−</mo><msub><mi>x</mi><mrow><mi>j</mi><mi>k</mi></mrow></msub><mo stretchy="false" form="prefix">|</mo><mi>.</mi></mrow><annotation encoding="application/x-tex">
+d_{L_1}(x_i, x_j) = \frac{1}{p}\sum_{k=1}^p |x_{ik} - x_{jk}|.
+</annotation></semantics></math> It has three problems:</p>
 <ol style="list-style-type: decimal">
-<li><p>Generalize the L1-distance to handle different variable types,
-including numerical and categorical features.</p></li>
 <li>
-<p>Assign appropriate weights to each feature to:</p>
-<p>a. eliminate the dependency on the scale of the variables,</p>
-<ol start="2" style="list-style-type: lower-alpha">
-<li>account for varying importance across features, and</li>
-<li>consider the impact size of each feature.</li>
+<strong>Categorical features.</strong>
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo stretchy="false" form="prefix">|</mo><msub><mi>x</mi><mrow><mi>i</mi><mi>k</mi></mrow></msub><mo>−</mo><msub><mi>x</mi><mrow><mi>j</mi><mi>k</mi></mrow></msub><mo stretchy="false" form="prefix">|</mo></mrow><annotation encoding="application/x-tex">|x_{ik} - x_{jk}|</annotation></semantics></math>
+is not defined for sex or tumour type.</li>
+<li>
+<strong>Scale.</strong> Measuring age in months instead of years
+multiplies its contribution by 12. Features with large numbers
+dominate.</li>
+<li>
+<strong>Relevance.</strong> Every feature counts equally. For lung
+cancer survival, the performance status matters more than the patient’s
+city, but
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>d</mi><msub><mi>L</mi><mn>1</mn></msub></msub><annotation encoding="application/x-tex">d_{L_1}</annotation></semantics></math>
+cannot know that.</li>
 </ol>
-</li>
-</ol>
-<p>By incorporating these modifications, we arrive at the following
-weighted distance measure:</p>
-<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>d</mi><mo stretchy="false" form="prefix">(</mo><msub><mi>x</mi><mi>i</mi></msub><mo>,</mo><msub><mi>x</mi><mi>j</mi></msub><mo stretchy="false" form="postfix">)</mo><mo>=</mo><munderover><mo>∑</mo><mrow><mi>k</mi><mo>=</mo><mn>1</mn></mrow><mi>p</mi></munderover><mo stretchy="false" form="prefix">|</mo><mi>α</mi><mo stretchy="false" form="prefix">(</mo><msubsup><mi>x</mi><mi>i</mi><mi>k</mi></msubsup><mo>,</mo><msubsup><mi>x</mi><mi>j</mi><mi>k</mi></msubsup><mo stretchy="false" form="postfix">)</mo><mi>d</mi><mo stretchy="false" form="prefix">(</mo><msubsup><mi>x</mi><mi>i</mi><mi>k</mi></msubsup><mo>,</mo><msubsup><mi>x</mi><mi>j</mi><mi>k</mi></msubsup><mo stretchy="false" form="postfix">)</mo><mo stretchy="false" form="prefix">|</mo></mrow><annotation encoding="application/x-tex">
-d(x_i, x_j) = \sum\limits_{k=1}^p |\alpha(x_i^k, x_j^k) d(x_i^k, x_j^k)|
-</annotation></semantics></math></p>
-<p>The weighted distance measure now includes weights
-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>α</mi><mo stretchy="false" form="prefix">(</mo><msubsup><mi>x</mi><mi>i</mi><mi>k</mi></msubsup><mo>,</mo><msubsup><mi>x</mi><mi>j</mi><mi>k</mi></msubsup><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">\alpha(x_i^k, x_j^k)</annotation></semantics></math>,
-which are determined based on the training data. In the next section, we
-will discuss how to obtain these weights and effectively compute the
-weighted distance measure for mixed data types and varying feature
-importance.</p>
-</div>
+<p>Standardising the features solves the second problem, but not the
+third. Only knowledge of the outcome can tell which features matter, and
+how much. A statistical model of the outcome contains exactly this
+knowledge.</p>
 </div>
 <div class="section level2">
-<h2 id="statistical-model">Statistical Model<a class="anchor" aria-label="anchor" href="#statistical-model"></a>
+<h2 id="regression">Regression models: distances in contribution space<a class="anchor" aria-label="anchor" href="#regression"></a>
 </h2>
-<p>Let
-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>α</mi><mo stretchy="false" form="prefix">(</mo><msubsup><mi>x</mi><mi>i</mi><mi>k</mi></msubsup><mo>,</mo><msubsup><mi>x</mi><mi>j</mi><mi>k</mi></msubsup><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">\alpha(x_i^k, x_j^k)</annotation></semantics></math>
-the weights and
-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>d</mi><mo stretchy="false" form="prefix">(</mo><msubsup><mi>x</mi><mi>i</mi><mi>k</mi></msubsup><mo>,</mo><msubsup><mi>x</mi><mi>j</mi><mi>k</mi></msubsup><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">d(x_i^k, x_j^k)</annotation></semantics></math>
-the distance for feature
-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>k</mi><annotation encoding="application/x-tex">k</annotation></semantics></math>
-and observation
-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>i</mi><annotation encoding="application/x-tex">i</annotation></semantics></math>
-and
-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>j</mi><annotation encoding="application/x-tex">j</annotation></semantics></math>.
-We will define them as:</p>
-<p>If feature
-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>k</mi><annotation encoding="application/x-tex">k</annotation></semantics></math>
-is numerical, then</p>
-<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>d</mi><mo stretchy="false" form="prefix">(</mo><msubsup><mi>x</mi><mi>i</mi><mi>k</mi></msubsup><mo>,</mo><msubsup><mi>x</mi><mi>j</mi><mi>k</mi></msubsup><mo stretchy="false" form="postfix">)</mo><mo>=</mo><msubsup><mi>x</mi><mi>i</mi><mi>k</mi></msubsup><mo>−</mo><msubsup><mi>x</mi><mi>j</mi><mi>k</mi></msubsup></mrow><annotation encoding="application/x-tex">d(x_i^k, x_j^k) = x_i^k - x_j^k</annotation></semantics></math>
-and</p>
-<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>α</mi><mo stretchy="false" form="prefix">(</mo><msubsup><mi>x</mi><mi>i</mi><mi>k</mi></msubsup><mo>,</mo><msubsup><mi>x</mi><mi>j</mi><mi>k</mi></msubsup><mo stretchy="false" form="postfix">)</mo><mo>=</mo><msub><mover><mi>β</mi><mo accent="true">̂</mo></mover><mi>k</mi></msub></mrow><annotation encoding="application/x-tex">\alpha(x_i^k, x_j^k) = \hat{\beta}_k</annotation></semantics></math></p>
-<p>If feature
-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>k</mi><annotation encoding="application/x-tex">k</annotation></semantics></math>
-is categorical, then</p>
-<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>d</mi><mo stretchy="false" form="prefix">(</mo><msubsup><mi>x</mi><mi>i</mi><mi>k</mi></msubsup><mo>,</mo><msubsup><mi>x</mi><mi>j</mi><mi>k</mi></msubsup><mo stretchy="false" form="postfix">)</mo><mo>=</mo><mn>1</mn><mrow><mspace width="0.333em"></mspace><mtext mathvariant="normal"> when </mtext><mspace width="0.333em"></mspace></mrow><msubsup><mi>x</mi><mi>i</mi><mi>k</mi></msubsup><mo>≠</mo><msubsup><mi>x</mi><mi>j</mi><mi>k</mi></msubsup><mrow><mspace width="0.333em"></mspace><mtext mathvariant="normal"> else </mtext><mspace width="0.333em"></mspace></mrow><mn>0</mn></mrow><annotation encoding="application/x-tex">d(x_i^k, x_j^k) = 1 \text{ when } x_i^k \neq x_j^k \text{ else } 0</annotation></semantics></math>
-and
-<math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>α</mi><mo stretchy="false" form="prefix">(</mo><msubsup><mi>x</mi><mi>i</mi><mi>k</mi></msubsup><mo>,</mo><msubsup><mi>x</mi><mi>j</mi><mi>k</mi></msubsup><mo stretchy="false" form="postfix">)</mo><mo>=</mo><msubsup><mover><mi>β</mi><mo accent="true">̂</mo></mover><mi>k</mi><mrow><mo stretchy="false" form="prefix">(</mo><msubsup><mi>x</mi><mi>i</mi><mi>k</mi></msubsup><mo stretchy="false" form="postfix">)</mo></mrow></msubsup><mo>−</mo><msubsup><mover><mi>β</mi><mo accent="true">̂</mo></mover><mi>k</mi><mrow><mo stretchy="false" form="prefix">(</mo><msubsup><mi>x</mi><mi>j</mi><mi>k</mi></msubsup><mo stretchy="false" form="postfix">)</mo></mrow></msubsup><mo>,</mo></mrow><annotation encoding="application/x-tex">\alpha(x_i^k, x_j^k) = \hat{\beta}_k^{(x_i^k)} - \hat{\beta}_k^{(x_j^k)},</annotation></semantics></math></p>
-<p>where
-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msubsup><mover><mi>β</mi><mo accent="true">̂</mo></mover><mi>k</mi><mrow><mo stretchy="false" form="prefix">(</mo><mi>l</mi><mo stretchy="false" form="postfix">)</mo></mrow></msubsup><annotation encoding="application/x-tex">\hat{\beta}_k^{(l)}</annotation></semantics></math>
-is the coefficient of level
-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>l</mi><annotation encoding="application/x-tex">l</annotation></semantics></math>
-(zero for the reference level) in a regression model (linear, logistic,
-or CPH model). The regression coefficients thus serve as weights that
-reflect each feature’s importance and scale.</p>
 <div class="section level3">
-<h3 id="contribution-space">Contribution Space<a class="anchor" aria-label="anchor" href="#contribution-space"></a>
+<h3 id="contribution-space">Definition<a class="anchor" aria-label="anchor" href="#contribution-space"></a>
 </h3>
-<p>Both cases are special cases of one definition. Let
-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>c</mi><mi>t</mi></msub><mo stretchy="false" form="prefix">(</mo><mi>x</mi><mo stretchy="false" form="postfix">)</mo><mo>=</mo><msub><mi>X</mi><mi>t</mi></msub><mo stretchy="false" form="prefix">(</mo><mi>x</mi><mo stretchy="false" form="postfix">)</mo><msub><mover><mi>β</mi><mo accent="true">̂</mo></mover><mi>t</mi></msub></mrow><annotation encoding="application/x-tex">c_t(x) = X_t(x)\hat{\beta}_t</annotation></semantics></math>
-be the contribution of model term
+<p><code>LinearModel</code>, <code>LogisticModel</code> and
+<code>CoxModel</code> fit a regression model with the
+<strong>rms</strong> package. Its linear predictor is a sum over model
+terms
 <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>t</mi><annotation encoding="application/x-tex">t</annotation></semantics></math>
-to the linear predictor, where
+(a variable, a spline of a variable, an interaction, …):
+<math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>η</mi><mo stretchy="false" form="prefix">(</mo><mi>x</mi><mo stretchy="false" form="postfix">)</mo><mo>=</mo><munder><mo>∑</mo><mi>t</mi></munder><msub><mi>c</mi><mi>t</mi></msub><mo stretchy="false" form="prefix">(</mo><mi>x</mi><mo stretchy="false" form="postfix">)</mo><mo>,</mo><mspace width="2.0em"></mspace><msub><mi>c</mi><mi>t</mi></msub><mo stretchy="false" form="prefix">(</mo><mi>x</mi><mo stretchy="false" form="postfix">)</mo><mo>=</mo><msub><mi>X</mi><mi>t</mi></msub><mo stretchy="false" form="prefix">(</mo><mi>x</mi><mo stretchy="false" form="postfix">)</mo><mspace width="0.167em"></mspace><msub><mover><mi>β</mi><mo accent="true">̂</mo></mover><mi>t</mi></msub><mo>,</mo></mrow><annotation encoding="application/x-tex">
+\eta(x) = \sum_t c_t(x), \qquad c_t(x) = X_t(x)\,\hat\beta_t ,
+</annotation></semantics></math> where
 <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>X</mi><mi>t</mi></msub><mo stretchy="false" form="prefix">(</mo><mi>x</mi><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">X_t(x)</annotation></semantics></math>
 are the columns of the design matrix that belong to term
 <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>t</mi><annotation encoding="application/x-tex">t</annotation></semantics></math>
 and
-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mover><mi>β</mi><mo accent="true">̂</mo></mover><mi>t</mi></msub><annotation encoding="application/x-tex">\hat{\beta}_t</annotation></semantics></math>
-their coefficients. The package computes</p>
-<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>d</mi><mo stretchy="false" form="prefix">(</mo><msub><mi>x</mi><mi>i</mi></msub><mo>,</mo><msub><mi>x</mi><mi>j</mi></msub><mo stretchy="false" form="postfix">)</mo><mo>=</mo><munder><mo>∑</mo><mi>t</mi></munder><mo stretchy="false" form="prefix">|</mo><msub><mi>c</mi><mi>t</mi></msub><mo stretchy="false" form="prefix">(</mo><msub><mi>x</mi><mi>i</mi></msub><mo stretchy="false" form="postfix">)</mo><mo>−</mo><msub><mi>c</mi><mi>t</mi></msub><mo stretchy="false" form="prefix">(</mo><msub><mi>x</mi><mi>j</mi></msub><mo stretchy="false" form="postfix">)</mo><mo stretchy="false" form="prefix">|</mo><mi>.</mi></mrow><annotation encoding="application/x-tex">
-d(x_i, x_j) = \sum\limits_{t} |c_t(x_i) - c_t(x_j)|.
-</annotation></semantics></math></p>
-<p>For a numerical main effect,
-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>c</mi><mi>t</mi></msub><mo stretchy="false" form="prefix">(</mo><mi>x</mi><mo stretchy="false" form="postfix">)</mo><mo>=</mo><msub><mover><mi>β</mi><mo accent="true">̂</mo></mover><mi>k</mi></msub><msup><mi>x</mi><mi>k</mi></msup></mrow><annotation encoding="application/x-tex">c_t(x) = \hat{\beta}_k x^k</annotation></semantics></math>;
-for a categorical one,
-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>c</mi><mi>t</mi></msub><mo stretchy="false" form="prefix">(</mo><mi>x</mi><mo stretchy="false" form="postfix">)</mo><mo>=</mo><msubsup><mover><mi>β</mi><mo accent="true">̂</mo></mover><mi>k</mi><mrow><mo stretchy="false" form="prefix">(</mo><msup><mi>x</mi><mi>k</mi></msup><mo stretchy="false" form="postfix">)</mo></mrow></msubsup></mrow><annotation encoding="application/x-tex">c_t(x) = \hat{\beta}_k^{(x^k)}</annotation></semantics></math>,
-so the distance is exactly the weighted distance above. The definition
-also covers any other term of an <strong>rms</strong> model: splines
-such as <code>rcs(age, 4)</code>, polynomials and interactions. Two
-cases are then close if the model assigns them similar contributions,
-even if a non-linear effect makes equal differences in a variable count
-differently in different ranges.</p>
-<p><code>explain_match()</code> reports the terms
-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo stretchy="false" form="prefix">|</mo><msub><mi>c</mi><mi>t</mi></msub><mo stretchy="false" form="prefix">(</mo><msub><mi>x</mi><mi>i</mi></msub><mo stretchy="false" form="postfix">)</mo><mo>−</mo><msub><mi>c</mi><mi>t</mi></msub><mo stretchy="false" form="prefix">(</mo><msub><mi>x</mi><mi>j</mi></msub><mo stretchy="false" form="postfix">)</mo><mo stretchy="false" form="prefix">|</mo></mrow><annotation encoding="application/x-tex">|c_t(x_i) - c_t(x_j)|</annotation></semantics></math>
-and their share of the distance, which shows why two cases match.</p>
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mover><mi>β</mi><mo accent="true">̂</mo></mover><mi>t</mi></msub><annotation encoding="application/x-tex">\hat\beta_t</annotation></semantics></math>
+their estimated coefficients. We call
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>c</mi><mi>t</mi></msub><mo stretchy="false" form="prefix">(</mo><mi>x</mi><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">c_t(x)</annotation></semantics></math>
+the <em>contribution</em> of term
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>t</mi><annotation encoding="application/x-tex">t</annotation></semantics></math>.
+The distance of two cases is the
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>L</mi><mn>1</mn></msub><annotation encoding="application/x-tex">L_1</annotation></semantics></math>
+distance of their contributions:
+<math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><menclose notation="box"><mrow><mspace width="0.278em"></mspace><mi>d</mi><mo stretchy="false" form="prefix">(</mo><msub><mi>x</mi><mi>i</mi></msub><mo>,</mo><msub><mi>x</mi><mi>j</mi></msub><mo stretchy="false" form="postfix">)</mo><mo>=</mo><munder><mo>∑</mo><mi>t</mi></munder><mrow><mo stretchy="true" form="prefix">|</mo><msub><mi>c</mi><mi>t</mi></msub><mo stretchy="false" form="prefix">(</mo><msub><mi>x</mi><mi>i</mi></msub><mo stretchy="false" form="postfix">)</mo><mo>−</mo><msub><mi>c</mi><mi>t</mi></msub><mo stretchy="false" form="prefix">(</mo><msub><mi>x</mi><mi>j</mi></msub><mo stretchy="false" form="postfix">)</mo><mo stretchy="true" form="postfix">|</mo></mrow><mspace width="0.278em"></mspace></mrow></menclose><annotation encoding="application/x-tex">
+\boxed{\; d(x_i, x_j) = \sum_t \left| c_t(x_i) - c_t(x_j) \right| \;}
+</annotation></semantics></math> For main effects this is the weighted
+distance of Dippon et al. (2002):</p>
+<ul>
+<li>numeric feature
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>k</mi><annotation encoding="application/x-tex">k</annotation></semantics></math>:
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>c</mi><mi>k</mi></msub><mo stretchy="false" form="prefix">(</mo><mi>x</mi><mo stretchy="false" form="postfix">)</mo><mo>=</mo><msub><mover><mi>β</mi><mo accent="true">̂</mo></mover><mi>k</mi></msub><msub><mi>x</mi><mi>k</mi></msub></mrow><annotation encoding="application/x-tex">c_k(x) = \hat\beta_k x_k</annotation></semantics></math>,
+so the term adds
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo stretchy="false" form="prefix">|</mo><msub><mover><mi>β</mi><mo accent="true">̂</mo></mover><mi>k</mi></msub><mo stretchy="false" form="prefix">|</mo><mspace width="0.167em"></mspace><mo stretchy="false" form="prefix">|</mo><msub><mi>x</mi><mrow><mi>i</mi><mi>k</mi></mrow></msub><mo>−</mo><msub><mi>x</mi><mrow><mi>j</mi><mi>k</mi></mrow></msub><mo stretchy="false" form="prefix">|</mo></mrow><annotation encoding="application/x-tex">|\hat\beta_k|\,|x_{ik} - x_{jk}|</annotation></semantics></math>;</li>
+<li>categorical feature
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>k</mi><annotation encoding="application/x-tex">k</annotation></semantics></math>
+with level coefficients
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msubsup><mover><mi>β</mi><mo accent="true">̂</mo></mover><mi>k</mi><mrow><mo stretchy="false" form="prefix">(</mo><mi>l</mi><mo stretchy="false" form="postfix">)</mo></mrow></msubsup><annotation encoding="application/x-tex">\hat\beta_k^{(l)}</annotation></semantics></math>
+(zero for the reference level): the term adds
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo stretchy="false" form="prefix">|</mo><msubsup><mover><mi>β</mi><mo accent="true">̂</mo></mover><mi>k</mi><mrow><mo stretchy="false" form="prefix">(</mo><msub><mi>x</mi><mrow><mi>i</mi><mi>k</mi></mrow></msub><mo stretchy="false" form="postfix">)</mo></mrow></msubsup><mo>−</mo><msubsup><mover><mi>β</mi><mo accent="true">̂</mo></mover><mi>k</mi><mrow><mo stretchy="false" form="prefix">(</mo><msub><mi>x</mi><mrow><mi>j</mi><mi>k</mi></mrow></msub><mo stretchy="false" form="postfix">)</mo></mrow></msubsup><mo stretchy="false" form="prefix">|</mo></mrow><annotation encoding="application/x-tex">|\hat\beta_k^{(x_{ik})} - \hat\beta_k^{(x_{jk})}|</annotation></semantics></math>,
+which is zero for equal levels.</li>
+</ul>
+<p>All three problems of the naive distance are solved: categorical
+features enter through their coefficients, the coefficient scales
+inversely with the unit of the feature, and features without effect get
+a coefficient near zero.</p>
+</div>
+<div class="section level3">
+<h3 id="interpretation">What a distance means<a class="anchor" aria-label="anchor" href="#interpretation"></a>
+</h3>
+<p>By the triangle inequality, the distance bounds the difference of the
+linear predictors:
+<math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo stretchy="false" form="prefix">|</mo><mi>η</mi><mo stretchy="false" form="prefix">(</mo><msub><mi>x</mi><mi>i</mi></msub><mo stretchy="false" form="postfix">)</mo><mo>−</mo><mi>η</mi><mo stretchy="false" form="prefix">(</mo><msub><mi>x</mi><mi>j</mi></msub><mo stretchy="false" form="postfix">)</mo><mo stretchy="false" form="postfix">|</mo><mo>≤</mo><mi>d</mi><mo stretchy="false" form="prefix">(</mo><msub><mi>x</mi><mi>i</mi></msub><mo>,</mo><msub><mi>x</mi><mi>j</mi></msub><mo stretchy="false" form="postfix">)</mo><mi>.</mi></mrow><annotation encoding="application/x-tex">
+\lvert \eta(x_i) - \eta(x_j) \rvert \le d(x_i, x_j).
+</annotation></semantics></math> The linear predictor has a meaning on
+the scale of the model, so the distance has one too:</p>
+<table class="table">
+<colgroup>
+<col width="33%">
+<col width="33%">
+<col width="33%">
+</colgroup>
+<thead><tr class="header">
+<th>Model</th>
+<th><math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>η</mi><mo stretchy="false" form="prefix">(</mo><mi>x</mi><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">\eta(x)</annotation></semantics></math></th>
+<th>
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>d</mi><mo stretchy="false" form="prefix">(</mo><msub><mi>x</mi><mi>i</mi></msub><mo>,</mo><msub><mi>x</mi><mi>j</mi></msub><mo stretchy="false" form="postfix">)</mo><mo>≤</mo><mi>δ</mi></mrow><annotation encoding="application/x-tex">d(x_i, x_j) \le \delta</annotation></semantics></math>
+means</th>
+</tr></thead>
+<tbody>
+<tr class="odd">
+<td><code>LinearModel</code></td>
+<td>expected outcome
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>E</mi><mo stretchy="false" form="prefix">[</mo><mi>y</mi><mo>∣</mo><mi>x</mi><mo stretchy="false" form="postfix">]</mo></mrow><annotation encoding="application/x-tex">E[y \mid x]</annotation></semantics></math>
+</td>
+<td>expected outcomes differ by at most
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>δ</mi><annotation encoding="application/x-tex">\delta</annotation></semantics></math>
+(in units of
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>y</mi><annotation encoding="application/x-tex">y</annotation></semantics></math>)</td>
+</tr>
+<tr class="even">
+<td><code>LogisticModel</code></td>
+<td>log-odds
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mrow><mi mathvariant="normal">log</mi><mo>⁡</mo></mrow><mfrac><mrow><mi>P</mi><mo stretchy="false" form="prefix">(</mo><mi>y</mi><mo>=</mo><mn>1</mn><mo>∣</mo><mi>x</mi><mo stretchy="false" form="postfix">)</mo></mrow><mrow><mi>P</mi><mo stretchy="false" form="prefix">(</mo><mi>y</mi><mo>=</mo><mn>0</mn><mo>∣</mo><mi>x</mi><mo stretchy="false" form="postfix">)</mo></mrow></mfrac></mrow><annotation encoding="application/x-tex">\log \frac{P(y=1 \mid x)}{P(y=0 \mid x)}</annotation></semantics></math>
+</td>
+<td>odds ratio between the cases in
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo stretchy="false" form="prefix">[</mo><msup><mi>e</mi><mrow><mi>−</mi><mi>δ</mi></mrow></msup><mo>,</mo><msup><mi>e</mi><mi>δ</mi></msup><mo stretchy="false" form="postfix">]</mo></mrow><annotation encoding="application/x-tex">[e^{-\delta}, e^{\delta}]</annotation></semantics></math>
+</td>
+</tr>
+<tr class="odd">
+<td><code>CoxModel</code></td>
+<td>log relative hazard</td>
+<td>hazard ratio between the cases in
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo stretchy="false" form="prefix">[</mo><msup><mi>e</mi><mrow><mi>−</mi><mi>δ</mi></mrow></msup><mo>,</mo><msup><mi>e</mi><mi>δ</mi></msup><mo stretchy="false" form="postfix">]</mo></mrow><annotation encoding="application/x-tex">[e^{-\delta}, e^{\delta}]</annotation></semantics></math>
+</td>
+</tr>
+</tbody>
+</table>
+<p>For example, two patients at Cox distance
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mn>0.1</mn><annotation encoding="application/x-tex">0.1</annotation></semantics></math>
+have hazards that differ by at most
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msup><mi>e</mi><mn>0.1</mn></msup><mo>−</mo><mn>1</mn><mo>≈</mo><mn>10</mn><mi>%</mi></mrow><annotation encoding="application/x-tex">e^{0.1} - 1 \approx 10\%</annotation></semantics></math>.</p>
+</div>
+<div class="section level3">
+<h3 id="regression-example">A worked example<a class="anchor" aria-label="anchor" href="#regression-example"></a>
+</h3>
+<p>We fit a Cox model for the survival of lung cancer patients.</p>
+<div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">lung2</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/na.fail.html" class="external-link">na.omit</a></span><span class="op">(</span><span class="va">lung</span><span class="op">[</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"time"</span>, <span class="st">"status"</span>, <span class="st">"age"</span>, <span class="st">"sex"</span>, <span class="st">"ph.ecog"</span>, <span class="st">"ph.karno"</span>, <span class="st">"wt.loss"</span><span class="op">)</span><span class="op">]</span><span class="op">)</span></span>
+<span><span class="va">lung2</span><span class="op">$</span><span class="va">status</span> <span class="op">&lt;-</span> <span class="va">lung2</span><span class="op">$</span><span class="va">status</span> <span class="op">-</span> <span class="fl">1</span></span>
+<span><span class="va">lung2</span><span class="op">$</span><span class="va">sex</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/factor.html" class="external-link">factor</a></span><span class="op">(</span><span class="va">lung2</span><span class="op">$</span><span class="va">sex</span>, labels <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"male"</span>, <span class="st">"female"</span><span class="op">)</span><span class="op">)</span></span>
+<span></span>
+<span><span class="va">cox</span> <span class="op">&lt;-</span> <span class="va"><a href="../reference/CoxModel.html">CoxModel</a></span><span class="op">$</span><span class="fu">new</span><span class="op">(</span><span class="fu">Surv</span><span class="op">(</span><span class="va">time</span>, <span class="va">status</span><span class="op">)</span> <span class="op">~</span> <span class="va">age</span> <span class="op">+</span> <span class="va">sex</span> <span class="op">+</span> <span class="va">ph.ecog</span>, <span class="va">lung2</span><span class="op">)</span></span>
+<span><span class="va">cox</span><span class="op">$</span><span class="fu">fit</span><span class="op">(</span><span class="op">)</span></span>
+<span><span class="va">beta</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/coef.html" class="external-link">coef</a></span><span class="op">(</span><span class="va">cox</span><span class="op">$</span><span class="va">model_fit</span><span class="op">)</span></span>
+<span><span class="va">beta</span></span></code></pre></div>
+<pre><code><span><span class="co">##         age  sex=female     ph.ecog </span></span>
+<span><span class="co">##  0.01347899 -0.57204879  0.45638532</span></span></code></pre>
+<p>Older age and a worse performance status (<code>ph.ecog</code>, 0 =
+fully active to 3 = bedridden half the day) increase the hazard; women
+have a lower hazard. Now take two patients:</p>
+<div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">pair</span> <span class="op">&lt;-</span> <span class="va">lung2</span><span class="op">[</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"19"</span>, <span class="st">"149"</span><span class="op">)</span>, <span class="op">]</span></span>
+<span><span class="va">pair</span></span></code></pre></div>
+<pre><code><span><span class="co">##     time status age    sex ph.ecog ph.karno wt.loss</span></span>
+<span><span class="co">## 19    61      1  56 female       2       60      10</span></span>
+<span><span class="co">## 149   31      1  82   male       0      100      27</span></span></code></pre>
+<p>By hand, the distance is the sum of three terms:</p>
+<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">by_hand</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span>age     <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/MathFun.html" class="external-link">abs</a></span><span class="op">(</span><span class="va">beta</span><span class="op">[[</span><span class="st">"age"</span><span class="op">]</span><span class="op">]</span> <span class="op">*</span> <span class="op">(</span><span class="va">pair</span><span class="op">$</span><span class="va">age</span><span class="op">[</span><span class="fl">1</span><span class="op">]</span> <span class="op">-</span> <span class="va">pair</span><span class="op">$</span><span class="va">age</span><span class="op">[</span><span class="fl">2</span><span class="op">]</span><span class="op">)</span><span class="op">)</span>,</span>
+<span>             sex     <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/MathFun.html" class="external-link">abs</a></span><span class="op">(</span><span class="va">beta</span><span class="op">[[</span><span class="st">"sex=female"</span><span class="op">]</span><span class="op">]</span> <span class="op">*</span> <span class="op">(</span><span class="op">(</span><span class="va">pair</span><span class="op">$</span><span class="va">sex</span><span class="op">[</span><span class="fl">1</span><span class="op">]</span> <span class="op">==</span> <span class="st">"female"</span><span class="op">)</span> <span class="op">-</span> <span class="op">(</span><span class="va">pair</span><span class="op">$</span><span class="va">sex</span><span class="op">[</span><span class="fl">2</span><span class="op">]</span> <span class="op">==</span> <span class="st">"female"</span><span class="op">)</span><span class="op">)</span><span class="op">)</span>,</span>
+<span>             ph.ecog <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/MathFun.html" class="external-link">abs</a></span><span class="op">(</span><span class="va">beta</span><span class="op">[[</span><span class="st">"ph.ecog"</span><span class="op">]</span><span class="op">]</span> <span class="op">*</span> <span class="op">(</span><span class="va">pair</span><span class="op">$</span><span class="va">ph.ecog</span><span class="op">[</span><span class="fl">1</span><span class="op">]</span> <span class="op">-</span> <span class="va">pair</span><span class="op">$</span><span class="va">ph.ecog</span><span class="op">[</span><span class="fl">2</span><span class="op">]</span><span class="op">)</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="va">by_hand</span></span></code></pre></div>
+<pre><code><span><span class="co">##       age       sex   ph.ecog </span></span>
+<span><span class="co">## 0.3504537 0.5720488 0.9127706</span></span></code></pre>
+<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/sum.html" class="external-link">sum</a></span><span class="op">(</span><span class="va">by_hand</span><span class="op">)</span></span></code></pre></div>
+<pre><code><span><span class="co">## [1] 1.835273</span></span></code></pre>
+<p><code>explain_match()</code> reports the same terms, sorted by their
+share of the distance, and <code>calc_distance_matrix()</code> the same
+total:</p>
+<div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu">knitr</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/knitr/man/kable.html" class="external-link">kable</a></span><span class="op">(</span><span class="va">cox</span><span class="op">$</span><span class="fu">explain_match</span><span class="op">(</span><span class="va">pair</span><span class="op">[</span><span class="fl">1</span>, <span class="op">]</span>, <span class="va">pair</span><span class="op">[</span><span class="fl">2</span>, <span class="op">]</span><span class="op">)</span>, digits <span class="op">=</span> <span class="fl">3</span><span class="op">)</span></span></code></pre></div>
+<table class="table">
+<thead><tr class="header">
+<th align="left">term</th>
+<th align="right">query_contribution</th>
+<th align="right">case_contribution</th>
+<th align="right">distance</th>
+<th align="right">share</th>
+</tr></thead>
+<tbody>
+<tr class="odd">
+<td align="left">ph.ecog</td>
+<td align="right">0.913</td>
+<td align="right">0.000</td>
+<td align="right">0.913</td>
+<td align="right">0.497</td>
+</tr>
+<tr class="even">
+<td align="left">sex</td>
+<td align="right">-0.572</td>
+<td align="right">0.000</td>
+<td align="right">0.572</td>
+<td align="right">0.312</td>
+</tr>
+<tr class="odd">
+<td align="left">age</td>
+<td align="right">0.755</td>
+<td align="right">1.105</td>
+<td align="right">0.350</td>
+<td align="right">0.191</td>
+</tr>
+</tbody>
+</table>
+<div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">cox</span><span class="op">$</span><span class="fu">calc_distance_matrix</span><span class="op">(</span><span class="va">pair</span><span class="op">[</span><span class="fl">1</span>, <span class="op">]</span><span class="op">)</span><span class="op">[</span><span class="fu"><a href="https://rdrr.io/r/base/colnames.html" class="external-link">rownames</a></span><span class="op">(</span><span class="va">lung2</span><span class="op">)</span> <span class="op">==</span> <span class="st">"149"</span>, <span class="op">]</span></span></code></pre></div>
+<pre><code><span><span class="co">## [1] 1.835273</span></span></code></pre>
+</div>
+<div class="section level3">
+<h3 id="compensation">Why not just compare risk scores?<a class="anchor" aria-label="anchor" href="#compensation"></a>
+</h3>
+<p>The two patients have almost the same linear predictor, i.e. the same
+predicted risk:</p>
+<div class="sourceCode" id="cb12"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">eta</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/predict.html" class="external-link">predict</a></span><span class="op">(</span><span class="va">cox</span><span class="op">$</span><span class="va">model_fit</span>, newdata <span class="op">=</span> <span class="va">pair</span>, type <span class="op">=</span> <span class="st">"lp"</span><span class="op">)</span></span>
+<span><span class="va">eta</span></span></code></pre></div>
+<pre><code><span><span class="co">##         19        149 </span></span>
+<span><span class="co">## 0.05765668 0.06738851</span></span></code></pre>
+<div class="sourceCode" id="cb14"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/MathFun.html" class="external-link">abs</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/diff.html" class="external-link">diff</a></span><span class="op">(</span><span class="va">eta</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
+<pre><code><span><span class="co">##        149 </span></span>
+<span><span class="co">## 0.00973183</span></span></code></pre>
+<p>The 56-year-old woman with a poor performance status and the
+82-year-old man who is fully active have the same risk <em>for different
+reasons</em>. A distance based only on
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo stretchy="false" form="prefix">|</mo><mi>η</mi><mo stretchy="false" form="prefix">(</mo><msub><mi>x</mi><mi>i</mi></msub><mo stretchy="false" form="postfix">)</mo><mo>−</mo><mi>η</mi><mo stretchy="false" form="prefix">(</mo><msub><mi>x</mi><mi>j</mi></msub><mo stretchy="false" form="postfix">)</mo><mo stretchy="false" form="prefix">|</mo></mrow><annotation encoding="application/x-tex">|\eta(x_i) - \eta(x_j)|</annotation></semantics></math>
+would treat them as identical cases; in contribution space they are far
+apart, because each term is compared on its own. Cases retrieved in
+contribution space are similar in risk <strong>and</strong> in the
+reasons for the risk, which is what makes them useful as precedents.</p>
+</div>
+<div class="section level3">
+<h3 id="scale">Scale invariance<a class="anchor" aria-label="anchor" href="#scale"></a>
+</h3>
+<p>Measuring age in months changes the coefficient by a factor of 1/12,
+and the distance not at all:</p>
+<div class="sourceCode" id="cb16"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">lung_months</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/transform.html" class="external-link">transform</a></span><span class="op">(</span><span class="va">lung2</span>, age <span class="op">=</span> <span class="va">age</span> <span class="op">*</span> <span class="fl">12</span><span class="op">)</span></span>
+<span><span class="va">cox_months</span> <span class="op">&lt;-</span> <span class="va"><a href="../reference/CoxModel.html">CoxModel</a></span><span class="op">$</span><span class="fu">new</span><span class="op">(</span><span class="fu">Surv</span><span class="op">(</span><span class="va">time</span>, <span class="va">status</span><span class="op">)</span> <span class="op">~</span> <span class="va">age</span> <span class="op">+</span> <span class="va">sex</span> <span class="op">+</span> <span class="va">ph.ecog</span>, <span class="va">lung_months</span><span class="op">)</span></span>
+<span><span class="va">cox_months</span><span class="op">$</span><span class="fu">fit</span><span class="op">(</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/Extremes.html" class="external-link">max</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/MathFun.html" class="external-link">abs</a></span><span class="op">(</span><span class="va">cox_months</span><span class="op">$</span><span class="fu">calc_distance_matrix</span><span class="op">(</span><span class="op">)</span> <span class="op">-</span> <span class="va">cox</span><span class="op">$</span><span class="fu">calc_distance_matrix</span><span class="op">(</span><span class="op">)</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
+<pre><code><span><span class="co">## [1] 4.440892e-16</span></span></code></pre>
+</div>
+<div class="section level3">
+<h3 id="nonlinear">Non-linear effects and interactions<a class="anchor" aria-label="anchor" href="#nonlinear"></a>
+</h3>
+<p>Any <strong>rms</strong> term is allowed, e.g. a restricted cubic
+spline <code>rcs(age, 4)</code> or an interaction
+<code>sex * ph.ecog</code>. The contribution
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>c</mi><mi>t</mi></msub><mo stretchy="false" form="prefix">(</mo><mi>x</mi><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">c_t(x)</annotation></semantics></math>
+is then a non-linear function, and equal differences in a variable count
+differently in different ranges: below, the eight years between 50 and
+58 and between 72 and 80 give different distances. All columns of an
+interaction belong to one term, so the term is compared as a whole.</p>
+<div class="sourceCode" id="cb18"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">cox_rcs</span> <span class="op">&lt;-</span> <span class="va"><a href="../reference/CoxModel.html">CoxModel</a></span><span class="op">$</span><span class="fu">new</span><span class="op">(</span><span class="fu">Surv</span><span class="op">(</span><span class="va">time</span>, <span class="va">status</span><span class="op">)</span> <span class="op">~</span> <span class="fu">rcs</span><span class="op">(</span><span class="va">age</span>, <span class="fl">3</span><span class="op">)</span> <span class="op">+</span> <span class="va">sex</span> <span class="op">+</span> <span class="va">ph.ecog</span>, <span class="va">lung2</span><span class="op">)</span></span>
+<span><span class="va">cox_rcs</span><span class="op">$</span><span class="fu">fit</span><span class="op">(</span><span class="op">)</span></span>
+<span><span class="va">ages</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span>age <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">50</span>, <span class="fl">58</span>, <span class="fl">72</span>, <span class="fl">80</span><span class="op">)</span>, sex <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/factor.html" class="external-link">factor</a></span><span class="op">(</span><span class="st">"male"</span>, <span class="fu"><a href="https://rdrr.io/r/base/levels.html" class="external-link">levels</a></span><span class="op">(</span><span class="va">lung2</span><span class="op">$</span><span class="va">sex</span><span class="op">)</span><span class="op">)</span>, ph.ecog <span class="op">=</span> <span class="fl">1</span><span class="op">)</span></span>
+<span><span class="va">age_distance</span> <span class="op">&lt;-</span> <span class="kw">function</span><span class="op">(</span><span class="va">a</span>, <span class="va">b</span><span class="op">)</span> <span class="fu"><a href="https://rdrr.io/r/base/sum.html" class="external-link">sum</a></span><span class="op">(</span><span class="va">cox_rcs</span><span class="op">$</span><span class="fu">explain_match</span><span class="op">(</span><span class="va">ages</span><span class="op">[</span><span class="va">a</span>, <span class="op">]</span>, <span class="va">ages</span><span class="op">[</span><span class="va">b</span>, <span class="op">]</span><span class="op">)</span><span class="op">$</span><span class="va">distance</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"50 vs 58"</span> <span class="op">=</span> <span class="fu">age_distance</span><span class="op">(</span><span class="fl">1</span>, <span class="fl">2</span><span class="op">)</span>, <span class="st">"72 vs 80"</span> <span class="op">=</span> <span class="fu">age_distance</span><span class="op">(</span><span class="fl">3</span>, <span class="fl">4</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
+<pre><code><span><span class="co">##   50 vs 58   72 vs 80 </span></span>
+<span><span class="co">## 0.01245924 0.23738336</span></span></code></pre>
+</div>
+<div class="section level3">
+<h3 id="regression-proscons">Advantages and disadvantages<a class="anchor" aria-label="anchor" href="#regression-proscons"></a>
+</h3>
+<p><strong>Advantages</strong></p>
+<ul>
+<li>Each feature is weighted by its estimated effect on the outcome;
+irrelevant features get (almost) no weight.</li>
+<li>Independent of the units of the features; categorical features need
+no ad-hoc coding.</li>
+<li>The distance has a meaning on the outcome scale (difference of
+expected outcome, log odds ratio, log hazard ratio).</li>
+<li>Fully explainable: <code>explain_match()</code> decomposes each
+distance into model terms.</li>
+<li>The model can be checked with the usual tools
+(<code>check_ph()</code>, residuals, <code><a href="https://rdrr.io/pkg/rms/man/validate.html" class="external-link">rms::validate()</a></code>), and
+variables can be selected before the distance is used.</li>
+<li>Fast and deterministic: computing all distances costs
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>O</mi><mo stretchy="false" form="prefix">(</mo><mi>n</mi><mspace width="0.167em"></mspace><mi>m</mi><mspace width="0.167em"></mspace><mi>T</mi><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">O(n\,m\,T)</annotation></semantics></math>
+for
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>n</mi><annotation encoding="application/x-tex">n</annotation></semantics></math>
+cases,
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>m</mi><annotation encoding="application/x-tex">m</annotation></semantics></math>
+queries and
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>T</mi><annotation encoding="application/x-tex">T</annotation></semantics></math>
+terms.</li>
+</ul>
+<p><strong>Disadvantages</strong></p>
+<ul>
+<li>The distance is only as good as the model. A misspecified model
+(wrong functional form, missing interactions, violated proportional
+hazards) gives a misleading distance.</li>
+<li>Non-linear effects and interactions must be specified by the
+user.</li>
+<li>A feature that acts only through an interaction that is not in the
+model gets no weight.</li>
+<li>With few cases or correlated features, the coefficients, and hence
+the weights, are unstable.</li>
+<li>Two levels of a factor with similar coefficients are treated as
+nearly identical, even if they are different in substance.</li>
+<li>
+<code>LogisticModel</code> supports binary outcomes only.</li>
+</ul>
 </div>
 </div>
 <div class="section level2">
-<h2 id="random-forests">Random Forests<a class="anchor" aria-label="anchor" href="#random-forests"></a>
+<h2 id="random-forests">Random forests: distances from the trees<a class="anchor" aria-label="anchor" href="#random-forests"></a>
 </h2>
-<div class="section level3">
-<h3 id="proximity-measure">Proximity Measure<a class="anchor" aria-label="anchor" href="#proximity-measure"></a>
-</h3>
-<p>Two observations
-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>i</mi><annotation encoding="application/x-tex">i</annotation></semantics></math>
-and
-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>j</mi><annotation encoding="application/x-tex">j</annotation></semantics></math>
-are considered more similar when the fraction of trees in which they
-share the same terminal node is close to one (Breiman, 2002). With
-proximity</p>
-<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>p</mi><mo stretchy="false" form="prefix">(</mo><msub><mi>x</mi><mi>i</mi></msub><mo>,</mo><msub><mi>x</mi><mi>j</mi></msub><mo stretchy="false" form="postfix">)</mo><mo>=</mo><mfrac><mn>1</mn><mi>T</mi></mfrac><munderover><mo>∑</mo><mrow><mi>t</mi><mo>=</mo><mn>1</mn></mrow><mi>T</mi></munderover><msub><mn>1</mn><mrow><mo stretchy="false" form="prefix">[</mo><msub><mi>x</mi><mi>i</mi></msub><mrow><mspace width="0.333em"></mspace><mtext mathvariant="normal"> and </mtext><mspace width="0.333em"></mspace></mrow><msub><mi>x</mi><mi>j</mi></msub><mrow><mspace width="0.333em"></mspace><mtext mathvariant="normal"> share the same terminal node in tree </mtext><mspace width="0.333em"></mspace></mrow><mi>t</mi><mo stretchy="false" form="postfix">]</mo></mrow></msub><mo>,</mo></mrow><annotation encoding="application/x-tex">
-p(x_i, x_j) = \frac{1}{T}\sum\limits_{t=1}^T 1_{[x_i \text{ and } x_j \text{ share the same terminal node in tree } t]},
-</annotation></semantics></math></p>
-<p>where
+<p><code>RFModel</code> fits a random forest with
+<strong>ranger</strong> (classification, regression or survival). A
+forest of
 <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>T</mi><annotation encoding="application/x-tex">T</annotation></semantics></math>
-is the number of trees, the distance is</p>
-<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>d</mi><mo stretchy="false" form="prefix">(</mo><msub><mi>x</mi><mi>i</mi></msub><mo>,</mo><msub><mi>x</mi><mi>j</mi></msub><mo stretchy="false" form="postfix">)</mo><mo>=</mo><msqrt><mrow><mn>1</mn><mo>−</mo><mi>p</mi><mo stretchy="false" form="prefix">(</mo><msub><mi>x</mi><mi>i</mi></msub><mo>,</mo><msub><mi>x</mi><mi>j</mi></msub><mo stretchy="false" form="postfix">)</mo></mrow></msqrt><mi>.</mi></mrow><annotation encoding="application/x-tex">
-d(x_i, x_j) = \sqrt{1 - p(x_i, x_j)}.
-</annotation></semantics></math></p>
-<p>A drawback of this measure is that the decision is binary, meaning
-that potentially similar observations might be counted as dissimilar.
-For example, suppose a final cut-off is consistently made around age 58,
-and observation 1 has an age of 56 while observation 2 has an age of 60.
-In this case, the distance between observation 1 and observation 2 would
-be the same as the distance between observation 1 and an observation
-with an age of 80. This limitation makes the proximity measure less
-sensitive to small differences between observations, potentially
-affecting the overall analysis of similarity.</p>
+trees partitions the feature space
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>T</mi><annotation encoding="application/x-tex">T</annotation></semantics></math>
+times; each tree sends a case down to one terminal node (<em>leaf</em>).
+Let
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>ℓ</mi><mi>t</mi></msub><mo stretchy="false" form="prefix">(</mo><mi>x</mi><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">\ell_t(x)</annotation></semantics></math>
+be the leaf of case
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>x</mi><annotation encoding="application/x-tex">x</annotation></semantics></math>
+in tree
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>t</mi><annotation encoding="application/x-tex">t</annotation></semantics></math>.
+The partitions are chosen to separate the outcomes, so cases in the same
+leaf have similar outcomes, and the forest finds non-linear effects and
+interactions by itself.</p>
+<div class="section level3">
+<h3 id="proximity">Proximity distance<a class="anchor" aria-label="anchor" href="#proximity"></a>
+</h3>
+<p>The proximity (Breiman, 2002) is the share of trees in which two
+cases share a leaf, and the distance is derived from it:
+<math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>p</mi><mo stretchy="false" form="prefix">(</mo><msub><mi>x</mi><mi>i</mi></msub><mo>,</mo><msub><mi>x</mi><mi>j</mi></msub><mo stretchy="false" form="postfix">)</mo><mo>=</mo><mfrac><mn>1</mn><mi>T</mi></mfrac><munderover><mo>∑</mo><mrow><mi>t</mi><mo>=</mo><mn>1</mn></mrow><mi>T</mi></munderover><mn>1</mn><mrow><mo stretchy="true" form="prefix">[</mo><msub><mi>ℓ</mi><mi>t</mi></msub><mo stretchy="false" form="prefix">(</mo><msub><mi>x</mi><mi>i</mi></msub><mo stretchy="false" form="postfix">)</mo><mo>=</mo><msub><mi>ℓ</mi><mi>t</mi></msub><mo stretchy="false" form="prefix">(</mo><msub><mi>x</mi><mi>j</mi></msub><mo stretchy="false" form="postfix">)</mo><mo stretchy="true" form="postfix">]</mo></mrow><mo>,</mo><mspace width="2.0em"></mspace><mi>d</mi><mo stretchy="false" form="prefix">(</mo><msub><mi>x</mi><mi>i</mi></msub><mo>,</mo><msub><mi>x</mi><mi>j</mi></msub><mo stretchy="false" form="postfix">)</mo><mo>=</mo><msqrt><mrow><mn>1</mn><mo>−</mo><mi>p</mi><mo stretchy="false" form="prefix">(</mo><msub><mi>x</mi><mi>i</mi></msub><mo>,</mo><msub><mi>x</mi><mi>j</mi></msub><mo stretchy="false" form="postfix">)</mo></mrow></msqrt><mi>.</mi></mrow><annotation encoding="application/x-tex">
+p(x_i, x_j) = \frac{1}{T}\sum_{t=1}^T 1\left[\ell_t(x_i) = \ell_t(x_j)\right],
+\qquad d(x_i, x_j) = \sqrt{1 - p(x_i, x_j)}.
+</annotation></semantics></math> A tiny forest of three trees shows the
+computation:</p>
+<div class="sourceCode" id="cb20"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">rf3</span> <span class="op">&lt;-</span> <span class="fu">ranger</span><span class="fu">::</span><span class="fu"><a href="http://imbs-hl.github.io/ranger/reference/ranger.html" class="external-link">ranger</a></span><span class="op">(</span><span class="va">Species</span> <span class="op">~</span> <span class="va">.</span>, <span class="va">iris</span>, num.trees <span class="op">=</span> <span class="fl">3</span>, write.forest <span class="op">=</span> <span class="cn">TRUE</span>, seed <span class="op">=</span> <span class="fl">1</span><span class="op">)</span></span>
+<span><span class="va">cases</span> <span class="op">&lt;-</span> <span class="va">iris</span><span class="op">[</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">51</span>, <span class="fl">53</span>, <span class="fl">78</span>, <span class="fl">101</span><span class="op">)</span>, <span class="op">-</span><span class="fl">5</span><span class="op">]</span></span>
+<span><span class="va">leaves</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/terminal_nodes.html">terminal_nodes</a></span><span class="op">(</span><span class="va">cases</span>, <span class="va">rf3</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/dimnames.html" class="external-link">dimnames</a></span><span class="op">(</span><span class="va">leaves</span><span class="op">)</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/colnames.html" class="external-link">rownames</a></span><span class="op">(</span><span class="va">cases</span><span class="op">)</span>, <span class="fu"><a href="https://rdrr.io/r/base/paste.html" class="external-link">paste</a></span><span class="op">(</span><span class="st">"tree"</span>, <span class="fl">1</span><span class="op">:</span><span class="fl">3</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="va">leaves</span></span></code></pre></div>
+<pre><code><span><span class="co">##     tree 1 tree 2 tree 3</span></span>
+<span><span class="co">## 51      19      3     15</span></span>
+<span><span class="co">## 53      26      9     15</span></span>
+<span><span class="co">## 78      26      9     14</span></span>
+<span><span class="co">## 101      8     10     10</span></span></code></pre>
+<div class="sourceCode" id="cb22"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="co"># proximity of case 51 and case 53: share of trees with the same leaf</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/mean.html" class="external-link">mean</a></span><span class="op">(</span><span class="va">leaves</span><span class="op">[</span><span class="st">"51"</span>, <span class="op">]</span> <span class="op">==</span> <span class="va">leaves</span><span class="op">[</span><span class="st">"53"</span>, <span class="op">]</span><span class="op">)</span></span></code></pre></div>
+<pre><code><span><span class="co">## [1] 0.3333333</span></span></code></pre>
+<div class="sourceCode" id="cb24"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/Round.html" class="external-link">round</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/matrix.html" class="external-link">as.matrix</a></span><span class="op">(</span><span class="fu"><a href="../reference/proximity_distance.html">proximity_distance</a></span><span class="op">(</span><span class="va">cases</span>, rfObject <span class="op">=</span> <span class="va">rf3</span><span class="op">)</span><span class="op">)</span>, <span class="fl">3</span><span class="op">)</span></span></code></pre></div>
+<pre><code><span><span class="co">##       1     2     3 4</span></span>
+<span><span class="co">## 1 0.000 0.816 1.000 1</span></span>
+<span><span class="co">## 2 0.816 0.000 0.577 1</span></span>
+<span><span class="co">## 3 1.000 0.577 0.000 1</span></span>
+<span><span class="co">## 4 1.000 1.000 1.000 0</span></span></code></pre>
 </div>
 <div class="section level3">
-<h3 id="oob-rfgap">Out-of-Bag and RF-GAP Proximities<a class="anchor" aria-label="anchor" href="#oob-rfgap"></a>
+<h3 id="oob-rfgap">Out-of-bag and RF-GAP proximities<a class="anchor" aria-label="anchor" href="#oob-rfgap"></a>
 </h3>
-<p>The original proximity is biased for training cases: a tree is grown
-until its leaves are small, so cases in a tree’s bootstrap sample tend
-to share leaves with each other. Two variants avoid this
-(<code>proximity_type</code> in <code><a href="../reference/proximity_distance.html">proximity_distance()</a></code>,
-<code><a href="../reference/distance_random_forest.html">distance_random_forest()</a></code> and
-<code>RFModel$set_distance_method()</code>):</p>
+<p>A tree is grown on a bootstrap sample until its leaves are small, so
+cases that were used to grow the tree (<em>in-bag</em>) tend to share
+leaves with each other. For training cases, the original proximity is
+therefore too optimistic. Two variants avoid this
+(<code>set_distance_method("Proximity", proximity_type = ...)</code>):</p>
 <ul>
-<li><p><strong>OOB</strong>: only the trees in which both observations
-are out-of-bag are counted, and
-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>T</mi><annotation encoding="application/x-tex">T</annotation></semantics></math>
-is replaced by the number of these trees.</p></li>
-<li><p><strong>RF-GAP</strong> (Rhodes, Cutler &amp; Moon, 2023): for a
+<li>
+<strong>OOB</strong>: only trees in which both cases are out-of-bag
+are counted.</li>
+<li>
+<strong>RF-GAP</strong> (Rhodes, Cutler &amp; Moon, 2023): for a
 query
 <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>q</mi><annotation encoding="application/x-tex">q</annotation></semantics></math>
 and a training case
 <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>j</mi><annotation encoding="application/x-tex">j</annotation></semantics></math>,
-<math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>p</mi><mo stretchy="false" form="prefix">(</mo><mi>q</mi><mo>,</mo><mi>j</mi><mo stretchy="false" form="postfix">)</mo><mo>=</mo><mfrac><mn>1</mn><mrow><mo stretchy="false" form="prefix">|</mo><msub><mi>S</mi><mi>q</mi></msub><mo stretchy="false" form="prefix">|</mo></mrow></mfrac><munder><mo>∑</mo><mrow><mi>t</mi><mo>∈</mo><msub><mi>S</mi><mi>q</mi></msub></mrow></munder><mfrac><mrow><msub><mi>c</mi><mi>j</mi></msub><mo stretchy="false" form="prefix">(</mo><mi>t</mi><mo stretchy="false" form="postfix">)</mo><mspace width="0.167em"></mspace><msub><mn>1</mn><mrow><mo stretchy="false" form="prefix">[</mo><mi>j</mi><mo>∈</mo><msub><mi>v</mi><mi>q</mi></msub><mo stretchy="false" form="prefix">(</mo><mi>t</mi><mo stretchy="false" form="postfix">)</mo><mo stretchy="false" form="postfix">]</mo></mrow></msub></mrow><mrow><mo stretchy="false" form="prefix">|</mo><msub><mi>M</mi><mi>q</mi></msub><mo stretchy="false" form="prefix">(</mo><mi>t</mi><mo stretchy="false" form="postfix">)</mo><mo stretchy="false" form="prefix">|</mo></mrow></mfrac><mo>,</mo></mrow><annotation encoding="application/x-tex">
-p(q, j) = \frac{1}{|S_q|}\sum\limits_{t \in S_q} \frac{c_j(t)\, 1_{[j \in v_q(t)]}}{|M_q(t)|},
+<math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>p</mi><mo stretchy="false" form="prefix">(</mo><mi>q</mi><mo>,</mo><mi>j</mi><mo stretchy="false" form="postfix">)</mo><mo>=</mo><mfrac><mn>1</mn><mrow><mo stretchy="false" form="prefix">|</mo><msub><mi>S</mi><mi>q</mi></msub><mo stretchy="false" form="prefix">|</mo></mrow></mfrac><munder><mo>∑</mo><mrow><mi>t</mi><mo>∈</mo><msub><mi>S</mi><mi>q</mi></msub></mrow></munder><mfrac><mrow><msub><mi>c</mi><mi>j</mi></msub><mo stretchy="false" form="prefix">(</mo><mi>t</mi><mo stretchy="false" form="postfix">)</mo><mspace width="0.167em"></mspace><mn>1</mn><mrow><mo stretchy="true" form="prefix">[</mo><msub><mi>ℓ</mi><mi>t</mi></msub><mo stretchy="false" form="prefix">(</mo><msub><mi>x</mi><mi>j</mi></msub><mo stretchy="false" form="postfix">)</mo><mo>=</mo><msub><mi>ℓ</mi><mi>t</mi></msub><mo stretchy="false" form="prefix">(</mo><msub><mi>x</mi><mi>q</mi></msub><mo stretchy="false" form="postfix">)</mo><mo stretchy="true" form="postfix">]</mo></mrow></mrow><mrow><mo stretchy="false" form="prefix">|</mo><msub><mi>M</mi><mi>q</mi></msub><mo stretchy="false" form="prefix">(</mo><mi>t</mi><mo stretchy="false" form="postfix">)</mo><mo stretchy="false" form="prefix">|</mo></mrow></mfrac><mo>,</mo></mrow><annotation encoding="application/x-tex">
+p(q, j) = \frac{1}{|S_q|}\sum_{t \in S_q} \frac{c_j(t)\, 1\left[\ell_t(x_j) = \ell_t(x_q)\right]}{|M_q(t)|},
 </annotation></semantics></math> where
 <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>S</mi><mi>q</mi></msub><annotation encoding="application/x-tex">S_q</annotation></semantics></math>
 are the trees in which
 <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>q</mi><annotation encoding="application/x-tex">q</annotation></semantics></math>
 is out-of-bag (all trees for new data),
-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>v</mi><mi>q</mi></msub><mo stretchy="false" form="prefix">(</mo><mi>t</mi><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">v_q(t)</annotation></semantics></math>
-is the terminal node of
-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>q</mi><annotation encoding="application/x-tex">q</annotation></semantics></math>
-in tree
-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>t</mi><annotation encoding="application/x-tex">t</annotation></semantics></math>,
 <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>c</mi><mi>j</mi></msub><mo stretchy="false" form="prefix">(</mo><mi>t</mi><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">c_j(t)</annotation></semantics></math>
 is the in-bag count of
 <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>j</mi><annotation encoding="application/x-tex">j</annotation></semantics></math>
@@ -274,62 +551,570 @@ in tree
 <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>t</mi><annotation encoding="application/x-tex">t</annotation></semantics></math>,
 and
 <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo stretchy="false" form="prefix">|</mo><msub><mi>M</mi><mi>q</mi></msub><mo stretchy="false" form="prefix">(</mo><mi>t</mi><mo stretchy="false" form="postfix">)</mo><mo stretchy="false" form="prefix">|</mo></mrow><annotation encoding="application/x-tex">|M_q(t)|</annotation></semantics></math>
-is the total in-bag count in
-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>v</mi><mi>q</mi></msub><mo stretchy="false" form="prefix">(</mo><mi>t</mi><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">v_q(t)</annotation></semantics></math>.</p></li>
+is the total in-bag count of the leaf of
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>q</mi><annotation encoding="application/x-tex">q</annotation></semantics></math>.</li>
 </ul>
 <p>The RF-GAP proximities of a query sum to one over the training cases,
-and the proximity-weighted average of the training outcomes equals the
-forest’s (out-of-bag) prediction. Retrieval with RF-GAP therefore uses
-the same notion of similarity as the forest’s predictions. Because the
+and the proximity-weighted mean of the training outcomes <em>is</em> the
+forest’s prediction. Retrieval with RF-GAP therefore uses exactly the
+notion of similarity of the forest’s predictions. Because the
 proximities are small, RF-GAP distances lie close to 1; only their order
-matters. Both variants need the in-bag counts, which
-<code>RFModel</code> keeps by default
-(<code>keep.inbag = TRUE</code>).</p>
+matters.</p>
 </div>
 <div class="section level3">
-<h3 id="depth-measure-a-modified-proximity-measure">Depth Measure: A modified proximity measure<a class="anchor" aria-label="anchor" href="#depth-measure-a-modified-proximity-measure"></a>
+<h3 id="depth">Depth distance<a class="anchor" aria-label="anchor" href="#depth"></a>
 </h3>
-<p>In contrast to the proximity measure, the depth measure takes into
-account the number of edges between the terminal nodes of two
-observations, not only whether they coincide. It is summed over all
-trees:</p>
-<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>d</mi><mo stretchy="false" form="prefix">(</mo><msub><mi>x</mi><mi>i</mi></msub><mo>,</mo><msub><mi>x</mi><mi>j</mi></msub><mo stretchy="false" form="postfix">)</mo><mo>=</mo><munderover><mo>∑</mo><mrow><mi>t</mi><mo>=</mo><mn>1</mn></mrow><mi>T</mi></munderover><msub><mi>g</mi><mrow><mi>i</mi><mi>j</mi></mrow></msub><mo stretchy="false" form="prefix">(</mo><mi>t</mi><mo stretchy="false" form="postfix">)</mo><mo>,</mo></mrow><annotation encoding="application/x-tex">
-d(x_i, x_j) = \sum\limits_{t=1}^T g_{ij}(t),
-</annotation></semantics></math></p>
-<p>where
-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>g</mi><mrow><mi>i</mi><mi>j</mi></mrow></msub><mo stretchy="false" form="prefix">(</mo><mi>t</mi><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">g_{ij}(t)</annotation></semantics></math>
-is the number of edges on the path between the terminal nodes of
-observation
-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>i</mi><annotation encoding="application/x-tex">i</annotation></semantics></math>
+<p>The proximity is all-or-nothing: two cases in neighbouring leaves
+count as far apart as two cases at opposite ends of the tree. The depth
+distance (Englund &amp; Verikas, 2012) counts the edges
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>g</mi><mi>t</mi></msub><mo stretchy="false" form="prefix">(</mo><msub><mi>x</mi><mi>i</mi></msub><mo>,</mo><msub><mi>x</mi><mi>j</mi></msub><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">g_t(x_i, x_j)</annotation></semantics></math>
+between the leaves of the two cases, i.e. the sum of their distances to
+their deepest common ancestor, averaged over the trees:
+<math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>d</mi><mo stretchy="false" form="prefix">(</mo><msub><mi>x</mi><mi>i</mi></msub><mo>,</mo><msub><mi>x</mi><mi>j</mi></msub><mo stretchy="false" form="postfix">)</mo><mo>=</mo><mfrac><mn>1</mn><mi>T</mi></mfrac><munderover><mo>∑</mo><mrow><mi>t</mi><mo>=</mo><mn>1</mn></mrow><mi>T</mi></munderover><msub><mi>g</mi><mi>t</mi></msub><mo stretchy="false" form="prefix">(</mo><msub><mi>x</mi><mi>i</mi></msub><mo>,</mo><msub><mi>x</mi><mi>j</mi></msub><mo stretchy="false" form="postfix">)</mo><mi>.</mi></mrow><annotation encoding="application/x-tex">
+d(x_i, x_j) = \frac{1}{T}\sum_{t=1}^T g_t(x_i, x_j).
+</annotation></semantics></math> In this tree,
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>g</mi><mo stretchy="false" form="prefix">(</mo><mi>A</mi><mo>,</mo><mi>B</mi><mo stretchy="false" form="postfix">)</mo><mo>=</mo><mn>2</mn></mrow><annotation encoding="application/x-tex">g(A, B) = 2</annotation></semantics></math>,
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>g</mi><mo stretchy="false" form="prefix">(</mo><mi>A</mi><mo>,</mo><mi>C</mi><mo stretchy="false" form="postfix">)</mo><mo>=</mo><mn>3</mn></mrow><annotation encoding="application/x-tex">g(A, C) = 3</annotation></semantics></math>
 and
-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>j</mi><annotation encoding="application/x-tex">j</annotation></semantics></math>
-in tree
-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>t</mi><annotation encoding="application/x-tex">t</annotation></semantics></math>,
-i.e. the sum of their distances to the deepest common ancestor.
-Observations that end up in neighbouring leaves are close, observations
-in distant parts of the tree are far apart. This is the default distance
-of <code>RFModel</code>.</p>
-<p>The edge counts are computed on demand from each tree’s structure, so
-the cost grows with the number of pairs and the tree depth, not with the
-number of nodes.</p>
-<p>For more details and a thorough explanation of the depth measure,
-refer to the publication by Englund and Verikas: “<a href="https://doi.org/10.1016/j.eswa.2012.05.094" class="external-link">A novel approach to
-estimate proximity in a random forest: An exploratory study.</a>”</p>
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>g</mi><mo stretchy="false" form="prefix">(</mo><mi>A</mi><mo>,</mo><mi>D</mi><mo stretchy="false" form="postfix">)</mo><mo>=</mo><mn>5</mn></mrow><annotation encoding="application/x-tex">g(A, D) = 5</annotation></semantics></math>,
+while the proximity only knows that
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>A</mi><annotation encoding="application/x-tex">A</annotation></semantics></math>
+shares a leaf with none of them:</p>
+<pre><code>              root
+            /      \
+          n1        n2
+         /  \      /  \
+       n3    C    D    E
+      /  \
+     A    B</code></pre>
+<p>The finer resolution matters for retrieval. For a query, many
+training cases share no leaf with it at all: they are tied at proximity
+distance 1, and their order is arbitrary. The depth distance still ranks
+them:</p>
+<div class="sourceCode" id="cb27"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/Random.html" class="external-link">set.seed</a></span><span class="op">(</span><span class="fl">1</span><span class="op">)</span></span>
+<span><span class="va">rf</span> <span class="op">&lt;-</span> <span class="va"><a href="../reference/RFModel.html">RFModel</a></span><span class="op">$</span><span class="fu">new</span><span class="op">(</span><span class="va">Species</span> <span class="op">~</span> <span class="va">.</span>, <span class="va">iris</span><span class="op">[</span><span class="op">-</span><span class="fl">51</span>, <span class="op">]</span>, num.trees <span class="op">=</span> <span class="fl">100</span><span class="op">)</span></span>
+<span><span class="va">rf</span><span class="op">$</span><span class="fu">fit</span><span class="op">(</span><span class="op">)</span></span>
+<span><span class="va">d_depth</span> <span class="op">&lt;-</span> <span class="va">rf</span><span class="op">$</span><span class="fu">calc_distance_matrix</span><span class="op">(</span><span class="va">iris</span><span class="op">[</span><span class="fl">51</span>, <span class="op">]</span><span class="op">)</span><span class="op">[</span>, <span class="fl">1</span><span class="op">]</span></span>
+<span><span class="va">rf</span><span class="op">$</span><span class="fu">set_distance_method</span><span class="op">(</span><span class="st">"Proximity"</span><span class="op">)</span></span>
+<span><span class="va">d_prox</span> <span class="op">&lt;-</span> <span class="va">rf</span><span class="op">$</span><span class="fu">calc_distance_matrix</span><span class="op">(</span><span class="va">iris</span><span class="op">[</span><span class="fl">51</span>, <span class="op">]</span><span class="op">)</span><span class="op">[</span>, <span class="fl">1</span><span class="op">]</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span>cases_at_maximal_proximity_distance <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/sum.html" class="external-link">sum</a></span><span class="op">(</span><span class="va">d_prox</span> <span class="op">==</span> <span class="fl">1</span><span class="op">)</span>,</span>
+<span>  distinct_proximity_distances <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/length.html" class="external-link">length</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/unique.html" class="external-link">unique</a></span><span class="op">(</span><span class="va">d_prox</span><span class="op">)</span><span class="op">)</span>,</span>
+<span>  distinct_depth_distances <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/length.html" class="external-link">length</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/unique.html" class="external-link">unique</a></span><span class="op">(</span><span class="va">d_depth</span><span class="op">)</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
+<pre><code><span><span class="co">## cases_at_maximal_proximity_distance        distinct_proximity_distances </span></span>
+<span><span class="co">##                                  73                                  36 </span></span>
+<span><span class="co">##            distinct_depth_distances </span></span>
+<span><span class="co">##                                  71</span></span></code></pre>
+<p>The depth distance is the default of <code>RFModel</code>.</p>
 </div>
+<div class="section level3">
+<h3 id="rf-explain">Explaining a forest match<a class="anchor" aria-label="anchor" href="#rf-explain"></a>
+</h3>
+<p>There are no coefficients, but the paths of two cases through a tree
+diverge at one split. <code>explain_match()</code> counts the split
+variables at which the paths diverge over the trees; attribute
+<code>same_leaf</code> is the proximity.</p>
+<div class="sourceCode" id="cb29"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">rf</span><span class="op">$</span><span class="fu">set_distance_method</span><span class="op">(</span><span class="st">"Depth"</span><span class="op">)</span></span>
+<span><span class="fu">knitr</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/knitr/man/kable.html" class="external-link">kable</a></span><span class="op">(</span><span class="va">rf</span><span class="op">$</span><span class="fu">explain_match</span><span class="op">(</span><span class="va">iris</span><span class="op">[</span><span class="fl">51</span>, <span class="op">]</span>, <span class="va">iris</span><span class="op">[</span><span class="fl">78</span>, <span class="op">]</span><span class="op">)</span>, digits <span class="op">=</span> <span class="fl">3</span><span class="op">)</span></span></code></pre></div>
+<table class="table">
+<thead><tr class="header">
+<th align="left">variable</th>
+<th align="right">n_trees</th>
+<th align="right">share</th>
+</tr></thead>
+<tbody>
+<tr class="odd">
+<td align="left">Petal.Length</td>
+<td align="right">52</td>
+<td align="right">0.642</td>
+</tr>
+<tr class="even">
+<td align="left">Petal.Width</td>
+<td align="right">25</td>
+<td align="right">0.309</td>
+</tr>
+<tr class="odd">
+<td align="left">Sepal.Length</td>
+<td align="right">2</td>
+<td align="right">0.025</td>
+</tr>
+<tr class="even">
+<td align="left">Sepal.Width</td>
+<td align="right">2</td>
+<td align="right">0.025</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="section level3">
+<h3 id="rf-proscons">Advantages and disadvantages<a class="anchor" aria-label="anchor" href="#rf-proscons"></a>
+</h3>
+<p><strong>Advantages</strong></p>
+<ul>
+<li>No model specification: non-linear effects and interactions are
+found automatically.</li>
+<li>Mixed feature types, any monotone transformation of a feature gives
+the same forest.</li>
+<li>RF-GAP retrieves exactly the cases the forest’s prediction is based
+on.</li>
+</ul>
+<p><strong>Disadvantages</strong></p>
+<ul>
+<li>The distance has no unit and no interpretation on the outcome scale;
+explanations are counts of split variables, not effects.</li>
+<li>Trees split more often on features with many possible split points
+(Strobl et al., 2007), so continuous features, including irrelevant
+ones, get much weight in the distance, especially on small data sets
+(see <a href="comparing_approaches.html">Comparing the
+Approaches</a>).</li>
+<li>It depends on the random seed and on tuning parameters
+(<code>num.trees</code>, <code>mtry</code>,
+<code>min.node.size</code>).</li>
+<li>The original proximity is biased for training cases (OOB and RF-GAP
+fix this) and coarse (many ties); RF-GAP distances are all close to
+1.</li>
+<li>More expensive:
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>O</mi><mo stretchy="false" form="prefix">(</mo><mi>n</mi><mspace width="0.167em"></mspace><mi>m</mi><mspace width="0.167em"></mspace><mi>T</mi><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">O(n\,m\,T)</annotation></semantics></math>
+for
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>T</mi><annotation encoding="application/x-tex">T</annotation></semantics></math>
+trees (typically hundreds), and the in-bag counts take
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>O</mi><mo stretchy="false" form="prefix">(</mo><mi>n</mi><mspace width="0.167em"></mspace><mi>T</mi><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">O(n\,T)</annotation></semantics></math>
+memory.</li>
+<li>OOB and RF-GAP proximities are tied to the cases the forest was
+grown on: after <code>add_cases()</code> or <code>remove_cases()</code>,
+the forest must be refitted.</li>
+</ul>
+</div>
+</div>
+<div class="section level2">
+<h2 id="gower">The Gower distance: a model-free baseline<a class="anchor" aria-label="anchor" href="#gower"></a>
+</h2>
+<p>The Gower (1971) distance of two cases is a weighted mean of
+per-variable distances in
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo stretchy="false" form="prefix">[</mo><mn>0</mn><mo>,</mo><mn>1</mn><mo stretchy="false" form="postfix">]</mo></mrow><annotation encoding="application/x-tex">[0, 1]</annotation></semantics></math>:
+<math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>d</mi><mo stretchy="false" form="prefix">(</mo><msub><mi>x</mi><mi>i</mi></msub><mo>,</mo><msub><mi>x</mi><mi>j</mi></msub><mo stretchy="false" form="postfix">)</mo><mo>=</mo><mfrac><mrow><munder><mo>∑</mo><mi>k</mi></munder><msub><mi>w</mi><mi>k</mi></msub><mspace width="0.167em"></mspace><msub><mi>δ</mi><mrow><mi>i</mi><mi>j</mi><mi>k</mi></mrow></msub><mspace width="0.167em"></mspace><msub><mi>s</mi><mrow><mi>i</mi><mi>j</mi><mi>k</mi></mrow></msub></mrow><mrow><munder><mo>∑</mo><mi>k</mi></munder><msub><mi>w</mi><mi>k</mi></msub><mspace width="0.167em"></mspace><msub><mi>δ</mi><mrow><mi>i</mi><mi>j</mi><mi>k</mi></mrow></msub></mrow></mfrac><mo>,</mo><mspace width="2.0em"></mspace><msub><mi>s</mi><mrow><mi>i</mi><mi>j</mi><mi>k</mi></mrow></msub><mo>=</mo><mrow><mo stretchy="true" form="prefix">{</mo><mtable><mtr><mtd columnalign="left" style="text-align: left"><mo stretchy="false" form="prefix">|</mo><msub><mi>x</mi><mrow><mi>i</mi><mi>k</mi></mrow></msub><mo>−</mo><msub><mi>x</mi><mrow><mi>j</mi><mi>k</mi></mrow></msub><mo stretchy="false" form="postfix">|</mo><mi>/</mi><msub><mi>R</mi><mi>k</mi></msub></mtd><mtd columnalign="left" style="text-align: left"><mrow><mtext mathvariant="normal">numeric, </mtext><mspace width="0.333em"></mspace></mrow><msub><mi>R</mi><mi>k</mi></msub><mrow><mspace width="0.333em"></mspace><mtext mathvariant="normal"> the range of feature </mtext><mspace width="0.333em"></mspace></mrow><mi>k</mi></mtd></mtr><mtr><mtd columnalign="left" style="text-align: left"><mo stretchy="false" form="prefix">|</mo><msub><mi>r</mi><mrow><mi>i</mi><mi>k</mi></mrow></msub><mo>−</mo><msub><mi>r</mi><mrow><mi>j</mi><mi>k</mi></mrow></msub><mo stretchy="false" form="postfix">|</mo><mi>/</mi><mo stretchy="false" form="prefix">(</mo><msub><mi>L</mi><mi>k</mi></msub><mo>−</mo><mn>1</mn><mo stretchy="false" form="postfix">)</mo></mtd><mtd columnalign="left" style="text-align: left"><mrow><mtext mathvariant="normal">ordered factor with ranks </mtext><mspace width="0.333em"></mspace></mrow><mi>r</mi><mrow><mspace width="0.333em"></mspace><mtext mathvariant="normal"> and </mtext><mspace width="0.333em"></mspace></mrow><msub><mi>L</mi><mi>k</mi></msub><mrow><mspace width="0.333em"></mspace><mtext mathvariant="normal"> levels</mtext></mrow></mtd></mtr><mtr><mtd columnalign="left" style="text-align: left"><mn>1</mn><mo stretchy="false" form="prefix">[</mo><msub><mi>x</mi><mrow><mi>i</mi><mi>k</mi></mrow></msub><mo>≠</mo><msub><mi>x</mi><mrow><mi>j</mi><mi>k</mi></mrow></msub><mo stretchy="false" form="postfix">]</mo></mtd><mtd columnalign="left" style="text-align: left"><mtext mathvariant="normal">unordered factor,</mtext></mtd></mtr></mtable></mrow></mrow><annotation encoding="application/x-tex">
+d(x_i, x_j) = \frac{\sum_k w_k\, \delta_{ijk}\, s_{ijk}}{\sum_k w_k\, \delta_{ijk}},
+\qquad
+s_{ijk} = \begin{cases}
+\lvert x_{ik} - x_{jk} \rvert / R_k &amp; \text{numeric, } R_k \text{ the range of feature } k\\
+\lvert r_{ik} - r_{jk} \rvert / (L_k - 1) &amp; \text{ordered factor with ranks } r \text{ and } L_k \text{ levels}\\
+1[x_{ik} \ne x_{jk}] &amp; \text{unordered factor,}
+\end{cases}
+</annotation></semantics></math> where
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>δ</mi><mrow><mi>i</mi><mi>j</mi><mi>k</mi></mrow></msub><mo>=</mo><mn>0</mn></mrow><annotation encoding="application/x-tex">\delta_{ijk} = 0</annotation></semantics></math>
+if feature
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>k</mi><annotation encoding="application/x-tex">k</annotation></semantics></math>
+is missing in one of the cases and 1 otherwise, and
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>w</mi><mi>k</mi></msub><annotation encoding="application/x-tex">w_k</annotation></semantics></math>
+are user-given weights (default 1). By hand, for the two patients from
+above:</p>
+<div class="sourceCode" id="cb30"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">gower</span> <span class="op">&lt;-</span> <span class="va"><a href="../reference/GowerModel.html">GowerModel</a></span><span class="op">$</span><span class="fu">new</span><span class="op">(</span><span class="fu">Surv</span><span class="op">(</span><span class="va">time</span>, <span class="va">status</span><span class="op">)</span> <span class="op">~</span> <span class="va">age</span> <span class="op">+</span> <span class="va">sex</span> <span class="op">+</span> <span class="va">ph.ecog</span>, <span class="va">lung2</span><span class="op">)</span></span>
+<span><span class="va">gower</span><span class="op">$</span><span class="fu">fit</span><span class="op">(</span><span class="op">)</span></span>
+<span><span class="va">R_age</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/diff.html" class="external-link">diff</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/range.html" class="external-link">range</a></span><span class="op">(</span><span class="va">lung2</span><span class="op">$</span><span class="va">age</span><span class="op">)</span><span class="op">)</span>; <span class="va">R_ecog</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/diff.html" class="external-link">diff</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/range.html" class="external-link">range</a></span><span class="op">(</span><span class="va">lung2</span><span class="op">$</span><span class="va">ph.ecog</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="va">by_hand</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span>age     <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/MathFun.html" class="external-link">abs</a></span><span class="op">(</span><span class="va">pair</span><span class="op">$</span><span class="va">age</span><span class="op">[</span><span class="fl">1</span><span class="op">]</span> <span class="op">-</span> <span class="va">pair</span><span class="op">$</span><span class="va">age</span><span class="op">[</span><span class="fl">2</span><span class="op">]</span><span class="op">)</span> <span class="op">/</span> <span class="va">R_age</span>,</span>
+<span>             sex     <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/numeric.html" class="external-link">as.numeric</a></span><span class="op">(</span><span class="va">pair</span><span class="op">$</span><span class="va">sex</span><span class="op">[</span><span class="fl">1</span><span class="op">]</span> <span class="op">!=</span> <span class="va">pair</span><span class="op">$</span><span class="va">sex</span><span class="op">[</span><span class="fl">2</span><span class="op">]</span><span class="op">)</span>,</span>
+<span>             ph.ecog <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/MathFun.html" class="external-link">abs</a></span><span class="op">(</span><span class="va">pair</span><span class="op">$</span><span class="va">ph.ecog</span><span class="op">[</span><span class="fl">1</span><span class="op">]</span> <span class="op">-</span> <span class="va">pair</span><span class="op">$</span><span class="va">ph.ecog</span><span class="op">[</span><span class="fl">2</span><span class="op">]</span><span class="op">)</span> <span class="op">/</span> <span class="va">R_ecog</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/mean.html" class="external-link">mean</a></span><span class="op">(</span><span class="va">by_hand</span><span class="op">)</span></span></code></pre></div>
+<pre><code><span><span class="co">## [1] 0.7571059</span></span></code></pre>
+<div class="sourceCode" id="cb32"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="../reference/gower_distance.html">gower_distance</a></span><span class="op">(</span><span class="va">pair</span><span class="op">[</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"age"</span>, <span class="st">"sex"</span>, <span class="st">"ph.ecog"</span><span class="op">)</span><span class="op">]</span>, ranges <span class="op">=</span> <span class="va">gower</span><span class="op">$</span><span class="va">model_fit</span><span class="op">$</span><span class="va">ranges</span><span class="op">)</span></span></code></pre></div>
+<pre><code><span><span class="co">##           1</span></span>
+<span><span class="co">## 2 0.7571059</span></span></code></pre>
+<div class="sourceCode" id="cb34"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu">knitr</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/knitr/man/kable.html" class="external-link">kable</a></span><span class="op">(</span><span class="va">gower</span><span class="op">$</span><span class="fu">explain_match</span><span class="op">(</span><span class="va">pair</span><span class="op">[</span><span class="fl">1</span>, <span class="op">]</span>, <span class="va">pair</span><span class="op">[</span><span class="fl">2</span>, <span class="op">]</span><span class="op">)</span>, digits <span class="op">=</span> <span class="fl">3</span><span class="op">)</span></span></code></pre></div>
+<table class="table">
+<thead><tr class="header">
+<th align="left">variable</th>
+<th align="left">query_value</th>
+<th align="left">case_value</th>
+<th align="right">weight</th>
+<th align="right">distance</th>
+<th align="right">share</th>
+</tr></thead>
+<tbody>
+<tr class="odd">
+<td align="left">sex</td>
+<td align="left">female</td>
+<td align="left">male</td>
+<td align="right">1</td>
+<td align="right">0.333</td>
+<td align="right">0.440</td>
+</tr>
+<tr class="even">
+<td align="left">ph.ecog</td>
+<td align="left">2</td>
+<td align="left">0</td>
+<td align="right">1</td>
+<td align="right">0.222</td>
+<td align="right">0.294</td>
+</tr>
+<tr class="odd">
+<td align="left">age</td>
+<td align="left">56</td>
+<td align="left">82</td>
+<td align="right">1</td>
+<td align="right">0.202</td>
+<td align="right">0.266</td>
+</tr>
+</tbody>
+</table>
+<p>The two patients that the Cox model found to be equally at risk are
+far apart for both distances; but the Gower distance weights the sex
+difference (1) as much as a difference over the full age range, without
+knowing that sex has a smaller effect on survival than ECOG.</p>
+<p><strong>Advantages</strong></p>
+<ul>
+<li>No model and no outcome needed: works for exploratory retrieval and
+as a sanity check of the model-derived distances.</li>
+<li>Transparent, deterministic, handles missing values pair by
+pair.</li>
+<li>Weights can encode expert knowledge.</li>
+</ul>
+<p><strong>Disadvantages</strong></p>
+<ul>
+<li>All features count equally unless weighted by hand. Irrelevant or
+noise features dilute the distance (see the benchmark).</li>
+<li>Numeric differences are scaled by the range, so a single outlier
+compresses all other differences.</li>
+<li>No interpretation on the outcome scale.</li>
+</ul>
+</div>
+<div class="section level2">
+<h2 id="reuse">Reuse: predictions from the retrieved cases<a class="anchor" aria-label="anchor" href="#reuse"></a>
+</h2>
+<p>Let
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>N</mi><mi>k</mi></msub><mo stretchy="false" form="prefix">(</mo><mi>q</mi><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">N_k(q)</annotation></semantics></math>
+be the
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>k</mi><annotation encoding="application/x-tex">k</annotation></semantics></math>
+nearest cases of query
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>q</mi><annotation encoding="application/x-tex">q</annotation></semantics></math>
+and
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>d</mi><mrow><mi>q</mi><mi>j</mi></mrow></msub><annotation encoding="application/x-tex">d_{qj}</annotation></semantics></math>
+their distances. With <code>weighted = TRUE</code>, case
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>j</mi><annotation encoding="application/x-tex">j</annotation></semantics></math>
+gets the tricube weight
+<math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>w</mi><mrow><mi>q</mi><mi>j</mi></mrow></msub><mo>=</mo><msup><mrow><mo stretchy="true" form="prefix">(</mo><mn>1</mn><mo>−</mo><msup><mrow><mo stretchy="true" form="prefix">(</mo><msub><mi>d</mi><mrow><mi>q</mi><mi>j</mi></mrow></msub><mi>/</mi><msub><mi>h</mi><mi>q</mi></msub><mo stretchy="true" form="postfix">)</mo></mrow><mn>3</mn></msup><mo stretchy="true" form="postfix">)</mo></mrow><mn>3</mn></msup><mo>,</mo><mspace width="2.0em"></mspace><msub><mi>h</mi><mi>q</mi></msub><mo>=</mo><mn>1.0001</mn><mo>⋅</mo><munder><mi mathvariant="normal">max</mi><mrow><mi>j</mi><mo>∈</mo><msub><mi>N</mi><mi>k</mi></msub><mo stretchy="false" form="prefix">(</mo><mi>q</mi><mo stretchy="false" form="postfix">)</mo></mrow></munder><msub><mi>d</mi><mrow><mi>q</mi><mi>j</mi></mrow></msub><mo>,</mo></mrow><annotation encoding="application/x-tex">
+w_{qj} = \left(1 - \left(d_{qj}/h_q\right)^3\right)^3, \qquad h_q = 1.0001 \cdot \max_{j \in N_k(q)} d_{qj},
+</annotation></semantics></math> so that close cases count more and the
+farthest of the
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>k</mi><annotation encoding="application/x-tex">k</annotation></semantics></math>
+cases still counts a little; otherwise
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>w</mi><mrow><mi>q</mi><mi>j</mi></mrow></msub><mo>=</mo><mn>1</mn></mrow><annotation encoding="application/x-tex">w_{qj} = 1</annotation></semantics></math>.
+<code>predict_outcome()</code> predicts</p>
+<ul>
+<li>classes:
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mover><mi>p</mi><mo accent="true">̂</mo></mover><mi>l</mi></msub><mo stretchy="false" form="prefix">(</mo><mi>q</mi><mo stretchy="false" form="postfix">)</mo><mo>=</mo><msub><mo>∑</mo><mrow><mi>j</mi><mo>∈</mo><msub><mi>N</mi><mi>k</mi></msub><mo stretchy="false" form="prefix">(</mo><mi>q</mi><mo stretchy="false" form="postfix">)</mo></mrow></msub><msub><mi>w</mi><mrow><mi>q</mi><mi>j</mi></mrow></msub><mspace width="0.167em"></mspace><mn>1</mn><mo stretchy="false" form="prefix">[</mo><msub><mi>y</mi><mi>j</mi></msub><mo>=</mo><mi>l</mi><mo stretchy="false" form="postfix">]</mo><mi minsize="120%" maxsize="120%" stretchy="true">/</mi><msub><mo>∑</mo><mrow><mi>j</mi><mo>∈</mo><msub><mi>N</mi><mi>k</mi></msub><mo stretchy="false" form="prefix">(</mo><mi>q</mi><mo stretchy="false" form="postfix">)</mo></mrow></msub><msub><mi>w</mi><mrow><mi>q</mi><mi>j</mi></mrow></msub></mrow><annotation encoding="application/x-tex">\hat p_l(q) = \sum_{j \in N_k(q)} w_{qj}\, 1[y_j = l] \big/ \sum_{j \in N_k(q)} w_{qj}</annotation></semantics></math>,
+and the class with the largest
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mover><mi>p</mi><mo accent="true">̂</mo></mover><mi>l</mi></msub><mo stretchy="false" form="prefix">(</mo><mi>q</mi><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">\hat p_l(q)</annotation></semantics></math>;</li>
+<li>numeric outcomes: the weighted mean
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mover><mi>y</mi><mo accent="true">̂</mo></mover><mo stretchy="false" form="prefix">(</mo><mi>q</mi><mo stretchy="false" form="postfix">)</mo><mo>=</mo><msub><mo>∑</mo><mi>j</mi></msub><msub><mi>w</mi><mrow><mi>q</mi><mi>j</mi></mrow></msub><mspace width="0.167em"></mspace><msub><mi>y</mi><mi>j</mi></msub><mi minsize="120%" maxsize="120%" stretchy="true">/</mi><msub><mo>∑</mo><mi>j</mi></msub><msub><mi>w</mi><mrow><mi>q</mi><mi>j</mi></mrow></msub></mrow><annotation encoding="application/x-tex">\hat y(q) = \sum_j w_{qj}\, y_j \big/ \sum_j w_{qj}</annotation></semantics></math>.</li>
+</ul>
+<p>For survival endpoints, <code>predict_survival()</code> computes the
+(weighted) Kaplan–Meier estimate of the
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>k</mi><annotation encoding="application/x-tex">k</annotation></semantics></math>
+nearest cases (Lowsky et al., 2013):
+<math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mover><mi>S</mi><mo accent="true">̂</mo></mover><mo stretchy="false" form="prefix">(</mo><mi>t</mi><mo>∣</mo><mi>q</mi><mo stretchy="false" form="postfix">)</mo><mo>=</mo><munder><mo>∏</mo><mrow><mi>s</mi><mo>≤</mo><mi>t</mi></mrow></munder><mrow><mo stretchy="true" form="prefix">(</mo><mn>1</mn><mo>−</mo><mfrac><mrow><munder><mo>∑</mo><mrow><mi>j</mi><mo>∈</mo><msub><mi>N</mi><mi>k</mi></msub><mo stretchy="false" form="prefix">(</mo><mi>q</mi><mo stretchy="false" form="postfix">)</mo></mrow></munder><msub><mi>w</mi><mrow><mi>q</mi><mi>j</mi></mrow></msub><mspace width="0.167em"></mspace><mn>1</mn><mo stretchy="false" form="prefix">[</mo><msub><mi>t</mi><mi>j</mi></msub><mo>=</mo><mi>s</mi><mo>,</mo><mspace width="0.222em"></mspace><msub><mi>δ</mi><mi>j</mi></msub><mo>=</mo><mn>1</mn><mo stretchy="false" form="postfix">]</mo></mrow><mrow><munder><mo>∑</mo><mrow><mi>j</mi><mo>∈</mo><msub><mi>N</mi><mi>k</mi></msub><mo stretchy="false" form="prefix">(</mo><mi>q</mi><mo stretchy="false" form="postfix">)</mo></mrow></munder><msub><mi>w</mi><mrow><mi>q</mi><mi>j</mi></mrow></msub><mspace width="0.167em"></mspace><mn>1</mn><mo stretchy="false" form="prefix">[</mo><msub><mi>t</mi><mi>j</mi></msub><mo>≥</mo><mi>s</mi><mo stretchy="false" form="postfix">]</mo></mrow></mfrac><mo stretchy="true" form="postfix">)</mo></mrow><mi>.</mi></mrow><annotation encoding="application/x-tex">
+\hat S(t \mid q) = \prod_{s \le t} \left(1 - \frac{\sum_{j \in N_k(q)} w_{qj}\, 1[t_j = s,\ \delta_j = 1]}{\sum_{j \in N_k(q)} w_{qj}\, 1[t_j \ge s]}\right).
+</annotation></semantics></math></p>
+<p>The number of cases
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>k</mi><annotation encoding="application/x-tex">k</annotation></semantics></math>
+trades bias against variance: few cases give noisy predictions, many
+cases include cases that are not similar. It should be chosen on
+held-out data with <code>evaluate()</code> /
+<code>evaluate_survival()</code>.</p>
+<p><code>get_counterfactual_cases()</code> reuses the case base in a
+different way: it returns the nearest cases with a <em>different</em>
+outcome (Keane &amp; Smyth, 2020). Together with
+<code>explain_match()</code>, they show what distinguishes the query
+from cases that turned out differently.</p>
+</div>
+<div class="section level2">
+<h2 id="revise">Revise: evaluating the predictions<a class="anchor" aria-label="anchor" href="#revise"></a>
+</h2>
+<p><code>evaluate()</code> and <code>evaluate_survival()</code> score
+the predictions for
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>m</mi><annotation encoding="application/x-tex">m</annotation></semantics></math>
+test cases:</p>
+<table style="width:100%;" class="table">
+<colgroup>
+<col width="24%">
+<col width="24%">
+<col width="26%">
+<col width="24%">
+</colgroup>
+<thead><tr class="header">
+<th>Endpoint</th>
+<th>Measure</th>
+<th>Definition</th>
+<th>Better</th>
+</tr></thead>
+<tbody>
+<tr class="odd">
+<td>class</td>
+<td>accuracy</td>
+<td><math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mfrac><mn>1</mn><mi>m</mi></mfrac><msub><mo>∑</mo><mi>q</mi></msub><mn>1</mn><mo stretchy="false" form="prefix">[</mo><mover><mi>y</mi><mo accent="true">̂</mo></mover><mo stretchy="false" form="prefix">(</mo><mi>q</mi><mo stretchy="false" form="postfix">)</mo><mo>=</mo><msub><mi>y</mi><mi>q</mi></msub><mo stretchy="false" form="postfix">]</mo></mrow><annotation encoding="application/x-tex">\frac{1}{m}\sum_q 1[\hat y(q) = y_q]</annotation></semantics></math></td>
+<td>higher</td>
+</tr>
+<tr class="even">
+<td>class</td>
+<td>Brier score</td>
+<td><math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mfrac><mn>1</mn><mi>m</mi></mfrac><msub><mo>∑</mo><mi>q</mi></msub><msub><mo>∑</mo><mi>l</mi></msub><mo stretchy="false" form="prefix">(</mo><msub><mover><mi>p</mi><mo accent="true">̂</mo></mover><mi>l</mi></msub><mo stretchy="false" form="prefix">(</mo><mi>q</mi><mo stretchy="false" form="postfix">)</mo><mo>−</mo><mn>1</mn><mo stretchy="false" form="prefix">[</mo><msub><mi>y</mi><mi>q</mi></msub><mo>=</mo><mi>l</mi><mo stretchy="false" form="postfix">]</mo><msup><mo stretchy="false" form="postfix">)</mo><mn>2</mn></msup></mrow><annotation encoding="application/x-tex">\frac{1}{m}\sum_q \sum_l (\hat p_l(q) - 1[y_q = l])^2</annotation></semantics></math></td>
+<td>lower</td>
+</tr>
+<tr class="odd">
+<td>class</td>
+<td>log loss</td>
+<td><math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>−</mi><mfrac><mn>1</mn><mi>m</mi></mfrac><msub><mo>∑</mo><mi>q</mi></msub><mrow><mi mathvariant="normal">log</mi><mo>⁡</mo></mrow><msub><mover><mi>p</mi><mo accent="true">̂</mo></mover><msub><mi>y</mi><mi>q</mi></msub></msub><mo stretchy="false" form="prefix">(</mo><mi>q</mi><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">-\frac{1}{m}\sum_q \log \hat p_{y_q}(q)</annotation></semantics></math></td>
+<td>lower</td>
+</tr>
+<tr class="even">
+<td>numeric</td>
+<td>RMSE, MAE</td>
+<td>
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msqrt><mrow><mfrac><mn>1</mn><mi>m</mi></mfrac><msub><mo>∑</mo><mi>q</mi></msub><mo stretchy="false" form="prefix">(</mo><mover><mi>y</mi><mo accent="true">̂</mo></mover><mo stretchy="false" form="prefix">(</mo><mi>q</mi><mo stretchy="false" form="postfix">)</mo><mo>−</mo><msub><mi>y</mi><mi>q</mi></msub><msup><mo stretchy="false" form="postfix">)</mo><mn>2</mn></msup></mrow></msqrt><annotation encoding="application/x-tex">\sqrt{\frac{1}{m}\sum_q (\hat y(q) - y_q)^2}</annotation></semantics></math>,
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mfrac><mn>1</mn><mi>m</mi></mfrac><msub><mo>∑</mo><mi>q</mi></msub><mo stretchy="false" form="prefix">|</mo><mover><mi>y</mi><mo accent="true">̂</mo></mover><mo stretchy="false" form="prefix">(</mo><mi>q</mi><mo stretchy="false" form="postfix">)</mo><mo>−</mo><msub><mi>y</mi><mi>q</mi></msub><mo stretchy="false" form="postfix">|</mo></mrow><annotation encoding="application/x-tex">\frac{1}{m}\sum_q \lvert\hat y(q) - y_q\rvert</annotation></semantics></math>
+</td>
+<td>lower</td>
+</tr>
+<tr class="odd">
+<td>survival</td>
+<td>Uno’s C</td>
+<td>concordance of the risk
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>1</mn><mo>−</mo><mover><mi>S</mi><mo accent="true">̂</mo></mover><mo stretchy="false" form="prefix">(</mo><mi>τ</mi><mo>∣</mo><mi>q</mi><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">1 - \hat S(\tau \mid q)</annotation></semantics></math>
+with the observed times, weighted for censoring (Uno et al., 2011)</td>
+<td>higher</td>
+</tr>
+<tr class="even">
+<td>survival</td>
+<td>IBS</td>
+<td><math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mfrac><mn>1</mn><mrow><msub><mi>t</mi><mi mathvariant="normal">max</mi></msub><mo>−</mo><msub><mi>t</mi><mi mathvariant="normal">min</mi></msub></mrow></mfrac><mo>∫</mo><mrow><mi mathvariant="normal">B</mi><mi mathvariant="normal">S</mi></mrow><mo stretchy="false" form="prefix">(</mo><mi>t</mi><mo stretchy="false" form="postfix">)</mo><mspace width="0.167em"></mspace><mi>d</mi><mi>t</mi></mrow><annotation encoding="application/x-tex">\frac{1}{t_{\max} - t_{\min}}\int \mathrm{BS}(t)\,dt</annotation></semantics></math></td>
+<td>lower</td>
+</tr>
+</tbody>
+</table>
+<p>with the censoring-weighted Brier score (Graf et al., 1999)
+<math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mrow><mi mathvariant="normal">B</mi><mi mathvariant="normal">S</mi></mrow><mo stretchy="false" form="prefix">(</mo><mi>t</mi><mo stretchy="false" form="postfix">)</mo><mo>=</mo><mfrac><mn>1</mn><mi>m</mi></mfrac><munder><mo>∑</mo><mi>q</mi></munder><mrow><mo stretchy="true" form="prefix">[</mo><mfrac><mrow><mover><mi>S</mi><mo accent="true">̂</mo></mover><mo stretchy="false" form="prefix">(</mo><mi>t</mi><mo>∣</mo><mi>q</mi><msup><mo stretchy="false" form="postfix">)</mo><mn>2</mn></msup><mspace width="0.167em"></mspace><mn>1</mn><mo stretchy="false" form="prefix">[</mo><msub><mi>t</mi><mi>q</mi></msub><mo>≤</mo><mi>t</mi><mo>,</mo><mspace width="0.222em"></mspace><msub><mi>δ</mi><mi>q</mi></msub><mo>=</mo><mn>1</mn><mo stretchy="false" form="postfix">]</mo></mrow><mrow><mover><mi>G</mi><mo accent="true">̂</mo></mover><mo stretchy="false" form="prefix">(</mo><msub><mi>t</mi><mi>q</mi></msub><mi>−</mi><mo stretchy="false" form="postfix">)</mo></mrow></mfrac><mo>+</mo><mfrac><mrow><mo stretchy="false" form="prefix">(</mo><mn>1</mn><mo>−</mo><mover><mi>S</mi><mo accent="true">̂</mo></mover><mo stretchy="false" form="prefix">(</mo><mi>t</mi><mo>∣</mo><mi>q</mi><mo stretchy="false" form="postfix">)</mo><msup><mo stretchy="false" form="postfix">)</mo><mn>2</mn></msup><mspace width="0.167em"></mspace><mn>1</mn><mo stretchy="false" form="prefix">[</mo><msub><mi>t</mi><mi>q</mi></msub><mo>&gt;</mo><mi>t</mi><mo stretchy="false" form="postfix">]</mo></mrow><mrow><mover><mi>G</mi><mo accent="true">̂</mo></mover><mo stretchy="false" form="prefix">(</mo><mi>t</mi><mo stretchy="false" form="postfix">)</mo></mrow></mfrac><mo stretchy="true" form="postfix">]</mo></mrow><mo>,</mo></mrow><annotation encoding="application/x-tex">
+\mathrm{BS}(t) = \frac{1}{m}\sum_q \left[\frac{\hat S(t \mid q)^2\, 1[t_q \le t,\ \delta_q = 1]}{\hat G(t_q-)} + \frac{(1 - \hat S(t \mid q))^2\, 1[t_q &gt; t]}{\hat G(t)}\right],
+</annotation></semantics></math> where
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mover><mi>G</mi><mo accent="true">̂</mo></mover><annotation encoding="application/x-tex">\hat G</annotation></semantics></math>
+is the Kaplan–Meier estimate of the censoring distribution of the
+training data. A Brier score of 0.25 is what an uninformative prediction
+of 50% achieves.</p>
+</div>
+<div class="section level2">
+<h2 id="retain">Retain: maintaining the case base<a class="anchor" aria-label="anchor" href="#retain"></a>
+</h2>
+<p><code>add_cases()</code> and <code>remove_cases()</code> change the
+case base. Regression models and the Gower distance do not need to be
+refitted: the distance of new cases is computed with the fitted
+coefficients (ranges); refit with <code>refit = TRUE</code> when the
+case base has changed a lot.</p>
+<p><code>assess_cases()</code> judges each case
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>i</mi><annotation encoding="application/x-tex">i</annotation></semantics></math>
+by its
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>k</mi><annotation encoding="application/x-tex">k</annotation></semantics></math>
+nearest <em>other</em> cases
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>N</mi><mi>k</mi></msub><mo stretchy="false" form="prefix">(</mo><mi>i</mi><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">N_k(i)</annotation></semantics></math>
+(leave one out). Case
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>j</mi><annotation encoding="application/x-tex">j</annotation></semantics></math><strong>solves</strong> case
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>i</mi><annotation encoding="application/x-tex">i</annotation></semantics></math>
+if
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>j</mi><mo>∈</mo><msub><mi>N</mi><mi>k</mi></msub><mo stretchy="false" form="prefix">(</mo><mi>i</mi><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">j \in N_k(i)</annotation></semantics></math>
+and both have the same outcome (same class; for numeric outcomes
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo stretchy="false" form="prefix">|</mo><msub><mi>y</mi><mi>i</mi></msub><mo>−</mo><msub><mi>y</mi><mi>j</mi></msub><mo stretchy="false" form="prefix">|</mo><mo>≤</mo></mrow><annotation encoding="application/x-tex">|y_i - y_j| \le</annotation></semantics></math><code>tolerance</code>; for survival outcomes the same event status at
+<code>horizon</code>). With the <em>reachability set</em>
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>R</mi><mo stretchy="false" form="prefix">(</mo><mi>i</mi><mo stretchy="false" form="postfix">)</mo><mo>=</mo><mo stretchy="false" form="prefix">{</mo><mi>j</mi><mo>:</mo><mi>j</mi><mrow><mspace width="0.333em"></mspace><mtext mathvariant="normal"> solves </mtext><mspace width="0.333em"></mspace></mrow><mi>i</mi><mo stretchy="false" form="postfix">}</mo></mrow><annotation encoding="application/x-tex">R(i) = \{j : j \text{ solves } i\}</annotation></semantics></math>
+and the <em>coverage set</em>
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>C</mi><mo stretchy="false" form="prefix">(</mo><mi>i</mi><mo stretchy="false" form="postfix">)</mo><mo>=</mo><mo stretchy="false" form="prefix">{</mo><msup><mi>i</mi><mo>′</mo></msup><mo>:</mo><mi>i</mi><mrow><mspace width="0.333em"></mspace><mtext mathvariant="normal"> solves </mtext><mspace width="0.333em"></mspace></mrow><msup><mi>i</mi><mo>′</mo></msup><mo stretchy="false" form="postfix">}</mo></mrow><annotation encoding="application/x-tex">C(i) = \{i' : i \text{ solves } i'\}</annotation></semantics></math>:</p>
+<ul>
+<li>
+<strong>noisy</strong> (Wilson, 1972): the majority of
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>N</mi><mi>k</mi></msub><mo stretchy="false" form="prefix">(</mo><mi>i</mi><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">N_k(i)</annotation></semantics></math>
+(the mean, for numeric outcomes) disagrees with
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>y</mi><mi>i</mi></msub><annotation encoding="application/x-tex">y_i</annotation></semantics></math>.
+Noisy cases are mislabelled or exceptional; removing them usually
+improves predictions.</li>
+<li>
+<strong>pivotal</strong> (Smyth &amp; Keane, 1995):
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>R</mi><mo stretchy="false" form="prefix">(</mo><mi>i</mi><mo stretchy="false" form="postfix">)</mo><mo>=</mo><mi>∅</mi></mrow><annotation encoding="application/x-tex">R(i) = \emptyset</annotation></semantics></math>.
+No other case solves
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>i</mi><annotation encoding="application/x-tex">i</annotation></semantics></math>;
+removing it loses competence.</li>
+<li>
+<strong>auxiliary</strong>: some
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>j</mi><mo>∈</mo><mi>R</mi><mo stretchy="false" form="prefix">(</mo><mi>i</mi><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">j \in R(i)</annotation></semantics></math>
+covers everything
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>i</mi><annotation encoding="application/x-tex">i</annotation></semantics></math>
+covers,
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>C</mi><mo stretchy="false" form="prefix">(</mo><mi>i</mi><mo stretchy="false" form="postfix">)</mo><mo>∪</mo><mo stretchy="false" form="prefix">{</mo><mi>i</mi><mo stretchy="false" form="postfix">}</mo><mo>⊆</mo><mi>C</mi><mo stretchy="false" form="prefix">(</mo><mi>j</mi><mo stretchy="false" form="postfix">)</mo><mo>∪</mo><mo stretchy="false" form="prefix">{</mo><mi>j</mi><mo stretchy="false" form="postfix">}</mo></mrow><annotation encoding="application/x-tex">C(i) \cup \{i\} \subseteq C(j) \cup \{j\}</annotation></semantics></math>.
+The case is redundant and can be removed to keep the case base
+small.</li>
+</ul>
+<div class="sourceCode" id="cb35"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">assessment</span> <span class="op">&lt;-</span> <span class="va">cox</span><span class="op">$</span><span class="fu">assess_cases</span><span class="op">(</span>k <span class="op">=</span> <span class="fl">10</span>, horizon <span class="op">=</span> <span class="fl">365</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/table.html" class="external-link">table</a></span><span class="op">(</span>category <span class="op">=</span> <span class="va">assessment</span><span class="op">$</span><span class="va">category</span>, noisy <span class="op">=</span> <span class="va">assessment</span><span class="op">$</span><span class="va">noisy</span>, useNA <span class="op">=</span> <span class="st">"ifany"</span><span class="op">)</span></span></code></pre></div>
+<pre><code><span><span class="co">##            noisy</span></span>
+<span><span class="co">## category    FALSE TRUE &lt;NA&gt;</span></span>
+<span><span class="co">##   pivotal       0    1    0</span></span>
+<span><span class="co">##   auxiliary    95   57    0</span></span>
+<span><span class="co">##   other         7   12    0</span></span>
+<span><span class="co">##   &lt;NA&gt;          0    0   41</span></span></code></pre>
+<p>Cases censored before the horizon have no known outcome and are not
+assessed (<code>NA</code>). Most cases are auxiliary: the case base is
+redundant, as is typical. Noisy cases are the patients whose survival
+differs from that of similar patients.</p>
+</div>
+<div class="section level2">
+<h2 id="comparison">Choosing an approach<a class="anchor" aria-label="anchor" href="#comparison"></a>
+</h2>
+<table style="width:100%;" class="table">
+<colgroup>
+<col width="24%">
+<col width="24%">
+<col width="26%">
+<col width="24%">
+</colgroup>
+<thead><tr class="header">
+<th></th>
+<th>Regression (Cox, linear, logistic)</th>
+<th>Random forest (depth, proximity, RF-GAP)</th>
+<th>Gower</th>
+</tr></thead>
+<tbody>
+<tr class="odd">
+<td>Weights the features by</td>
+<td>estimated effect on the outcome</td>
+<td>number of splits (favours continuous features)</td>
+<td>scale (equal or user weights)</td>
+</tr>
+<tr class="even">
+<td>Irrelevant features</td>
+<td>small weight, shrinking with more cases</td>
+<td>substantial weight on small data</td>
+<td>full weight</td>
+</tr>
+<tr class="odd">
+<td>Needs an outcome</td>
+<td>yes</td>
+<td>yes</td>
+<td>no</td>
+</tr>
+<tr class="even">
+<td>Non-linear effects, interactions</td>
+<td>if specified (splines, <code>*</code>)</td>
+<td>automatic</td>
+<td>no</td>
+</tr>
+<tr class="odd">
+<td>Distance unit</td>
+<td>outcome scale (log HR, log OR,
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>y</mi><annotation encoding="application/x-tex">y</annotation></semantics></math>)</td>
+<td>none</td>
+<td>share of features</td>
+</tr>
+<tr class="even">
+<td>Explanation</td>
+<td>contribution per term</td>
+<td>split variables where paths diverge</td>
+<td>per-feature difference</td>
+</tr>
+<tr class="odd">
+<td>Assumptions</td>
+<td>model correctly specified (e.g. PH)</td>
+<td>few</td>
+<td>none</td>
+</tr>
+<tr class="even">
+<td>Deterministic</td>
+<td>yes</td>
+<td>no (seed)</td>
+<td>yes</td>
+</tr>
+<tr class="odd">
+<td>Cost per pair</td>
+<td>number of terms</td>
+<td>number of trees</td>
+<td>number of features</td>
+</tr>
+<tr class="even">
+<td>Retain without refitting</td>
+<td>yes</td>
+<td>depth and original proximity: yes; OOB, RF-GAP: no</td>
+<td>yes</td>
+</tr>
+</tbody>
+</table>
+<p>Some rules of thumb:</p>
+<ul>
+<li>
+<strong>Start with the regression model</strong> when the outcome is
+well described by a regression model, or when the distance must be
+explained and defended (e.g. to clinicians). Check the model first; the
+distance inherits its assumptions.</li>
+<li>
+<strong>Use a random forest</strong> when the relationships are
+complex or unknown, when there are many features, or when the regression
+model does not fit well. Prefer RF-GAP when the retrieved cases should
+explain the forest’s prediction, the depth distance for a finer ranking
+of the neighbours.</li>
+<li>
+<strong>Use the Gower distance</strong> as a baseline, when there is
+no outcome, or when the features were chosen by experts and are all
+relevant.</li>
+<li>
+<strong>Compare them on held-out data</strong> with
+<code>evaluate()</code> / <code>evaluate_survival()</code>. In the
+benchmark article, the predictive performance of the distances is
+similar; with irrelevant features, the Gower distance loses the most
+accuracy.</li>
+</ul>
 </div>
 <div class="section level2">
 <h2 id="references">References<a class="anchor" aria-label="anchor" href="#references"></a>
 </h2>
 <ul>
+<li>Aamodt, A. and Plaza, E. (1994). <a href="https://doi.org/10.3233/AIC-1994-7104" class="external-link">Case-based reasoning:
+Foundational issues, methodological variations, and system
+approaches</a>. <em>AI Communications</em>, 7(1), 39–59.</li>
 <li>Breiman, L. (2002). Manual on setting up, using, and understanding
 random forests V3.1.</li>
 <li>Dippon, J. et al. (2002). <a href="https://doi.org/10.1016/S0167-9473(02)00058-0" class="external-link">A statistical
 approach to case based reasoning, with application to breast cancer
-data</a>.</li>
+data</a>. <em>Computational Statistics &amp; Data Analysis</em>, 40(3),
+579–602.</li>
 <li>Englund, C. and Verikas, A. (2012). <a href="https://doi.org/10.1016/j.eswa.2012.05.094" class="external-link">A novel approach to
-estimate proximity in a random forest: An exploratory study</a>.</li>
+estimate proximity in a random forest: An exploratory study</a>.
+<em>Expert Systems with Applications</em>, 39(17), 13046–13050.</li>
+<li>Gower, J. C. (1971). <a href="https://doi.org/10.2307/2528823" class="external-link">A
+general coefficient of similarity and some of its properties</a>.
+<em>Biometrics</em>, 27(4), 857–871.</li>
+<li>Graf, E. et al. (1999). Assessment and comparison of prognostic
+classification schemes for survival data. <em>Statistics in
+Medicine</em>, 18(17–18), 2529–2545.</li>
+<li>Keane, M. T. and Smyth, B. (2020). <a href="https://doi.org/10.1007/978-3-030-58342-2_11" class="external-link">Good counterfactuals
+and where to find them</a>. ICCBR 2020, LNCS 12311, 163–178.</li>
+<li>Lowsky, D. J. et al. (2013). <a href="https://doi.org/10.1002/sim.5673" class="external-link">A K-nearest neighbors survival
+probability prediction method</a>. <em>Statistics in Medicine</em>,
+32(12), 2062–2069.</li>
 <li>Rhodes, J. S., Cutler, A. and Moon, K. R. (2023). <a href="https://doi.org/10.1109/TPAMI.2023.3263774" class="external-link">Geometry- and
-Accuracy-Preserving Random Forest Proximities</a>.</li>
+accuracy-preserving random forest proximities</a>. <em>IEEE TPAMI</em>,
+45(9), 10947–10959.</li>
+<li>Strobl, C., Boulesteix, A.-L., Zeileis, A. and Hothorn, T. (2007).
+<a href="https://doi.org/10.1186/1471-2105-8-25" class="external-link">Bias in random forest
+variable importance measures</a>. <em>BMC Bioinformatics</em>, 8,
+25.</li>
+<li>Smyth, B. and Keane, M. T. (1995). Remembering to forget: A
+competence-preserving case deletion policy for case-based reasoning
+systems. <em>Proceedings of IJCAI-95</em>, 377–382.</li>
+<li>Uno, H. et al. (2011). <a href="https://doi.org/10.1002/sim.4154" class="external-link">On
+the C-statistics for evaluating overall adequacy of risk prediction
+procedures with censored survival data</a>. <em>Statistics in
+Medicine</em>, 30(10), 1105–1117.</li>
+<li>Wilson, D. L. (1972). <a href="https://doi.org/10.1109/TSMC.1972.4309137" class="external-link">Asymptotic properties
+of nearest neighbor rules using edited data</a>. <em>IEEE Transactions
+on Systems, Man, and Cybernetics</em>, 2(3), 408–421.</li>
 </ul>
 </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>

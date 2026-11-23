@@ -46,6 +46,19 @@
   ([\#42](https://github.com/sipemu/case-based-reasoning/issues/42)).
   README and the get-started vignette cover outcome prediction, the
   Gower distance, retaining and maintaining cases.
+- The “Motivation” vignette is rewritten as “Methods: Case-Based
+  Reasoning with Statistical Models”. It covers the mathematics of every
+  distance and every step of the CBR cycle, with worked examples that
+  recompute the package’s results by hand, and lists the advantages and
+  disadvantages of each approach.
+- New vignette “Comparing the Approaches”: all distances on the same
+  data. It compares the retrieved cases, the feature weights, the
+  predictions, the effect of irrelevant features and the stability under
+  resampling.
+- Agent Skills for Claude Code (`.claude/skills/`): `cbr-capabilities`
+  for API discovery and `cbr-advisor` for running, comparing and
+  interpreting a CBR analysis. They install as a plugin from
+  `.claude-plugin/`.
 
 ### Bug fixes
 
@@ -54,6 +67,8 @@
   design matrix of regression models fitted with ordered factors.
 
 ## CaseBasedReasoning 0.5.0
+
+CRAN release: 2026-11-22
 
 ### Bug fixes
 

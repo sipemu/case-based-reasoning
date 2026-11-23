@@ -19,7 +19,8 @@
 <li class="nav-item dropdown">
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-articles" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Articles</button>
   <ul class="dropdown-menu" aria-labelledby="dropdown-articles"><li><a class="dropdown-item" href="../articles/benchmark.html">Benchmark: Model-Derived Distances vs. Learned Metrics</a></li>
-    <li><a class="dropdown-item" href="../articles/distance_measures.html">Motivation</a></li>
+    <li><a class="dropdown-item" href="../articles/comparing_approaches.html">Comparing the Approaches</a></li>
+    <li><a class="dropdown-item" href="../articles/distance_measures.html">Methods: Case-Based Reasoning with Statistical Models</a></li>
     <li><a class="dropdown-item" href="../articles/get_started.html">Get Started</a></li>
   </ul></li>
 <li class="active nav-item"><a class="nav-link" href="../news/index.html">Changelog</a></li>
@@ -52,6 +53,9 @@
 <div class="section level3">
 <h3 id="documentation-development-version">Documentation<a class="anchor" aria-label="anchor" href="#documentation-development-version"></a></h3>
 <ul><li>New article “Benchmark: Model-Derived Distances vs. Learned Metrics” on the package website: the regression, random forest and Gower distances against a learned metric (diagonal NCA) on four data sets, with irrelevant variables and for survival (<a href="https://github.com/sipemu/case-based-reasoning/issues/42" class="external-link">#42</a>). README and the get-started vignette cover outcome prediction, the Gower distance, retaining and maintaining cases.</li>
+<li>The “Motivation” vignette is rewritten as “Methods: Case-Based Reasoning with Statistical Models”. It covers the mathematics of every distance and every step of the CBR cycle, with worked examples that recompute the package’s results by hand, and lists the advantages and disadvantages of each approach.</li>
+<li>New vignette “Comparing the Approaches”: all distances on the same data. It compares the retrieved cases, the feature weights, the predictions, the effect of irrelevant features and the stability under resampling.</li>
+<li>Agent Skills for Claude Code (<code>.claude/skills/</code>): <code>cbr-capabilities</code> for API discovery and <code>cbr-advisor</code> for running, comparing and interpreting a CBR analysis. They install as a plugin from <code>.claude-plugin/</code>.</li>
 </ul></div>
 <div class="section level3">
 <h3 id="bug-fixes-development-version">Bug fixes<a class="anchor" aria-label="anchor" href="#bug-fixes-development-version"></a></h3>
@@ -59,7 +63,7 @@
 </ul></div>
 </div>
     <div class="section level2">
-<h2 class="pkg-version" data-toc-text="0.5.0" id="casebasedreasoning-050">CaseBasedReasoning 0.5.0<a class="anchor" aria-label="anchor" href="#casebasedreasoning-050"></a></h2>
+<h2 class="pkg-version" data-toc-text="0.5.0" id="casebasedreasoning-050">CaseBasedReasoning 0.5.0<a class="anchor" aria-label="anchor" href="#casebasedreasoning-050"></a></h2><p class="text-muted">CRAN release: 2026-11-22</p>
 <div class="section level3">
 <h3 id="bug-fixes-0-5-0">Bug fixes<a class="anchor" aria-label="anchor" href="#bug-fixes-0-5-0"></a></h3>
 <ul><li>Factor values in queries are now matched to the training data by level name instead of internal integer code. Queries with different or dropped factor levels previously got silently wrong distances. Unknown levels are now an error (<a href="https://github.com/sipemu/case-based-reasoning/issues/4" class="external-link">#4</a>).</li>
