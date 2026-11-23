@@ -21,7 +21,18 @@ library(survival)
 
 # Motivation {#motivation}
 
-Case-Based Reasoning (CBR) solves new problems by finding similar past cases. This package uses regression models---Cox Proportional Hazards (CPH), linear, and logistic---and random forests to define a principled distance between cases. The workflow is: prepare data, fit a model, then query for similar cases. The retrieved cases can then be used to predict survival, to find counterfactual cases and to explain matches.
+Case-Based Reasoning (CBR) solves new problems by finding similar past cases. This package uses regression models---Cox Proportional Hazards (CPH), linear, and logistic---and random forests to define a principled distance between cases: two cases are close if the fitted model considers them alike. The workflow is: prepare data, fit a model, then query for similar cases. The retrieved cases can then be used to predict outcomes and survival, to find counterfactual cases and to explain matches.
+
+This vignette is a hands-on tour, following the steps of the CBR cycle:
+
+| Step | What it does | Functions |
+|------|--------------|-----------|
+| Retrieve | find the most similar cases | `get_similar_cases()`, `calc_distance_matrix()`, `explain_match()` |
+| Reuse | predict from the retrieved cases | `predict_outcome()`, `predict_survival()`, `get_counterfactual_cases()` |
+| Revise | evaluate the predictions | `evaluate()`, `evaluate_survival()`, `check_ph()` |
+| Retain | maintain the case base | `add_cases()`, `remove_cases()`, `assess_cases()` |
+
+The [Methods](distance_measures.html) vignette explains the mathematics behind each step, with worked examples and the advantages and disadvantages of each distance. [Comparing the Approaches](comparing_approaches.html) applies all distances to the same data.
 
 # Cox Proportional Hazard Model {#cox-proportional-hazard-model}
 
@@ -65,8 +76,8 @@ The package provides four model classes for estimating case similarity:
 
 ## **Random Forests**
 
-- Captures non-linear relationships and feature interactions.
-- More computationally expensive and less interpretable than regression models.
+- Captures non-linear relationships and feature interactions without specifying them.
+- More computationally expensive and less interpretable than regression models; the distance depends on the random seed.
 
 # Case Based Reasoning {#case-based-reasoning}
 

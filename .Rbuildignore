@@ -13,3 +13,5 @@
 ^pkgdown$
 ^codecov\.yml$
 ^vignettes/articles$
+^\.claude$
+^\.claude-plugin$
