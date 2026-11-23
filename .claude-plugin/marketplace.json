@@ -1,0 +1,19 @@
+{
+  "name": "casebasedreasoning",
+  "description": "Claude Code plugin marketplace for CaseBasedReasoning, case-based reasoning with statistical models in R. Ships the cbr-capabilities and cbr-advisor Agent Skills.",
+  "owner": {
+    "name": "Simon Müller",
+    "url": "https://github.com/sipemu/case-based-reasoning"
+  },
+  "plugins": [
+    {
+      "name": "casebasedreasoning",
+      "source": "./.claude",
+      "description": "CaseBasedReasoning Agent Skills: cbr-capabilities (API discovery: model classes, R6 methods, distances, CBR-cycle routing) and cbr-advisor (prepare -> choose distance -> fit and check -> retrieve and explain -> reuse -> evaluate and compare -> maintain).",
+      "version": "0.5.0",
+      "homepage": "https://sipemu.github.io/case-based-reasoning/",
+      "license": "MIT",
+      "keywords": ["case-based-reasoning", "similarity", "knn", "survival", "random-forest", "r", "skills"]
+    }
+  ]
+}

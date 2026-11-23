@@ -252,10 +252,12 @@ knitr::kable(summarise_cv(res_lung, c("c_index", "ibs")))
   as good as the metric that is learned specifically for nearest-neighbour
   classification (NCA).
 - **With irrelevant variables, the model-free Gower distance gets worse**,
-  while the model-derived distances and NCA are hardly affected: the model
-  gives irrelevant variables (almost) no weight. This is the main argument for
-  deriving the distance from a model when not all variables are known to be
-  relevant.
+  while the accuracy of the model-derived distances and NCA hardly changes:
+  the regression model gives irrelevant variables small weights. This is the
+  main argument for deriving the distance from a model when not all variables
+  are known to be relevant. (On small data sets, random forests can still give
+  irrelevant continuous variables much weight in the distance; see the
+  vignette *Comparing the Approaches*.)
 - **The gain of the model-derived distances lies in interpretability**: the
   distance follows the fitted model, so `explain_match()` can attribute it to
   model terms, and the model can be checked with the usual tools (e.g.

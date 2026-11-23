@@ -54,6 +54,13 @@ A random forest (via the [ranger](https://github.com/imbs-hl/ranger) package) is
 
 Both approaches produce an (n x m) distance matrix, where n is the number of training observations and m the number of query observations. This matrix can be used directly for clustering or visualization, or passed to the built-in k-nearest-neighbor search to retrieve the most similar cases.
 
+## Documentation
+
+-   [Get Started](https://sipemu.github.io/case-based-reasoning/articles/get_started.html): a hands-on tour through the CBR cycle.
+-   [Methods](https://sipemu.github.io/case-based-reasoning/articles/distance_measures.html): the mathematics of each distance and step, with worked examples and advantages and disadvantages.
+-   [Comparing the Approaches](https://sipemu.github.io/case-based-reasoning/articles/comparing_approaches.html): all distances applied to the same data: retrieved cases, feature weights, predictions, irrelevant features and stability.
+-   [Benchmark](https://sipemu.github.io/case-based-reasoning/articles/benchmark.html): predictive performance against the Gower distance and a learned metric (NCA).
+
 ## Installation
 
 #### CRAN
