@@ -32,7 +32,8 @@ Suggests:
     knitr,
     rmarkdown,
     RcppArmadillo,
-    patchwork
+    patchwork,
+    xgboost
 LinkingTo: Rcpp, RcppArmadillo, RcppParallel
 SystemRequirements: GNU make
 NeedsCompilation: yes

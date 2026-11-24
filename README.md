@@ -74,8 +74,8 @@ Both approaches produce an (n x m) distance matrix, where n is the number of tra
 
 ## Features
 
--   **Models**: linear, logistic and Cox regression (with splines and interactions), and random forests ([ranger](https://github.com/imbs-hl/ranger)) for numeric, binary, multi-class and survival endpoints; `GowerModel` as a model-free baseline.
--   **Distances**: regression-weighted (contribution-space) distance; random forest proximity (original, OOB, RF-GAP) and depth distance, implemented in parallel C++; the Gower distance for mixed data.
+-   **Models**: linear, logistic and Cox regression (with splines and interactions), gradient boosting (`BoostModel`, [xgboost](https://CRAN.R-project.org/package=xgboost)) and random forests ([ranger](https://github.com/imbs-hl/ranger)) for numeric, binary, multi-class and survival endpoints; `GowerModel` as a model-free baseline.
+-   **Distances**: regression-weighted (contribution-space) distance; the SHAP distance of gradient-boosted trees (`BoostModel`, xgboost), which generalises it to learned non-linear effects; random forest proximity (original, OOB, RF-GAP) and depth distance, implemented in parallel C++; the Gower distance for mixed data.
 -   **Outcome prediction**: `predict_outcome()` predicts classes (with probabilities) and numeric outcomes from the nearest cases; `evaluate()` scores them (accuracy, Brier score, log loss; RMSE, MAE).
 -   **Retrieval**: `get_similar_cases()` / `predict()` return the k nearest training cases per query, optionally merged with the query and excluding the query itself (`exclude_self = TRUE`).
 -   **Survival prediction**: `predict_survival()` estimates a Kaplan–Meier curve from each query's nearest cases; `evaluate_survival()` scores it with Uno's C-index and the integrated Brier score.

@@ -3,7 +3,7 @@ name: cbr-advisor
 description: |
   Run and advise on a case-based reasoning analysis with the CaseBasedReasoning R
   package: prepare the data, choose and fit a distance (Cox/linear/logistic regression,
-  random forest, Gower), check the model, retrieve and explain similar cases, predict
+  gradient boosting with SHAP distance, random forest, Gower), check the model, retrieve and explain similar cases, predict
   outcomes or survival curves from the neighbours, choose k and compare distances on
   held-out data, and maintain the case base (noisy, pivotal, redundant cases). Use this
   skill whenever a user asks to find similar cases or patients, build a k-NN or CBR

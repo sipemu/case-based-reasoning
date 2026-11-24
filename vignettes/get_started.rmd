@@ -74,6 +74,11 @@ The package provides four model classes for estimating case similarity:
 - Model-free distance for mixed data (`GowerModel`), optionally weighted.
 - A baseline for the model-derived distances; all variables count equally unless weighted.
 
+## **Gradient Boosting (SHAP distance)**
+
+- `BoostModel` fits boosted trees with **xgboost** and compares cases by their SHAP values: the regression distance for models that learn non-linear effects and interactions themselves.
+- Needs tuning and regularisation; on small data sets the neighbours are less stable.
+
 ## **Random Forests**
 
 - Captures non-linear relationships and feature interactions without specifying them.

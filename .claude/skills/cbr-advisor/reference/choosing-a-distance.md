@@ -9,10 +9,10 @@ and the *Benchmark* article. This file is the condensed decision guide.
 
    | Endpoint | Regression model | Forest | Baseline |
    |----------|------------------|--------|----------|
-   | numeric | `LinearModel` | `RFModel` | `GowerModel` |
-   | binary | `LogisticModel` | `RFModel` | `GowerModel` |
-   | multi-class | none | `RFModel` | `GowerModel` |
-   | survival (right-censored) | `CoxModel` | `RFModel` | `GowerModel` |
+   | numeric | `LinearModel` | `BoostModel`, `RFModel` | `GowerModel` |
+   | binary | `LogisticModel` | `BoostModel`, `RFModel` | `GowerModel` |
+   | multi-class | none | `BoostModel`, `RFModel` | `GowerModel` |
+   | survival (right-censored) | `CoxModel` | `BoostModel` (Cox objective), `RFModel` | `GowerModel` |
    | none / unknown | none | none | `GowerModel` or `gower_distance()` |
 
 2. **Must the retrieved cases be justified (e.g. to clinicians)?** Prefer the regression
@@ -26,7 +26,10 @@ and the *Benchmark* article. This file is the condensed decision guide.
    - the functional form, adding splines with `rcs(x, 3-4)`;
    - plausible interactions, added with `a * b`.
 
-   If it doesn't fit, or the relationships are complex or unknown, use `RFModel`.
+   If it doesn't fit, or the relationships are complex or unknown:
+   - use `BoostModel` (SHAP distance) if the distance should still be explained per
+     feature on the outcome scale;
+   - otherwise use `RFModel`.
 
 4. **Are there many candidate features of unknown relevance?**
    - With regression, select the features first (`variable_selection()`). Noise
@@ -72,6 +75,31 @@ Cons:
 - The weights are unstable with few cases or collinear features.
 - Two factor levels with similar coefficients are treated as near-identical.
 - `LogisticModel` is binary only.
+
+### Boosting (SHAP) distance
+
+Pros:
+
+- It learns non-linear effects and interactions.
+- Like the regression distance, it bounds the difference of the predictions on the
+  outcome, log-odds or log-hazard scale, and is explained per feature.
+- For a linear model it reduces to the regression distance.
+- It is cheap: O(n x m x p) once the SHAP values are computed.
+- It needs no refit after `add_cases()`, and is deterministic without subsampling.
+
+Cons:
+
+- SHAP values are step functions, and they split interaction effects among the
+  features involved.
+- It inherits the boosted model's overfitting. On 160 lung cases with 5 noise features,
+  about 40% of its weight went to noise, and it had the least stable neighbourhoods
+  under 90% subsampling (Jaccard overlap 0.45, against 0.72 for Cox and 0.98 for
+  Gower).
+- It needs tuning: choose `nrounds` and `max_depth` (1-3) by cross-validation with
+  `xgboost::xgb.cv()` and early stopping (code in the *Methods* vignette). With many
+  fixed rounds, the splits in noise features become distance. The 40% above came from
+  100 fixed rounds; on very small data (lung) tuning does not make it stable.
+- It needs the suggested package xgboost.
 
 ### Random forest distances
 

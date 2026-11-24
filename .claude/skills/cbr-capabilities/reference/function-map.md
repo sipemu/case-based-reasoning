@@ -10,7 +10,7 @@ names or arguments that are not listed here. Re-check the signatures with
 
 | Method | Returns | Notes |
 |--------|---------|-------|
-| `$new(formula, data)` | model object | `RFModel$new(formula, data, ...)`, `GowerModel$new(formula, data, weights = NULL)` |
+| `$new(formula, data)` | model object | `RFModel$new(formula, data, ...)`, `GowerModel$new(formula, data, weights = NULL)`, `BoostModel$new(formula, data, nrounds = 100, params = list(eta = 0.1, max_depth = 3))` |
 | `$fit()` | the object, invisibly | drops incomplete training cases (warning); must be called before any other method |
 | `$print()`, `summary(model)` | — | |
 
@@ -36,7 +36,7 @@ With `merge = TRUE` the query rows are included, plus two more columns:
 
 | Model | Columns | Notes |
 |-------|---------|-------|
-| regression | `term`, `query_contribution`, `case_contribution`, `distance`, `share` | |
+| regression and `BoostModel` | `term`, `query_contribution`, `case_contribution`, `distance`, `share` | for `BoostModel`, the contributions are SHAP values |
 | Gower | `variable`, `query_value`, `case_value`, `weight`, `distance`, `share` | |
 | forest | `variable`, `n_trees`, `share` | attribute `same_leaf` |
 
@@ -94,6 +94,7 @@ With `merge = TRUE` the query rows are included, plus two more columns:
 | `$variable_selection(update = FALSE, ...)` | `LinearModel`, `LogisticModel`, `CoxModel` |
 | `$check_ph()` | `CoxModel` |
 | `$set_distance_method(method = "Depth", proximity_type = "original")` | `RFModel` |
+| `$shap_values(data)` | `BoostModel` |
 
 ## Standalone functions
 

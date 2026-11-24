@@ -181,3 +181,20 @@ predict.GowerModel <- function(object, newdata, k = NULL, type = c("cases", "out
 #' @param ... Additional arguments (currently unused)
 #' @export
 print.GowerModel <- function(x, ...) x$print()
+
+#' Predict method for BoostModel
+#'
+#' @param object A \code{BoostModel} R6 object
+#' @inheritParams predict.CoxModel
+#' @return A data.frame of similar cases, a data.frame of predictions, or a
+#'   matrix of survival probabilities
+#' @export
+predict.BoostModel <- function(object, newdata, k = NULL, type = c("cases", "outcome", "survival"), ...) {
+  cbr_predict(object, newdata, k, type, ...)
+}
+
+#' Print method for BoostModel
+#' @param x A \code{BoostModel} R6 object
+#' @param ... Additional arguments (currently unused)
+#' @export
+print.BoostModel <- function(x, ...) x$print()

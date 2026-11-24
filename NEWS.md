@@ -2,6 +2,16 @@
 
 ### New features
 
+- `BoostModel`: gradient-boosted trees (xgboost, suggested) with a SHAP
+  distance, the L1 distance of the cases' TreeSHAP values. It works for
+  numeric, binary, multi-class and survival (Cox objective) endpoints. It
+  is the contribution-space distance with the features as terms: for a
+  linear model it reduces to the regression distance, and the distance
+  bounds the difference of the predictions on the margin scale.
+  `shap_values()` returns the contributions, `explain_match()` decomposes
+  the distance per feature, and all CBR methods work with it. The Methods
+  and Comparing the Approaches vignettes cover it.
+
 - `predict_outcome()` predicts class and numeric outcomes from the `k` most
   similar training cases: a (tricube-weighted) majority vote with class
   probabilities, or a (weighted) mean. `evaluate()` scores the predictions on

@@ -2,7 +2,7 @@
 name: cbr-capabilities
 description: |
   Discover the CaseBasedReasoning R package's capabilities: list the model classes
-  (CoxModel, LinearModel, LogisticModel, RFModel, GowerModel), their R6 methods and
+  (CoxModel, LinearModel, LogisticModel, BoostModel, RFModel, GowerModel), their R6 methods and
   call signatures, the distance functions, and which method covers which step of the
   case-based reasoning cycle (retrieve, reuse, revise, retain). Use this skill whenever
   a user asks "what can CaseBasedReasoning do?", "which model or distance can I use for
@@ -45,7 +45,7 @@ Without loading the package, read `NAMESPACE` and the R6 definitions in `R/`:
 
 ```bash
 grep -E "^export\(" NAMESPACE | sed -E 's/export\((.*)\)/\1/' | sort
-grep -nE "^ +[a-z_]+ = function\(" R/CBRBase.R R/RegressionModel.R R/RFModel.R R/gower.R
+grep -nE "^ +[a-z_]+ = function\(" R/CBRBase.R R/RegressionModel.R R/RFModel.R R/gower.R R/boost.R
 ```
 
 Online reference: <https://sipemu.github.io/case-based-reasoning/reference/index.html>.
@@ -71,6 +71,7 @@ are matched by name, and unknown levels and missing values are errors.
 | `LinearModel` | numeric | contribution-space distance from an `rms::ols` fit | `variable_selection()` |
 | `LogisticModel` | binary (0/1, logical, two-level factor) | contribution-space distance from `rms::lrm` | `variable_selection()` |
 | `CoxModel` | survival, `Surv(time, status)` | contribution-space distance from `rms::cph` | `variable_selection()`, `check_ph()` |
+| `BoostModel` | numeric, class, or survival | SHAP distance from an xgboost model (needs the suggested package xgboost) | `shap_values()` |
 | `RFModel` | numeric, class, or survival | random forest (`ranger`): depth (default) or proximity (original / OOB / RF-GAP) | `set_distance_method()` |
 | `GowerModel` | any, or none (`~ x1 + x2`) | Gower distance, optional weights | none |
 
@@ -98,7 +99,7 @@ standalone distance function.
 | "Predict a survival curve from neighbours" | `$predict_survival(query, k, times)`; score with `$evaluate_survival(test, k)` |
 | "Why are these two cases similar?" | `$explain_match(query, case)` |
 | "Similar case with a different outcome" | `$get_counterfactual_cases(query, k, horizon)` |
-| "Non-linear effects / interactions" | regression formula with `rcs(x, 4)` or `a * b`, or `RFModel` |
+| "Non-linear effects / interactions" | regression formula with `rcs(x, 4)` or `a * b`, `BoostModel` (SHAP distance, explained per feature), or `RFModel` |
 | "Distance without an outcome model" | `GowerModel$new(~ x1 + x2, data)` or `gower_distance(x, y)` |
 | "Distance matrix for clustering / heatmap" | `$calc_distance_matrix()` (n x n) or `$calc_distance_matrix(query)` (n x m) |
 | "Add new solved cases" | `$add_cases(newdata, refit = FALSE)` |
