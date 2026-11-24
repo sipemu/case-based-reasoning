@@ -55,6 +55,8 @@
 <li>The “Motivation” vignette is rewritten as “Methods: Case-Based Reasoning with Statistical Models”. It covers the mathematics of every distance and every step of the CBR cycle, with worked examples that recompute the package’s results by hand, and lists the advantages and disadvantages of each approach.</li>
 <li>New vignette “Comparing the Approaches”: all distances on the same data. It compares the retrieved cases, the feature weights, the predictions, the effect of irrelevant features and the stability under resampling.</li>
 <li>Agent Skills for Claude Code (<code>.claude/skills/</code>): <code>cbr-capabilities</code> for API discovery and <code>cbr-advisor</code> for running, comparing and interpreting a CBR analysis. They install as a plugin from <code>.claude-plugin/</code>.</li>
+<li>
+<code>RFModel</code>: the help page explains how to fit survival forests on large data sets with a time grid (<code>time.interest</code>). ranger otherwise stores the cumulative hazard at every event time in every leaf, which took about 15 minutes and 6 GB per forest with 3000 cases.</li>
 </ul></div>
 <div class="section level3">
 <h3 id="bug-fixes-development-version">Bug fixes<a class="anchor" aria-label="anchor" href="#bug-fixes-development-version"></a></h3>

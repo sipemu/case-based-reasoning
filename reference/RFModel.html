@@ -55,6 +55,12 @@ as a similarity matrix of training and query
 observations. By default all cases with at least one missing values are dropped
 from learning, calculating the distance matrix and searching for similar
 cases.</p>
+<p>For survival endpoints, ranger stores the cumulative hazard at every
+distinct event time in every leaf. On large data sets this makes the forest
+slow to fit and large in memory (with 3000 cases and 500 trees, about 15
+minutes and 6 GB). The distances and the survival predictions of this
+package do not use these curves, so pass a time grid, e.g.
+<code>RFModel$new(Surv(time, status) ~ ., data, time.interest = 100)</code>.</p>
     </div>
     <div class="section level2">
     <h2 id="references">References<a class="anchor" aria-label="anchor" href="#references"></a></h2>
@@ -138,7 +144,8 @@ in a random forest: An exploratory study. Expert Systems with Applications,
 
 <dt><code>...</code></dt>
 <dd><p>ranger RandomForest arguments. <code>write.forest</code> is always
-set to <code>TRUE</code>; <code>verbose</code> defaults to <code>FALSE</code>.</p></dd>
+set to <code>TRUE</code>; <code>verbose</code> defaults to <code>FALSE</code>. For
+large survival data, set <code>time.interest</code> (see Details).</p></dd>
 
 
 </dl><p></p></div>
