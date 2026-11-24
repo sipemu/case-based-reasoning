@@ -24,6 +24,15 @@ Find Them: A Case-Based Technique for Generating Counterfactuals for
 Explainable AI. ICCBR 2020, LNCS 12311, 163–178.
 [doi:10.1007/978-3-030-58342-2_11](https://doi.org/10.1007/978-3-030-58342-2_11)
 
+Smyth, B. and Keane, M. T. (1995). Remembering to forget: A
+competence-preserving case deletion policy for case-based reasoning
+systems. Proceedings of IJCAI-95, 377–382.
+
+Wilson, D. L. (1972). Asymptotic properties of nearest neighbor rules
+using edited data. IEEE Transactions on Systems, Man, and Cybernetics,
+2(3), 408–421.
+[doi:10.1109/TSMC.1972.4309137](https://doi.org/10.1109/TSMC.1972.4309137)
+
 ## Public fields
 
 - `model`:
@@ -88,11 +97,23 @@ Explainable AI. ICCBR 2020, LNCS 12311, 163–178.
 
 - [`CBRBase$get_similar_cases()`](#method-CBRBase-get_similar_cases)
 
+- [`CBRBase$predict_outcome()`](#method-CBRBase-predict_outcome)
+
+- [`CBRBase$evaluate()`](#method-CBRBase-evaluate)
+
 - [`CBRBase$predict_survival()`](#method-CBRBase-predict_survival)
 
 - [`CBRBase$evaluate_survival()`](#method-CBRBase-evaluate_survival)
 
 - [`CBRBase$get_counterfactual_cases()`](#method-CBRBase-get_counterfactual_cases)
+
+- [`CBRBase$add_cases()`](#method-CBRBase-add_cases)
+
+- [`CBRBase$remove_cases()`](#method-CBRBase-remove_cases)
+
+- [`CBRBase$assess_cases()`](#method-CBRBase-assess_cases)
+
+- [`CBRBase$get_case_base()`](#method-CBRBase-get_case_base)
 
 - [`CBRBase$explain_match()`](#method-CBRBase-explain_match)
 
@@ -183,6 +204,87 @@ Extracts similar cases
   Exclude training cases whose row name equals the query's row name. Use
   this when the query rows are taken from the training data, so that a
   case is not returned as its own nearest neighbour.
+
+------------------------------------------------------------------------
+
+### Method `predict_outcome()`
+
+Predict the outcome of class and numeric endpoints from the `k` most
+similar training cases (the Reuse step of the CBR cycle): a (weighted)
+majority vote with class probabilities, or a (weighted) mean. For
+survival endpoints use `predict_survival()`.
+
+Class endpoints are factors, characters, logicals or 0/1 variables; all
+other endpoints are numeric.
+
+#### Usage
+
+    CBRBase$predict_outcome(query, k = 10, weighted = FALSE, exclude_self = FALSE)
+
+#### Arguments
+
+- `query`:
+
+  Query data of class data.frame
+
+- `k`:
+
+  number of similar cases
+
+- `weighted`:
+
+  If `TRUE`, cases are weighted with a tricube kernel of their distance
+  to the query.
+
+- `exclude_self`:
+
+  Exclude training cases whose row name equals the query's row name
+  (leave-one-out predictions for in-sample queries).
+
+#### Returns
+
+A data.frame with one row per query and the column `prediction`. For
+class endpoints `prediction` is a factor, and there is one column
+`prob_<level>` with the share of (weighted) cases per class.
+
+------------------------------------------------------------------------
+
+### Method `evaluate()`
+
+Evaluate predictions from retrieved cases on test data. Class endpoints:
+accuracy, Brier score and log loss; numeric endpoints: root mean squared
+error (RMSE) and mean absolute error (MAE); survival endpoints: see
+`evaluate_survival()`. Use it to choose `k` and the distance method on
+held-out data.
+
+#### Usage
+
+    CBRBase$evaluate(test, k = 10, weighted = FALSE, ...)
+
+#### Arguments
+
+- `test`:
+
+  Test data with the endpoint column(s)
+
+- `k`:
+
+  number of similar cases
+
+- `weighted`:
+
+  If `TRUE`, cases are weighted with a tricube kernel of their distance
+  to the query.
+
+- `...`:
+
+  further arguments: `exclude_self` for class and numeric endpoints,
+  `times` and `tau` for survival endpoints.
+
+#### Returns
+
+A named list of scores and the number of test cases `n` (for survival
+endpoints the list of `evaluate_survival()`).
 
 ------------------------------------------------------------------------
 
@@ -327,6 +429,129 @@ counterfactual if
 
 A data.frame like `get_similar_cases()` with the additional column
 `queryOutcome`.
+
+------------------------------------------------------------------------
+
+### Method `add_cases()`
+
+Add solved cases to the case base (the Retain step of the CBR cycle). By
+default the model is not refitted: the new cases are retrievable at
+once, and distances use the fitted model (for `GowerModel`: the ranges
+of the fitted cases). The new cases are checked like queries (variables,
+factor levels, missing values) and need a complete endpoint.
+
+For `RFModel` the OOB and RF-GAP proximities need the in-bag counts of
+all cases; refit the model to use them after adding cases.
+
+#### Usage
+
+    CBRBase$add_cases(newdata, refit = FALSE)
+
+#### Arguments
+
+- `newdata`:
+
+  New cases (data.frame) with the variables and the endpoint of the
+  model. Other columns of the training data are filled with `NA`.
+
+- `refit`:
+
+  If `TRUE`, refit the model on the extended case base; new factor
+  levels are then allowed.
+
+#### Returns
+
+The object, invisibly.
+
+------------------------------------------------------------------------
+
+### Method `remove_cases()`
+
+Remove cases from the case base, e.g. noisy or redundant cases found by
+`assess_cases()`.
+
+#### Usage
+
+    CBRBase$remove_cases(cases, refit = FALSE)
+
+#### Arguments
+
+- `cases`:
+
+  row names (character) or positions (integer) of cases in the case base
+  (`get_case_base()`).
+
+- `refit`:
+
+  If `TRUE`, refit the model on the remaining cases.
+
+#### Returns
+
+The object, invisibly.
+
+------------------------------------------------------------------------
+
+### Method `assess_cases()`
+
+Assess the cases of the case base for case-base maintenance. Each case
+is retrieved against the other cases (leave-one-out) with its `k`
+nearest neighbours.
+
+Case \\j\\ *solves* case \\i\\ if \\j\\ is among the `k` nearest
+neighbours of \\i\\ and has the same outcome (same class, numeric
+outcomes within `tolerance`, survival: same event status at `horizon`).
+Following Smyth & Keane (1995), a case is *pivotal* if no other case
+solves it (removing it loses competence), and *auxiliary* if its
+coverage (the cases it solves, and itself) is contained in the coverage
+of a case that solves it (it is redundant). A case is *noisy* if the
+majority of its neighbours predicts a different outcome (Wilson editing,
+1972); pivotal cases are often noisy.
+
+For `RFModel` with OOB or RF-GAP proximities, the in-sample (out-of-bag)
+proximities are used.
+
+#### Usage
+
+    CBRBase$assess_cases(k = 5, horizon = NULL, tolerance = NULL)
+
+#### Arguments
+
+- `k`:
+
+  number of neighbours
+
+- `horizon`:
+
+  time horizon for survival endpoints (default: median event time).
+  Cases censored before `horizon` are not assessed.
+
+- `tolerance`:
+
+  numeric endpoints: largest outcome difference counted as the same
+  outcome (default: half the standard deviation of the outcome).
+
+#### Returns
+
+A data.frame with one row per case of the case base (row names as in
+`get_case_base()`): `outcome`, `agreement` (share of neighbours with the
+same outcome), `noisy`, `n_reachable` (number of cases that solve the
+case), `n_coverage` (number of cases it solves) and `category`
+(`"pivotal"`, `"auxiliary"` or `"other"`).
+
+------------------------------------------------------------------------
+
+### Method `get_case_base()`
+
+The case base: the training cases used for retrieval (complete cases,
+including added cases).
+
+#### Usage
+
+    CBRBase$get_case_base()
+
+#### Returns
+
+A data.frame.
 
 ------------------------------------------------------------------------
 

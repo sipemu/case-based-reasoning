@@ -5,9 +5,27 @@
 Case-Based Reasoning (CBR) solves new problems by finding similar past
 cases. This package uses regression models—Cox Proportional Hazards
 (CPH), linear, and logistic—and random forests to define a principled
-distance between cases. The workflow is: prepare data, fit a model, then
+distance between cases: two cases are close if the fitted model
+considers them alike. The workflow is: prepare data, fit a model, then
 query for similar cases. The retrieved cases can then be used to predict
-survival, to find counterfactual cases and to explain matches.
+outcomes and survival, to find counterfactual cases and to explain
+matches.
+
+This vignette is a hands-on tour, following the steps of the CBR cycle:
+
+| Step | What it does | Functions |
+|----|----|----|
+| Retrieve | find the most similar cases | `get_similar_cases()`, `calc_distance_matrix()`, `explain_match()` |
+| Reuse | predict from the retrieved cases | `predict_outcome()`, `predict_survival()`, `get_counterfactual_cases()` |
+| Revise | evaluate the predictions | `evaluate()`, `evaluate_survival()`, `check_ph()` |
+| Retain | maintain the case base | `add_cases()`, `remove_cases()`, `assess_cases()` |
+
+The
+[Methods](https://sipemu.github.io/case-based-reasoning/articles/distance_measures.md)
+vignette explains the mathematics behind each step, with worked examples
+and the advantages and disadvantages of each distance. [Comparing the
+Approaches](https://sipemu.github.io/case-based-reasoning/articles/comparing_approaches.md)
+applies all distances to the same data.
 
 ## Cox Proportional Hazard Model
 
@@ -49,11 +67,27 @@ The package provides four model classes for estimating case similarity:
 - Designed for time-to-event (survival) data with right-censoring.
 - Assumes constant hazard ratios over time.
 
+### **Gower Distance**
+
+- Model-free distance for mixed data (`GowerModel`), optionally
+  weighted.
+- A baseline for the model-derived distances; all variables count
+  equally unless weighted.
+
+### **Gradient Boosting (SHAP distance)**
+
+- `BoostModel` fits boosted trees with **xgboost** and compares cases by
+  their SHAP values: the regression distance for models that learn
+  non-linear effects and interactions themselves.
+- Needs tuning and regularisation; on small data sets the neighbours are
+  less stable.
+
 ### **Random Forests**
 
-- Captures non-linear relationships and feature interactions.
+- Captures non-linear relationships and feature interactions without
+  specifying them.
 - More computationally expensive and less interpretable than regression
-  models.
+  models; the distance depends on the random seed.
 
 ## Case Based Reasoning
 
@@ -303,3 +337,122 @@ knitr::kable(rf_model$explain_match(iris[51, ], iris[60, ]), digits = 3)
 | Petal.Length |       5 | 0.064 |
 | Sepal.Width  |       4 | 0.051 |
 | Petal.Width  |       0 | 0.000 |
+
+## Predicting Outcomes
+
+For class and numeric endpoints, `predict_outcome()` predicts from the
+`k` most similar cases: a majority vote with class probabilities, or a
+mean (optionally tricube-weighted with `weighted = TRUE`). `evaluate()`
+scores the predictions on test data.
+
+``` r
+
+set.seed(1)
+idx <- sample(nrow(iris), 100)
+rf_iris <- RFModel$new(Species ~ ., data = iris[idx, ], num.trees = 200)
+rf_iris$fit()
+knitr::kable(head(rf_iris$predict_outcome(iris[-idx, ], k = 10)), digits = 2)
+```
+
+| prediction | prob_setosa | prob_versicolor | prob_virginica |
+|:-----------|------------:|----------------:|---------------:|
+| setosa     |           1 |               0 |              0 |
+| setosa     |           1 |               0 |              0 |
+| setosa     |           1 |               0 |              0 |
+| setosa     |           1 |               0 |              0 |
+| setosa     |           1 |               0 |              0 |
+| setosa     |           1 |               0 |              0 |
+
+``` r
+
+str(rf_iris$evaluate(iris[-idx, ], k = 10))
+```
+
+    ## List of 4
+    ##  $ accuracy: num 0.96
+    ##  $ brier   : num 0.08
+    ##  $ log_loss: num 1.38
+    ##  $ n       : int 50
+
+## A Model-Free Baseline: the Gower Distance
+
+`GowerModel` compares cases with the Gower distance: numeric variables
+by their range-normalised difference, ordered factors by their rank,
+other factors by equality. It supports the same methods as the other
+models and shows what a model-derived distance adds. The [benchmark
+article](https://sipemu.github.io/case-based-reasoning/articles/benchmark.html)
+compares the distances on several data sets.
+
+``` r
+
+gower_model <- GowerModel$new(Surv(time, status) ~ age + sex + ph.ecog + wt.loss, lung_train)
+gower_model$fit()
+str(gower_model$evaluate(lung_test, k = 30)[c("c_index", "ibs")])
+```
+
+    ## List of 2
+    ##  $ c_index: num 0.636
+    ##  $ ibs    : num 0.185
+
+``` r
+
+knitr::kable(gower_model$explain_match(lung_test[1, ], lung_train[1, ]), digits = 3)
+```
+
+| variable | query_value | case_value | weight | distance | share |
+|:---------|:------------|:-----------|-------:|---------:|------:|
+| sex      | male        | female     |      1 |    0.250 | 0.838 |
+| age      | 57          | 53         |      1 |    0.024 | 0.082 |
+| wt.loss  | 11          | 3          |      1 |    0.024 | 0.080 |
+| ph.ecog  | 1           | 1          |      1 |    0.000 | 0.000 |
+
+## Retaining and Maintaining Cases
+
+The last steps of the CBR cycle keep the case base up to date.
+`add_cases()` adds solved cases without refitting the model
+(`refit = TRUE` refits), and `remove_cases()` removes cases.
+
+``` r
+
+lung_model$add_cases(lung_test[1:10, ])
+nrow(lung_model$get_case_base())
+```
+
+    ## [1] 160
+
+`assess_cases()` retrieves each case against the others. A case is
+*noisy* if most of its neighbours have a different outcome (Wilson
+editing), *pivotal* if no other case solves it, and *auxiliary*
+(redundant) if another case that solves it also solves all the cases it
+solves (Smyth & Keane, 1995). For survival endpoints the outcome is the
+event status at `horizon`.
+
+``` r
+
+assessment <- lung_model$assess_cases(k = 10, horizon = 365)
+knitr::kable(head(assessment), digits = 2)
+```
+
+|     | outcome  | agreement | noisy | n_reachable | n_coverage | category  |
+|:----|:---------|----------:|:------|------------:|-----------:|:----------|
+| 75  | event    |      0.43 | TRUE  |           3 |          6 | auxiliary |
+| 176 | NA       |        NA | NA    |           0 |          0 | NA        |
+| 137 | no event |      0.29 | TRUE  |           2 |          3 | auxiliary |
+| 171 | NA       |        NA | NA    |           0 |          0 | NA        |
+| 48  | no event |      0.29 | TRUE  |           2 |          4 | other     |
+| 16  | event    |      0.71 | FALSE |           5 |          5 | auxiliary |
+
+``` r
+
+table(assessment$category, assessment$noisy, useNA = "ifany")
+```
+
+    ##            
+    ##             FALSE TRUE <NA>
+    ##   pivotal       0    1    0
+    ##   auxiliary    57   35    0
+    ##   other        24   13    0
+    ##   <NA>          0    0   30
+
+Noisy cases can then be removed,
+e.g. `lung_model$remove_cases(rownames(assessment)[which(assessment$noisy)])`.

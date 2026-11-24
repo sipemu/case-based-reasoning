@@ -1,5 +1,84 @@
 # Changelog
 
+## CaseBasedReasoning (development version)
+
+### New features
+
+- `BoostModel`: gradient-boosted trees (xgboost, suggested) with a SHAP
+  distance, the L1 distance of the cases’ TreeSHAP values. It works for
+  numeric, binary, multi-class and survival (Cox objective) endpoints.
+  It is the contribution-space distance with the features as terms: for
+  a linear model it reduces to the regression distance, and the distance
+  bounds the difference of the predictions on the margin scale.
+  `shap_values()` returns the contributions, `explain_match()`
+  decomposes the distance per feature, and all CBR methods work with it.
+  The Methods and Comparing the Approaches vignettes cover it.
+
+- `predict_outcome()` predicts class and numeric outcomes from the `k`
+  most similar training cases: a (tricube-weighted) majority vote with
+  class probabilities, or a (weighted) mean. `evaluate()` scores the
+  predictions on test data (accuracy, Brier score and log loss; RMSE and
+  MAE) and delegates to `evaluate_survival()` for survival endpoints.
+  [`predict()`](https://rdrr.io/r/stats/predict.html) gains
+  `type = c("cases", "outcome", "survival")`; the default still returns
+  the similar cases
+  ([\#43](https://github.com/sipemu/case-based-reasoning/issues/43)).
+
+- `GowerModel` and
+  [`gower_distance()`](https://sipemu.github.io/case-based-reasoning/reference/gower_distance.md):
+  the model-free Gower (1971) distance for mixed data (numeric, nominal,
+  ordinal and logical variables, optional weights) as a baseline for the
+  model-derived distances. Ranges come from the training cases, so query
+  distances do not depend on the batch. All CBR methods (retrieval,
+  outcome and survival prediction, counterfactuals, `explain_match()`)
+  work with it
+  ([\#44](https://github.com/sipemu/case-based-reasoning/issues/44)).
+
+- Retain: `add_cases()` adds solved cases to the case base without
+  refitting the model (or with `refit = TRUE`), `remove_cases()` removes
+  cases by row name or position, and `get_case_base()` returns the
+  current case base. New cases are validated like queries. OOB and
+  RF-GAP proximities of `RFModel` need a refit after the case base was
+  changed
+  ([\#45](https://github.com/sipemu/case-based-reasoning/issues/45)).
+
+- Case-base maintenance: `assess_cases()` retrieves each case against
+  the others (leave-one-out) and reports the agreement with its
+  neighbours, noisy cases (Wilson editing, 1972) and the competence
+  categories of Smyth & Keane (1995): pivotal cases that no other case
+  solves and redundant (auxiliary) cases whose coverage another case
+  subsumes. Combine it with `remove_cases()` to edit the case base
+  ([\#46](https://github.com/sipemu/case-based-reasoning/issues/46)).
+
+### Documentation
+
+- New article “Benchmark: Model-Derived Distances vs. Learned Metrics”
+  on the package website: the regression, random forest and Gower
+  distances against a learned metric (diagonal NCA) on four data sets,
+  with irrelevant variables and for survival
+  ([\#42](https://github.com/sipemu/case-based-reasoning/issues/42)).
+  README and the get-started vignette cover outcome prediction, the
+  Gower distance, retaining and maintaining cases.
+- The “Motivation” vignette is rewritten as “Methods: Case-Based
+  Reasoning with Statistical Models”. It covers the mathematics of every
+  distance and every step of the CBR cycle, with worked examples that
+  recompute the package’s results by hand, and lists the advantages and
+  disadvantages of each approach.
+- New vignette “Comparing the Approaches”: all distances on the same
+  data. It compares the retrieved cases, the feature weights, the
+  predictions, the effect of irrelevant features and the stability under
+  resampling.
+- Agent Skills for Claude Code (`.claude/skills/`): `cbr-capabilities`
+  for API discovery and `cbr-advisor` for running, comparing and
+  interpreting a CBR analysis. They install as a plugin from
+  `.claude-plugin/`.
+
+### Bug fixes
+
+- Ordered factors in queries stay ordered. Queries were converted to
+  unordered factors when aligned to the training data, which changed the
+  design matrix of regression models fitted with ordered factors.
+
 ## CaseBasedReasoning 0.5.0
 
 CRAN release: 2026-11-22

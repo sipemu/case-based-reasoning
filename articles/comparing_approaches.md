@@ -29,8 +29,15 @@ train <- lung2[idx, ]
 test <- lung2[-idx, ]
 ```
 
-We build five distances. The Cox model gets a spline for age, the forest
-and the Gower distance use the features as they are.
+We build six distances:
+
+- a Cox model with a spline for age;
+- gradient boosting (`BoostModel`, xgboost with the Cox objective) with
+  the SHAP distance;
+- the Gower distance;
+- a random forest with three distance methods.
+
+The models other than Cox use the features as they are.
 
 ``` r
 
@@ -38,6 +45,8 @@ fml <- Surv(time, status) ~ age + sex + ph.ecog + ph.karno + wt.loss
 fit_all <- function(train, seed = 1) {
   cox <- CoxModel$new(Surv(time, status) ~ rcs(age, 3) + sex + ph.ecog + ph.karno + wt.loss, train)
   cox$fit()
+  boost <- BoostModel$new(fml, train, nrounds = 100, params = list(eta = 0.05, max_depth = 2))
+  boost$fit()
   gower <- GowerModel$new(fml, train)
   gower$fit()
   set.seed(seed)
@@ -46,7 +55,7 @@ fit_all <- function(train, seed = 1) {
   # three distances from the same forest
   rf_prox <- rf$clone()$set_distance_method("Proximity")
   rf_gap <- rf$clone()$set_distance_method("Proximity", proximity_type = "rfgap")
-  list("Cox" = cox, "Gower" = gower, "RF depth" = rf,
+  list("Cox" = cox, "Boost (SHAP)" = boost, "Gower" = gower, "RF depth" = rf,
        "RF proximity" = rf_prox, "RF-GAP" = rf_gap)
 }
 models <- fit_all(train)
@@ -88,6 +97,11 @@ knitr::kable(do.call(rbind, show), row.names = FALSE)
 | Cox          |  50 | female |       2 |       60 |      -3 |  239 |      1 |
 | Cox          |  67 | female |       2 |       70 |       2 |  208 |      1 |
 | Cox          |  68 | female |       2 |       70 |      10 |  310 |      1 |
+| Boost (SHAP) |  70 | female |       2 |       70 |       3 |  211 |      0 |
+| Boost (SHAP) |  67 | female |       2 |       70 |       2 |  208 |      1 |
+| Boost (SHAP) |  68 | female |       2 |       70 |      10 |  310 |      1 |
+| Boost (SHAP) |  60 | female |       2 |       70 |      10 |  199 |      1 |
+| Boost (SHAP) |  50 | female |       2 |       60 |      -3 |  239 |      1 |
 | Gower        |  70 | female |       2 |       70 |       3 |  211 |      0 |
 | Gower        |  67 | female |       2 |       70 |       2 |  208 |      1 |
 | Gower        |  68 | female |       2 |       70 |      10 |  310 |      1 |
@@ -131,25 +145,29 @@ dimnames(overlap) <- list(names(nn_all), names(nn_all))
 knitr::kable(overlap, digits = 2)
 ```
 
-|              |  Cox | Gower | RF depth | RF proximity | RF-GAP |
-|:-------------|-----:|------:|---------:|-------------:|-------:|
-| Cox          | 1.00 |  0.70 |     0.42 |         0.38 |   0.34 |
-| Gower        | 0.70 |  1.00 |     0.48 |         0.44 |   0.41 |
-| RF depth     | 0.42 |  0.48 |     1.00 |         0.71 |   0.65 |
-| RF proximity | 0.38 |  0.44 |     0.71 |         1.00 |   0.82 |
-| RF-GAP       | 0.34 |  0.41 |     0.65 |         0.82 |   1.00 |
+|              |  Cox | Boost (SHAP) | Gower | RF depth | RF proximity | RF-GAP |
+|:-------------|-----:|-------------:|------:|---------:|-------------:|-------:|
+| Cox          | 1.00 |         0.33 |  0.70 |     0.42 |         0.38 |   0.34 |
+| Boost (SHAP) | 0.33 |         1.00 |  0.33 |     0.36 |         0.33 |   0.32 |
+| Gower        | 0.70 |         0.33 |  1.00 |     0.48 |         0.44 |   0.41 |
+| RF depth     | 0.42 |         0.36 |  0.48 |     1.00 |         0.71 |   0.65 |
+| RF proximity | 0.38 |         0.33 |  0.44 |     0.71 |         1.00 |   0.82 |
+| RF-GAP       | 0.34 |         0.32 |  0.41 |     0.65 |         0.82 |   1.00 |
 
 There are two families. The Cox and the Gower distance, both sums of
 per-feature differences, share most of their neighbours; the three
 forest distances share most of theirs. Between the families, only about
-four in ten neighbours are the same. **The choice of the distance
-changes the retrieved cases considerably**, even when, as we will see,
-it hardly changes the quality of the predictions.
+four in ten neighbours are the same. The SHAP distance of the boosted
+model forms a group of its own: only a third of its neighbours are also
+retrieved by any other distance. **The choice of the distance changes
+the retrieved cases considerably**, even when, as we will see, it hardly
+changes the quality of the predictions.
 
 ## Why are cases similar?
 
 `explain_match()` explains a match for every distance, but each in its
-own terms: the Cox model in contributions to the log hazard, the Gower
+own terms: the Cox model in contributions to the log hazard, the boosted
+model in SHAP values (also contributions to the log hazard), the Gower
 distance in per-feature differences, the forest in split variables at
 which the paths of the cases diverge.
 
@@ -166,6 +184,19 @@ knitr::kable(models$Cox$explain_match(query, nn1("Cox")), digits = 3)
 | wt.loss     |             -0.006 |            -0.018 |    0.012 | 0.045 |
 | sex         |             -0.612 |            -0.612 |    0.000 | 0.000 |
 | ph.ecog     |              1.858 |             1.858 |    0.000 | 0.000 |
+
+``` r
+
+knitr::kable(models$`Boost (SHAP)`$explain_match(query, nn1("Boost (SHAP)")), digits = 3)
+```
+
+| term     | query_contribution | case_contribution | distance | share |
+|:---------|-------------------:|------------------:|---------:|------:|
+| age      |              0.186 |             0.054 |    0.132 | 0.680 |
+| sex      |             -0.323 |            -0.344 |    0.021 | 0.107 |
+| wt.loss  |              0.162 |             0.182 |    0.021 | 0.107 |
+| ph.karno |              0.007 |             0.019 |    0.012 | 0.062 |
+| ph.ecog  |              0.626 |             0.634 |    0.009 | 0.044 |
 
 ``` r
 
@@ -193,9 +224,15 @@ knitr::kable(models$`RF depth`$explain_match(query, nn1("RF depth")), digits = 3
 | sex      |       0 | 0.000 |
 | ph.ecog  |       0 | 0.000 |
 
-The nearest case agrees with the query in sex and ECOG, so all three
+The nearest case agrees with the query in sex and ECOG, so the
 explanations attribute the remaining distance to the Karnofsky score,
-age and weight loss, each in its own terms.
+age and weight loss. The SHAP explanation shows a property of trees: the
+SHAP value of a feature is a step function, so the one-year age
+difference (71 vs. 70) counts more than the Karnofsky difference,
+because a split of the trees lies between 70 and 71. The SHAP values of
+sex and ECOG also differ slightly although the cases agree in them: in
+trees, the contribution of a feature depends on the other features
+(interactions).
 
 What does each distance pay attention to in general? We change one
 feature of a case from its lower to its upper quartile (for sex: from
@@ -219,7 +256,10 @@ feature_weights <- function(models, data, features) {
   w <- sapply(features, function(f) {
     lo <- iqr_change(data, f, TRUE)
     hi <- iqr_change(data, f, FALSE)
+    boost <- models$`Boost (SHAP)`
     c("Cox"      = sum(models$Cox$explain_match(lo[1, ], hi[1, ])$distance),
+      # the SHAP values depend on the other features: average over all cases
+      "Boost (SHAP)" = mean(rowSums(abs(boost$shap_values(lo) - boost$shap_values(hi)))),
       "Gower"    = sum(models$Gower$explain_match(lo[1, ], hi[1, ])$distance),
       # the forest distance depends on the other features: average over all cases
       "RF depth" = mean(diag(depth_distance(lo[, features], hi[, features], rf))) / rf$num.trees)
@@ -229,16 +269,21 @@ feature_weights <- function(models, data, features) {
 knitr::kable(feature_weights(models, train, features), digits = 2)
 ```
 
-|          |  age | sex | ph.ecog | ph.karno | wt.loss |
-|:---------|-----:|----:|--------:|---------:|--------:|
-| Cox      | 0.10 | 0.3 |    0.45 |     0.11 |    0.05 |
-| Gower    | 0.14 | 0.5 |    0.17 |     0.10 |    0.09 |
-| RF depth | 0.27 | 0.2 |    0.17 |     0.13 |    0.23 |
+|              |  age |  sex | ph.ecog | ph.karno | wt.loss |
+|:-------------|-----:|-----:|--------:|---------:|--------:|
+| Cox          | 0.10 | 0.30 |    0.45 |     0.11 |    0.05 |
+| Boost (SHAP) | 0.13 | 0.36 |    0.34 |     0.01 |    0.16 |
+| Gower        | 0.14 | 0.50 |    0.17 |     0.10 |    0.09 |
+| RF depth     | 0.27 | 0.20 |    0.17 |     0.13 |    0.23 |
 
-The three distances weight the features very differently:
+The distances weight the features very differently:
 
 - The **Cox distance** follows the estimated effects: ECOG and sex, the
   strongest prognostic factors in these data, dominate.
+- The **SHAP distance** of the boosted model also follows the effects
+  the model has learned. Sex and ECOG dominate, as for the Cox model,
+  but the Karnofsky score gets almost no weight: once ECOG is in the
+  model, the trees do not need the correlated Karnofsky score.
 - The **Gower distance** follows the scale of the features: sex is
   binary, so male vs. female is the largest possible difference (1); a
   typical difference in age or weight loss is a small part of the range.
@@ -256,9 +301,9 @@ Kaplan–Meier estimate of the 20 nearest cases. For the first patient:
 
 times <- seq(0, 900, by = 10)
 curves <- sapply(models, function(m) m$predict_survival(query, k = 20, times = times)[1, ])
-matplot(times, curves, type = "s", lty = 1, lwd = 2, col = 1:5,
+matplot(times, curves, type = "s", lty = 1, lwd = 2, col = 1:6,
         xlab = "Days", ylab = "Survival probability", ylim = c(0, 1))
-legend("topright", names(models), col = 1:5, lty = 1, lwd = 2, bty = "n")
+legend("topright", names(models), col = 1:6, lty = 1, lwd = 2, bty = "n")
 ```
 
 ![](comparing_approaches_files/figure-html/curves-1.png)
@@ -278,6 +323,7 @@ knitr::kable(scores, digits = 3)
 |              | c_index |   ibs |
 |:-------------|--------:|------:|
 | Cox          |   0.608 | 0.207 |
+| Boost (SHAP) |   0.614 | 0.208 |
 | Gower        |   0.610 | 0.195 |
 | RF depth     |   0.604 | 0.213 |
 | RF proximity |   0.620 | 0.213 |
@@ -314,7 +360,9 @@ gower_n$fit()
 set.seed(1)
 rf_n <- RFModel$new(fml_n, train_n, num.trees = 300)
 rf_n$fit()
-models_n <- list("Cox" = cox_n, "Gower" = gower_n, "RF depth" = rf_n)
+boost_n <- BoostModel$new(fml_n, train_n, nrounds = 100, params = list(eta = 0.05, max_depth = 2))
+boost_n$fit()
+models_n <- list("Cox" = cox_n, "Boost (SHAP)" = boost_n, "Gower" = gower_n, "RF depth" = rf_n)
 ```
 
 How much weight do the noise features get, how much do the
@@ -335,15 +383,25 @@ noise_tbl <- data.frame(
 knitr::kable(noise_tbl, digits = 2, row.names = FALSE)
 ```
 
-| method   | noise_weight | overlap_with_clean | c_index | c_index_clean |
-|:---------|-------------:|-------------------:|--------:|--------------:|
-| Cox      |         0.26 |               0.51 |    0.54 |          0.61 |
-| Gower    |         0.41 |               0.37 |    0.56 |          0.61 |
-| RF depth |         0.58 |               0.31 |    0.58 |          0.60 |
+| method       | noise_weight | overlap_with_clean | c_index | c_index_clean |
+|:-------------|-------------:|-------------------:|--------:|--------------:|
+| Cox          |         0.26 |               0.51 |    0.54 |          0.61 |
+| Boost (SHAP) |         0.42 |               0.22 |    0.62 |          0.61 |
+| Gower        |         0.41 |               0.37 |    0.56 |          0.61 |
+| RF depth     |         0.58 |               0.31 |    0.58 |          0.60 |
 
 - The **Cox model** estimates small, but not zero, coefficients for the
   noise features: with 160 cases, chance associations remain. About a
   quarter of its distance is noise.
+- The **SHAP distance** gives the noise about 40% of its weight, and its
+  neighbourhoods change the most. With 160 cases and 100 fixed rounds,
+  the boosted trees find splits in the noise; the SHAP values reflect
+  the fitted model, including its overfitting. Its C-index did not drop,
+  but on 53 test patients this may be chance. Choose the number of
+  rounds and the depth by cross-validation (see
+  [Methods](https://sipemu.github.io/case-based-reasoning/articles/distance_measures.md));
+  on data this small, the weights of the noise features remain unstable
+  even then.
 - The **Gower distance** weights the noise like the real features: it
   gets the share that five of ten features get by their scale.
 - The **forest** gives the noise the most weight: on a small data set,
@@ -392,6 +450,7 @@ knitr::kable(data.frame(method = names(stability), stability = stability),
 | method       | stability |
 |:-------------|----------:|
 | Cox          |      0.72 |
+| Boost (SHAP) |      0.45 |
 | Gower        |      0.98 |
 | RF depth     |      0.75 |
 | RF proximity |      0.78 |
@@ -400,22 +459,31 @@ knitr::kable(data.frame(method = names(stability), stability = stability),
 The Gower distance changes only through the ranges of the features and
 is the most stable. The Cox distance changes with the estimated
 coefficients; the forest distances change with the forest, and also with
-the random seed.
+the random seed. The SHAP distance is the least stable: boosting builds
+its trees greedily one after another, and small changes in the data
+change which splits are chosen, so the step functions of the SHAP values
+move. Stronger regularisation (smaller `eta` with more rounds, larger
+`min_child_weight`, `lambda`) may help; we did not tune it.
 
 ## Summary
 
-|  | Cox (regression) | Random forest | Gower |
-|----|----|----|----|
-| Weights the features by | estimated effects | number of splits (favours continuous features) | scale (favours binary features) |
-| Explanation | contribution to the log hazard per term | split variables where the paths diverge | difference per feature |
-| Irrelevant features | small weight, shrinking with more cases | substantial weight on small data | full weight |
-| Stability | changes with the coefficients | changes with the forest and the seed | very stable |
-| Assumptions | proportional hazards, specified functional form | few | none |
-| Prediction (here) | similar | similar | similar |
+|  | Cox (regression) | Boosting (SHAP) | Random forest | Gower |
+|----|----|----|----|----|
+| Weights the features by | estimated effects | learned effects | number of splits (favours continuous features) | scale (favours binary features) |
+| Explanation | contribution to the log hazard per term | SHAP value (log hazard) per feature | split variables where the paths diverge | difference per feature |
+| Non-linear effects, interactions | if specified | automatic | automatic | no |
+| Irrelevant features | small weight, shrinking with more cases | substantial weight on small data | substantial weight on small data | full weight |
+| Stability | changes with the coefficients | least stable here | changes with the forest and the seed | very stable |
+| Assumptions | proportional hazards, specified functional form | proportional hazards (Cox objective) | few | none |
+| Prediction (here) | similar | similar | similar | similar |
 
 - Use the **regression distance** when the model fits well and the
   retrieved cases must be justified: every distance can be traced to
   effects on the outcome.
+- Use the **SHAP distance** when the relationships are complex or
+  unknown but the distance should still be explained by effects on the
+  outcome; tune and regularise the boosted model, and check the
+  stability of the neighbours.
 - Use the **forest distances** when the relationships are complex or
   unknown; RF-GAP when the neighbours should explain the forest’s
   prediction, the depth distance for a finer ranking.
@@ -427,6 +495,10 @@ the random seed.
 
 ## References
 
+- Lundberg, S. M. et al. (2020). [From local explanations to global
+  understanding with explainable AI for
+  trees](https://doi.org/10.1038/s42256-019-0138-9). *Nature Machine
+  Intelligence*, 2, 56–67.
 - Strobl, C., Boulesteix, A.-L., Zeileis, A. and Hothorn, T. (2007).
   [Bias in random forest variable importance measures: Illustrations,
   sources and a solution](https://doi.org/10.1186/1471-2105-8-25). *BMC
