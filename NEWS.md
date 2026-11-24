@@ -55,6 +55,10 @@
 - Agent Skills for Claude Code (`.claude/skills/`): `cbr-capabilities` for
   API discovery and `cbr-advisor` for running, comparing and interpreting a
   CBR analysis. They install as a plugin from `.claude-plugin/`.
+- `RFModel`: the help page explains how to fit survival forests on large data
+  sets with a time grid (`time.interest`). ranger otherwise stores the
+  cumulative hazard at every event time in every leaf, which took about 15
+  minutes and 6 GB per forest with 3000 cases.
 
 ### Bug fixes
 

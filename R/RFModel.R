@@ -6,6 +6,13 @@
 #' from learning, calculating the distance matrix and searching for similar
 #' cases.
 #'
+#' For survival endpoints, ranger stores the cumulative hazard at every
+#' distinct event time in every leaf. On large data sets this makes the forest
+#' slow to fit and large in memory (with 3000 cases and 500 trees, about 15
+#' minutes and 6 GB). The distances and the survival predictions of this
+#' package do not use these curves, so pass a time grid, e.g.
+#' \code{RFModel$new(Surv(time, status) ~ ., data, time.interest = 100)}.
+#'
 #' @references
 #' Englund, C. and Verikas, A. (2012). A novel approach to estimate proximity
 #' in a random forest: An exploratory study. Expert Systems with Applications,
@@ -43,7 +50,8 @@ RFModel <- R6Class(
     #' @param formula Object of class formula or character describing the model fit.
     #' @param data Training data of class data.frame
     #' @param ... ranger RandomForest arguments. \code{write.forest} is always
-    #'   set to \code{TRUE}; \code{verbose} defaults to \code{FALSE}.
+    #'   set to \code{TRUE}; \code{verbose} defaults to \code{FALSE}. For
+    #'   large survival data, set \code{time.interest} (see Details).
     initialize = function(formula, data, ...) {
       super$initialize(formula, data)
       self$model_params <- list(...)
