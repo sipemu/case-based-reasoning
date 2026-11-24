@@ -14,6 +14,13 @@ as a similarity matrix of training and query
 observations. By default all cases with at least one missing values are dropped
 from learning, calculating the distance matrix and searching for similar
 cases.
+
+For survival endpoints, ranger stores the cumulative hazard at every
+distinct event time in every leaf. On large data sets this makes the forest
+slow to fit and large in memory (with 3000 cases and 500 trees, about 15
+minutes and 6 GB). The distances and the survival predictions of this
+package do not use these curves, so pass a time grid, e.g.
+\code{RFModel$new(Surv(time, status) ~ ., data, time.interest = 100)}.
 }
 \references{
 Englund, C. and Verikas, A. (2012). A novel approach to estimate proximity
@@ -93,7 +100,8 @@ Initialize a RandomForest object for searching similar cases.
 \item{\code{data}}{Training data of class data.frame}
 
 \item{\code{...}}{ranger RandomForest arguments. \code{write.forest} is always
-set to \code{TRUE}; \code{verbose} defaults to \code{FALSE}.}
+set to \code{TRUE}; \code{verbose} defaults to \code{FALSE}. For
+large survival data, set \code{time.interest} (see Details).}
 }
 \if{html}{\out{</div>}}
 }
